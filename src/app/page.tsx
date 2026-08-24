@@ -1,3 +1,4 @@
+import ConsultaVeiculo from "@/components/consultaVeiculos";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export default function Home() {
           {/* Logo */}
           <div
             style={{
-               display: "flex",
+              display: "flex",
               justifyContent: "center",
               marginBottom: "2rem",
             }}
@@ -81,7 +82,6 @@ export default function Home() {
             maxWidth: 360,
             height: "auto",
             display: "block",
-            transform: "translateX(4.2rem)",
             mixBlendMode: "multiply",
             opacity: 0.92,
             }}
@@ -110,67 +110,7 @@ export default function Home() {
           </p>
 
           {/* Formulário */}
-          <form
-            method="get"
-            action="/"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.9rem",
-              textAlign: "left",
-            }}
-          >
-            <div>
-              <label
-                htmlFor="placa"
-                className="label"
-              >
-                Placa do veículo
-              </label>
-
-              <input
-                id="placa"
-                name="placa"
-                className="input"
-                placeholder="ABC1D23"
-                autoComplete="off"
-                maxLength={7}
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="cpf"
-                className="label"
-              >
-                CPF do proprietário
-              </label>
-
-              <input
-                id="cpf"
-                name="cpf"
-                className="input"
-                placeholder="000.000.000-00"
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={14}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{
-                justifyContent: "center",
-                padding: "0.75rem",
-                marginTop: "0.25rem",
-              }}
-            >
-              Consultar veículo
-            </button>
-          </form>
+          <ConsultaVeiculo />
 
           {/* Área de acesso da oficina */}
           <div

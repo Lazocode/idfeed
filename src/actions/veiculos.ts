@@ -9,14 +9,76 @@ import crypto from "node:crypto";
 
 export async function criarVeiculo(formData: FormData) {
   const session = await requireRole(["admin", "mecanico", "atendente"]);
-  const parsed = vehicleSchema.safeParse({ placa: formData.get("placa"), modelo: formData.get("modelo"), proprietarioNome: formData.get("proprietarioNome"), proprietarioContato: formData.get("proprietarioContato") ?? "", kmAtual: formData.get("kmAtual") ?? 0 });
-  if (!parsed.success) throw new Error("Confira os dados do veículo.");
-  const { placa: placaRaw, modelo, proprietarioNome, proprietarioContato, kmAtual } = parsed.data;
+
+  const parsed = vehicleSchema.safeParse({
+    placa: formData.get("placa"),
+    modelo: formData.get("modelo"),
+    proprietarioNome: formData.get("proprietarioNome"),
+    proprietarioCpf: formData.get("proprietarioCpf"),
+    proprietarioContato: formData.get("proprietarioContato") ?? "",
+    kmAtual: formData.get("kmAtual") ?? 0,
+  });
+
+  if (!parsed.success) {
+    throw new Error("Confira os dados do veículo.");
+  }
+
+  const {
+    placa: placaRaw,
+    modelo,
+    proprietarioNome,
+    proprietarioCpf,
+    proprietarioContato,
+    kmAtual,
+  } = parsed.data;
+
   const placa = normPlaca(placaRaw);
-  const { data: existente } = await supabaseAdmin.from("veiculos").select("id").eq("placa", placa).maybeSingle();
-  if (existente) throw new Error("Já existe um veículo cadastrado com essa placa.");
-  const { data: veiculo, error } = await supabaseAdmin.from("veiculos").insert({ loja_id: session.user.lojaId, placa, public_token: crypto.randomBytes(24).toString("hex"), modelo, proprietario_nome: proprietarioNome, proprietario_contato: proprietarioContato || null, km_atual: kmAtual, km_proxima_revisao: kmAtual + 5000, nota_proxima_revisao: "Definir próxima revisão" }).select().single();
-  if (error || !veiculo) throw new Error("Não foi possível cadastrar o veículo.");
+
+  const cpfSecret = process.env.CPF_HASH_SECRET;
+
+  if (!cpfSecret) {
+    throw new Error("Configuração de segurança do CPF não encontrada.");
+  }
+
+  const cpfHash = crypto
+    .createHmac("sha256", cpfSecret)
+    .update(proprietarioCpf)
+    .digest("hex");
+
+  const { data: existente } = await supabaseAdmin
+    .from("veiculos")
+    .select("id")
+    .eq("placa", placa)
+    .maybeSingle();
+
+  if (existente) {
+    throw new Error("Já existe um veículo cadastrado com essa placa.");
+  }
+
+  const { data: veiculo, error } = await supabaseAdmin
+    .from("veiculos")
+    .insert({
+      loja_id: session.user.lojaId,
+      placa,
+      public_token: crypto.randomBytes(24).toString("hex"),
+      modelo,
+      proprietario_nome: proprietarioNome,
+      proprietario_cpf_hash: cpfHash,
+      proprietario_contato: proprietarioContato || null,
+      km_atual: kmAtual,
+      km_proxima_revisao: kmAtual + 5000,
+      nota_proxima_revisao: "Definir próxima revisão",
+    })
+    .select()
+    .single();
+
+  if (error || !veiculo) {
+  console.error("ERRO AO CADASTRAR VEÍCULO:", error);
+  throw new Error(
+    error?.message || "Não foi possível cadastrar o veículo."
+  );
+}
+
   redirect(`/loja/veiculo/${veiculo.id}`);
 }
 
