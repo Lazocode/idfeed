@@ -17,11 +17,27 @@ create table usuarios (
 create index on usuarios (loja_id);
 
 create table veiculos (
-  id uuid primary key default uuid_generate_v4(), loja_id uuid not null references lojas(id) on delete cascade,
+  id uuid primary key default uuid_generate_v4(),
+  loja_id uuid not null references lojas(id) on delete cascade,
+
   public_token text not null unique default encode(gen_random_bytes(24), 'hex'),
-  placa text not null unique, modelo text not null, proprietario_nome text not null, proprietario_contato text,
-  km_atual integer not null default 0 check (km_atual >= 0), km_proxima_revisao integer check (km_proxima_revisao is null or km_proxima_revisao >= 0),
-  nota_proxima_revisao text, criado_em timestamptz not null default now(), atualizado_em timestamptz not null default now()
+
+  placa text not null unique,
+  modelo text not null,
+  proprietario_nome text not null,
+  proprietario_cpf_hash text,
+  proprietario_contato text,
+
+  km_atual integer not null default 0 check (km_atual >= 0),
+  km_proxima_revisao integer check (
+    km_proxima_revisao is null
+    or km_proxima_revisao >= 0
+  ),
+
+  nota_proxima_revisao text,
+
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
 );
 create index on veiculos (loja_id);
 

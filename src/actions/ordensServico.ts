@@ -30,8 +30,14 @@ export async function criarOrdemServico(veiculoId: string, formData: FormData) {
     p_pecas: pecas,
     p_loja_id: session.user.lojaId,
   });
-  if (error || !osId) throw new Error("Não foi possível registrar a manutenção.");
-  redirect(`/loja/veiculo/${veiculoId}`);
+  
+  if (error || !osId) {
+  console.error("ERRO AO REGISTRAR MANUTENÇÃO:", error);
+
+  throw new Error(
+    error?.message || "Não foi possível registrar manutenção."
+  );
+}
 }
 
 export async function editarOrdemServico(ordemServicoId: string, veiculoId: string, formData: FormData) {

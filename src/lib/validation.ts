@@ -10,9 +10,51 @@ export const signupSchema = z.object({
 
 export const vehicleSchema = z.object({
   placa: z.string().trim().min(5).max(10),
+
   modelo: z.string().trim().min(2).max(120),
+
   proprietarioNome: z.string().trim().min(2).max(120),
+
+  proprietarioCpf: z
+    .string()
+    .trim()
+    .transform((value) => value.replace(/\D/g, ""))
+    .refine((value) => value.length === 11, {
+      message: "CPF deve possuir 11 dígitos.",
+    })
+    .refine(
+      (cpf) => {
+        if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+        let soma = 0;
+
+        for (let i = 0; i < 9; i++) {
+          soma += Number(cpf[i]) * (10 - i);
+        }
+
+        let digito1 = (soma * 10) % 11;
+        if (digito1 === 10) digito1 = 0;
+
+        if (digito1 !== Number(cpf[9])) return false;
+
+        soma = 0;
+
+        for (let i = 0; i < 10; i++) {
+          soma += Number(cpf[i]) * (11 - i);
+        }
+
+        let digito2 = (soma * 10) % 11;
+        if (digito2 === 10) digito2 = 0;
+
+        return digito2 === Number(cpf[10]);
+      },
+      {
+        message: "CPF inválido.",
+      }
+    ),
+
   proprietarioContato: z.string().trim().max(40),
+
   kmAtual: z.coerce.number().int().min(0).max(10_000_000),
 });
 

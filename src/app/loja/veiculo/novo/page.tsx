@@ -38,6 +38,17 @@ export default function NovoVeiculoPage() {
                 <input className="input" name="proprietarioNome" placeholder="Nome do cliente" required />
               </div>
               <div>
+                <label className="label">CPF do proprietário *</label>
+                <input
+                  className="input"
+                  name="proprietarioCpf"
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  maxLength={14}
+                  required
+                />
+              </div>
+              <div>
                 <label className="label">Contato</label>
                 <input className="input" name="proprietarioContato" placeholder="Telefone ou e-mail" />
               </div>
