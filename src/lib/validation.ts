@@ -2,11 +2,54 @@ import { z } from "zod";
 
 export const signupSchema = z.object({
   nomeLoja: z.string().trim().min(2).max(100),
+
   nome: z.string().trim().min(2).max(100),
-  email: z.string().trim().email().max(254).transform((v) => v.toLowerCase()),
+
+  cpf: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => /^\d{11}$/.test(v), {
+      message: "CPF inválido.",
+    }),
+
+  telefone: z
+    .string()
+    .trim()
+    .max(20)
+    .transform((v) => v.replace(/\D/g, "")),
+
+  email: z
+    .string()
+    .trim()
+    .email()
+    .max(254)
+    .transform((v) => v.toLowerCase()),
+
+  cnpj: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => /^\d{14}$/.test(v), {
+      message: "CNPJ inválido.",
+    }),
+
+  telefoneLoja: z
+    .string()
+    .trim()
+    .max(20)
+    .transform((v) => v.replace(/\D/g, "")),
+
   senha: z.string().min(10).max(128),
+
   confirmarSenha: z.string().min(10).max(128),
-}).refine((v) => v.senha === v.confirmarSenha, { path: ["confirmarSenha"], message: "As senhas não conferem." });
+}).refine(
+  (v) => v.senha === v.confirmarSenha,
+  {
+    path: ["confirmarSenha"],
+    message: "As senhas não conferem.",
+  }
+);
 
 export const vehicleSchema = z.object({
   placa: z.string().trim().min(5).max(10),

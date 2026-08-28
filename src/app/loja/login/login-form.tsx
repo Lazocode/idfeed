@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
@@ -14,11 +14,52 @@ export default function LoginForm() {
     e.preventDefault();
     setErro("");
     setLoading(true);
-    const res = await signIn("credentials", { email, senha, redirect: false });
+    const res = await signIn("credentials", {
+      email,
+      senha,
+      redirect: false,
+    });
+
     setLoading(false);
-    if (res?.error) { setErro("E-mail ou senha incorretos."); return; }
-    router.push("/loja/dashboard");
-    router.refresh();
+
+    if (res?.error) {
+      setErro("E-mail ou senha incorretos.");
+      return;
+    }
+
+    const session = await getSession();
+
+    if (!session?.user) {
+      setErro("Não foi possível carregar sua sessão.");
+      return;
+    }
+
+    const lojaStatus = (session.user as { lojaStatus?: string }).lojaStatus;
+
+    if (lojaStatus === "pendente") {
+      router.push("/loja/enviar-documento");
+      router.refresh();
+      return;
+    }
+
+    if (lojaStatus === "aprovada") {
+      router.push("/loja/dashboard");
+      router.refresh();
+      return;
+    }
+
+    if (lojaStatus === "rejeitada") {
+      router.push("/loja/documento-rejeitado");
+      router.refresh();
+      return;
+    }
+
+    if (lojaStatus === "bloqueada") {
+      setErro("O acesso desta oficina está bloqueado.");
+      return;
+    }
+
+    setErro("Não foi possível identificar o status da oficina.");
   }
 
   return (
