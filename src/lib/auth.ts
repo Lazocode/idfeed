@@ -21,15 +21,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!checkLoginRateLimit(`login:${normalizedEmail}`)) return null;
 
         const { data: usuario } = await supabaseAdmin
-          .from("usuarios")
-          .select("id, nome, email, senha_hash, loja_id, papel")
-          .eq("email", normalizedEmail)
-          .maybeSingle();
+        .from("usuarios")
+        .select(`
+          id,
+          nome,
+          email,
+          senha_hash,
+          loja_id,
+          papel,
+        loja:lojas(status)
+        `)
+        .eq("email", normalizedEmail)
+        .maybeSingle();
 
         if (!usuario) return null;
 
+        const loja = Array.isArray(usuario.lojas)
+          ? usuario.lojas[0]
+          : usuario.lojas;
+
+        if (!loja || loja.status !== "aprovada") {
+          return null;
+        }
+
         const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
         if (!senhaValida) return null;
+
+        if (usuario.loja?.status !== "aprovada") {
+          return null;
+        }
 
         return {
           id: usuario.id,
@@ -37,6 +57,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: usuario.nome,
           lojaId: usuario.loja_id,
           papel: usuario.papel,
+          lojaStatus: usuario.loja?.status ?? "pendente",
         };
       },
     }),
@@ -46,7 +67,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.lojaId = (user as { lojaId: string }).lojaId;
         token.papel = (user as { papel: string }).papel;
-      }
+        token.lojaStatus = (user as { lojaStatus: string }).lojaStatus;
+}
       return token;
     },
     session({ session, token }) {
@@ -54,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub as string;
         session.user.lojaId = token.lojaId as string;
         session.user.papel = token.papel as string;
+        session.user.lojaStatus = token.lojaStatus as string;
       }
       return session;
     },
