@@ -1,76 +1,113 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+
 import { supabaseAdmin } from "./supabase";
 import { checkLoginRateLimit } from "./rate-limit";
 
+class OficinaPendenteError extends CredentialsSignin {
+  code = "oficina_pendente";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: { signIn: "/loja/login" },
+  session: {
+    strategy: "jwt",
+  },
+
+  pages: {
+    signIn: "/loja/login",
+  },
+
   providers: [
     Credentials({
       credentials: {
-        email: { label: "E-mail", type: "email" },
-        senha: { label: "Senha", type: "password" },
+        email: {
+          label: "E-mail",
+          type: "email",
+        },
+        senha: {
+          label: "Senha",
+          type: "password",
+        },
       },
+
       authorize: async (credentials) => {
-        const email = credentials?.email as string | undefined;
-        const senha = credentials?.senha as string | undefined;
-        if (!email || !senha) return null;
-        const normalizedEmail = email.trim().toLowerCase();
-        if (!checkLoginRateLimit(`login:${normalizedEmail}`)) return null;
+          const email = credentials?.email as string | undefined;
+          const senha = credentials?.senha as string | undefined;
 
-        const { data: usuario } = await supabaseAdmin
-        .from("usuarios")
-        .select(`
-          id,
-          nome,
-          email,
-          senha_hash,
-          loja_id,
-          papel,
-        loja:lojas(status)
-        `)
-        .eq("email", normalizedEmail)
-        .maybeSingle();
+          if (!email || !senha) {
+            return null;
+          }
 
-        if (!usuario) return null;
+          const normalizedEmail = email.trim().toLowerCase();
 
-        const loja = Array.isArray(usuario.lojas)
-          ? usuario.lojas[0]
-          : usuario.lojas;
+          if (!checkLoginRateLimit(`login:${normalizedEmail}`)) {
+            return null;
+          }
 
-        if (!loja || loja.status !== "aprovada") {
-          return null;
-        }
+          const { data: usuario, error: usuarioError } =
+            await supabaseAdmin
+              .from("usuarios")
+              .select("id, nome, email, senha_hash, loja_id, papel")
+              .eq("email", normalizedEmail)
+              .maybeSingle();
 
-        const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
-        if (!senhaValida) return null;
+          if (usuarioError || !usuario) {
+            return null;
+          }
 
-        if (usuario.loja?.status !== "aprovada") {
-          return null;
-        }
+          // PRIMEIRO: verifica a senha
+          const senhaValida = await bcrypt.compare(
+            senha,
+            usuario.senha_hash
+          );
 
-        return {
-          id: usuario.id,
-          email: usuario.email,
-          name: usuario.nome,
-          lojaId: usuario.loja_id,
-          papel: usuario.papel,
-          lojaStatus: usuario.loja?.status ?? "pendente",
-        };
+          if (!senhaValida) {
+            return null;
+          }
+
+          // SEGUNDO: verifica a loja
+          const { data: loja, error: lojaError } =
+            await supabaseAdmin
+              .from("lojas")
+              .select("status")
+              .eq("id", usuario.loja_id)
+              .maybeSingle();
+
+          if (lojaError || !loja) {
+            return null;
+          }
+
+          // Senha está correta, mas a loja ainda não foi aprovada
+          if (loja.status !== "aprovada") {
+            throw new OficinaPendenteError();
+          }
+
+          return {
+            id: usuario.id,
+            email: usuario.email,
+            name: usuario.nome,
+            lojaId: usuario.loja_id,
+            papel: usuario.papel,
+            lojaStatus: loja.status,
+          };
       },
     }),
   ],
+
   callbacks: {
     jwt({ token, user }) {
       if (user) {
         token.lojaId = (user as { lojaId: string }).lojaId;
         token.papel = (user as { papel: string }).papel;
-        token.lojaStatus = (user as { lojaStatus: string }).lojaStatus;
-}
+        token.lojaStatus = (
+          user as { lojaStatus: string }
+        ).lojaStatus;
+      }
+
       return token;
     },
+
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub as string;
@@ -78,6 +115,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.papel = token.papel as string;
         session.user.lojaStatus = token.lojaStatus as string;
       }
+
       return session;
     },
   },

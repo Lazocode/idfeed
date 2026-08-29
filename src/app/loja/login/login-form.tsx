@@ -1,10 +1,12 @@
 "use client";
+
 import { useState } from "react";
-import { signIn, getSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -12,8 +14,10 @@ export default function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     setErro("");
     setLoading(true);
+
     const res = await signIn("credentials", {
       email,
       senha,
@@ -23,60 +27,65 @@ export default function LoginForm() {
     setLoading(false);
 
     if (res?.error) {
-      setErro("E-mail ou senha incorretos.");
+      setErro(
+        "E-mail e senha incorretos ou sua oficina ainda não foi aprovada."
+      );
       return;
     }
 
-    const session = await getSession();
-
-    if (!session?.user) {
-      setErro("Não foi possível carregar sua sessão.");
-      return;
-    }
-
-    const lojaStatus = (session.user as { lojaStatus?: string }).lojaStatus;
-
-    if (lojaStatus === "pendente") {
-      router.push("/loja/enviar-documento");
-      router.refresh();
-      return;
-    }
-
-    if (lojaStatus === "aprovada") {
-      router.push("/loja/dashboard");
-      router.refresh();
-      return;
-    }
-
-    if (lojaStatus === "rejeitada") {
-      router.push("/loja/documento-rejeitado");
-      router.refresh();
-      return;
-    }
-
-    if (lojaStatus === "bloqueada") {
-      setErro("O acesso desta oficina está bloqueado.");
-      return;
-    }
-
-    setErro("Não foi possível identificar o status da oficina.");
+    router.push("/loja/dashboard");
+    router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit} className="login-form">
       <div>
         <label className="label">E-mail</label>
-        <input className="input login-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seuemail@oficina.com" required />
+
+        <input
+          className="input login-input"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="seuemail@oficina.com"
+          required
+        />
       </div>
+
       <div>
         <label className="label">Senha</label>
-        <input className="input login-input" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="••••••••" required />
+
+        <input
+          className="input login-input"
+          type="password"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          placeholder="••••••••"
+          required
+        />
       </div>
-      <button type="submit" className="btn-primary login-submit" disabled={loading}>
-        <span>{loading ? "Entrando..." : "Entrar no painel"}</span>
-        {!loading && <span aria-hidden="true">→</span>}
+
+      <button
+        type="submit"
+        className="btn-primary login-submit"
+        disabled={loading}
+      >
+        <span>
+          {loading ? "Entrando..." : "Entrar no painel"}
+        </span>
+
+        {!loading && (
+          <span aria-hidden="true">
+            →
+          </span>
+        )}
       </button>
-      {erro && <div className="alert-error">{erro}</div>}
+
+      {erro && (
+        <div className="alert-error">
+          {erro}
+        </div>
+      )}
     </form>
   );
 }
