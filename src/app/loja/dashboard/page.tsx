@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatKm, formatPlaca } from "@/lib/utils";
 import LogoutButton from "@/components/logout-button";
@@ -7,8 +7,13 @@ import LogoutButton from "@/components/logout-button";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole([
+  "admin",
+  "mecanico",
+  "atendente",
+]);
+
+const lojaId = session.user.lojaId;
   const { q } = await searchParams;
   const query = (q ?? "").trim();
 
