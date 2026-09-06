@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
+import AprovacaoOficina from "@/components/aprovacaoOficina";
 
 export const dynamic = "force-dynamic";
 
@@ -63,12 +64,12 @@ export default async function AnaliseOficinaPage({
   }
 
   const { data: documentos, error: documentoError } = await supabaseAdmin
-    .from("documentos_oficina")
-    .select(
-      "id, nome_arquivo, caminho_arquivo, status, criado_em"
-    )
-    .eq("loja_id", lojaId)
-    .order("criado_em", { ascending: false });
+  .from("documentos_oficina")
+  .select(
+    "id, nome_arquivo, caminho_arquivo, status, enviado_em"
+  )
+  .eq("loja_id", lojaId)
+  .order("enviado_em", { ascending: false });
 
   if (documentoError) {
     console.error(
@@ -176,7 +177,7 @@ export default async function AnaliseOficinaPage({
               Documento enviado
             </div>
 
-            {!documento && (
+                        {!documento && (
               <p
                 style={{
                   marginTop: "1rem",
@@ -188,52 +189,56 @@ export default async function AnaliseOficinaPage({
             )}
 
             {documento && (
-              <div style={{ marginTop: "1rem" }}>
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "var(--text-soft)",
-                  }}
-                >
-                  Arquivo:
-                </p>
+              <>
+                <AprovacaoOficina lojaId={lojaId} />
 
-                <p
-                  style={{
-                    fontWeight: 700,
-                    marginTop: "0.25rem",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {documento.nome_arquivo}
-                </p>
+                <div style={{ marginTop: "1rem" }}>
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "var(--text-soft)",
+                    }}
+                  >
+                    Arquivo:
+                  </p>
 
-                <span
-                  className="badge badge-amber"
-                  style={{
-                    display: "inline-flex",
-                    marginTop: "0.75rem",
-                  }}
-                >
-                  {documento.status}
-                </span>
+                  <p
+                    style={{
+                      fontWeight: 700,
+                      marginTop: "0.25rem",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {documento.nome_arquivo}
+                  </p>
 
-                {documentoUrl && (
-                  <div style={{ marginTop: "1.25rem" }}>
-                    <a
-                      href={documentoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary"
-                      style={{
-                        display: "inline-flex",
-                      }}
-                    >
-                      Visualizar documento
-                    </a>
-                  </div>
-                )}
-              </div>
+                  <span
+                    className="badge badge-amber"
+                    style={{
+                      display: "inline-flex",
+                      marginTop: "0.75rem",
+                    }}
+                  >
+                    {documento.status}
+                  </span>
+
+                  {documentoUrl && (
+                    <div style={{ marginTop: "1.25rem" }}>
+                      <a
+                        href={documentoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                        style={{
+                          display: "inline-flex",
+                        }}
+                      >
+                        Visualizar documento
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
