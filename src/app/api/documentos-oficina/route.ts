@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 
 export const runtime = "nodejs";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -27,38 +27,41 @@ export async function POST(request: Request) {
 
     const lojaId = session.user.lojaId;
 
-    const formData = await request.formData();
-    const arquivo = formData.get("documento");
+    // Tipo do arquivo enviado
+    const contentType = request.headers.get("content-type");
 
-    if (!(arquivo instanceof File)) {
-      return NextResponse.json(
-        { error: "Nenhum documento foi enviado." },
-        { status: 400 }
-      );
-    }
-
-    if (arquivo.size <= 0) {
-      return NextResponse.json(
-        { error: "O documento está vazio." },
-        { status: 400 }
-      );
-    }
-
-    if (arquivo.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "O documento deve ter no máximo 5 MB." },
-        { status: 400 }
-      );
-    }
-
-    if (!ALLOWED_TYPES.has(arquivo.type)) {
+    if (!contentType || !ALLOWED_TYPES.has(contentType)) {
       return NextResponse.json(
         { error: "Formato de documento não permitido." },
         { status: 400 }
       );
     }
 
-    // Confirma que a oficina existe e ainda está pendente.
+    // Nome original do arquivo
+    const encodedFileName = request.headers.get("x-file-name");
+
+    const nomeOriginal = encodedFileName
+      ? decodeURIComponent(encodedFileName).slice(0, 255)
+      : "documento";
+
+    // Lê o arquivo diretamente do corpo da requisição
+    const buffer = Buffer.from(await request.arrayBuffer());
+
+    if (buffer.length <= 0) {
+      return NextResponse.json(
+        { error: "O documento está vazio." },
+        { status: 400 }
+      );
+    }
+
+    if (buffer.length > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "O documento deve ter no máximo 5 MB." },
+        { status: 400 }
+      );
+    }
+
+    // Confirma que a oficina existe e está pendente
     const { data: loja, error: lojaError } = await supabaseAdmin
       .from("lojas")
       .select("id, status")
@@ -79,7 +82,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Evita múltiplos documentos pendentes para a mesma oficina.
+    // Evita múltiplos documentos pendentes
     const { data: documentoExistente } = await supabaseAdmin
       .from("documentos_oficina")
       .select("id")
@@ -94,24 +97,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Define extensão
     const extensao =
-      arquivo.type === "application/pdf"
+      contentType === "application/pdf"
         ? "pdf"
-        : arquivo.type === "image/png"
+        : contentType === "image/png"
           ? "png"
-          : arquivo.type === "image/webp"
+          : contentType === "image/webp"
             ? "webp"
             : "jpg";
 
     const nomeArquivo = `${crypto.randomUUID()}.${extensao}`;
     const caminhoArquivo = `${lojaId}/${nomeArquivo}`;
 
-    const buffer = Buffer.from(await arquivo.arrayBuffer());
-
+    // Upload para o Storage
     const { error: uploadError } = await supabaseAdmin.storage
       .from("documentos-oficinas")
       .upload(caminhoArquivo, buffer, {
-        contentType: arquivo.type,
+        contentType,
         upsert: false,
       });
 
@@ -124,11 +127,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Registra documento no banco
     const { error: documentoError } = await supabaseAdmin
       .from("documentos_oficina")
       .insert({
         loja_id: lojaId,
-        nome_arquivo: arquivo.name.slice(0, 255),
+        nome_arquivo: nomeOriginal,
         caminho_arquivo: caminhoArquivo,
         status: "pendente",
       });
@@ -139,7 +143,7 @@ export async function POST(request: Request) {
         documentoError
       );
 
-      // Remove o arquivo caso o registro no banco falhe.
+      // Remove o arquivo caso o banco falhe
       await supabaseAdmin.storage
         .from("documentos-oficinas")
         .remove([caminhoArquivo]);
@@ -150,9 +154,9 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.redirect(
-      new URL("/loja/documento-enviado", request.url)
-    );
+    return NextResponse.json({
+      success: true,
+    });
   } catch (error) {
     console.error("ERRO NO ENVIO DO DOCUMENTO:", error);
 

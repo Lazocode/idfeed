@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/security";
+import EnviarDocumentoForm from "@/components/enviar-documento-form";
 
 export const dynamic = "force-dynamic";
 
@@ -48,41 +49,8 @@ export default async function EnviarDocumentoPage() {
           de liberar o acesso ao sistema.
         </p>
 
-        <form
-          action="/api/documentos-oficina"
-          method="post"
-          encType="multipart/form-data"
-        >
-          <label className="label" htmlFor="documento">
-            Documento com foto
-          </label>
-
-          <input
-            id="documento"
-            name="documento"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            required
-            style={{
-              width: "100%",
-              marginTop: "0.5rem",
-            }}
-          />
-
-          <button
-            type="submit"
-            className="btn-primary"
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              marginTop: "1.25rem",
-              padding: "0.75rem",
-            }}
-          >
-            Enviar documento
-          </button>
-        </form>
-
+        <EnviarDocumentoForm />
+        
         <p
           style={{
             color: "var(--text-muted)",
