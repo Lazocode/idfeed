@@ -75,9 +75,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (loja.status !== "pendente") {
+    if (loja.status === "aprovada") {
       return NextResponse.json(
-        { error: "Esta oficina não está aguardando documento." },
+        { error: "Esta oficina já está aprovada." },
         { status: 400 }
       );
     }
@@ -152,6 +152,37 @@ export async function POST(request: Request) {
         { error: "Não foi possível registrar o documento." },
         { status: 500 }
       );
+    }
+
+    if (loja.status === "rejeitada") {
+      const { error: atualizarLojaError } = await supabaseAdmin
+        .from("lojas")
+        .update({
+          status: "pendente",
+        })
+        .eq("id", lojaId);
+
+      if (atualizarLojaError) {
+        console.error(
+          "ERRO AO ATUALIZAR STATUS DA OFICINA:",
+          atualizarLojaError
+        );
+
+        await supabaseAdmin
+          .from("documentos_oficina")
+          .delete()
+          .eq("loja_id", lojaId)
+          .eq("caminho_arquivo", caminhoArquivo);
+
+        await supabaseAdmin.storage
+          .from("documentos-oficinas")
+          .remove([caminhoArquivo]);
+
+        return NextResponse.json(
+          { error: "Não foi possível reenviar o documento." },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({
