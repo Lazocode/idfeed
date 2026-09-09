@@ -37,7 +37,7 @@ export default function LoginForm() {
     const session = await getSession();
     const lojaStatus = (session?.user as { lojaStatus?: string })?.lojaStatus;
 
-    if (lojaStatus === "pendente") {
+    if (lojaStatus === "pendente" || lojaStatus === "reprovada") {
       router.push("/loja/enviar-documento");
     } else {
       router.push("/loja/dashboard");

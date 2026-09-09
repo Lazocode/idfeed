@@ -112,7 +112,7 @@ export async function requireApprovedRole(roles: Papel[]) {
   }
 
   if (status === "rejeitada") {
-    redirect("/loja/documento-rejeitado");
+    redirect("/loja/enviar-documento");
   }
 
   if (status === "bloqueada") {
