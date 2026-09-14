@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { requireRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
+import AprovacoesTabs from "@/components/aprovacoesTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export default async function AprovacoesPage() {
   const { data: oficinas, error } = await supabaseAdmin
     .from("lojas")
     .select("id, nome, cnpj, telefone, status, criado_em")
-    .eq("status", "pendente")
+    .in("status", ["pendente", "aprovada", "rejeitada"])
     .order("criado_em", { ascending: true });
 
   if (error) {
@@ -26,13 +26,23 @@ export default async function AprovacoesPage() {
       >
         <div className="card" style={{ padding: "2rem" }}>
           <h1>Erro ao carregar aprovações</h1>
+
           <p style={{ color: "var(--text-soft)" }}>
-            Não foi possível carregar as oficinas pendentes.
+            Não foi possível carregar as oficinas.
           </p>
         </div>
       </main>
     );
   }
+
+  const pendentes =
+    oficinas?.filter((oficina) => oficina.status === "pendente") ?? [];
+
+  const aprovadas =
+    oficinas?.filter((oficina) => oficina.status === "aprovada") ?? [];
+
+  const rejeitadas =
+    oficinas?.filter((oficina) => oficina.status === "rejeitada") ?? [];
 
   return (
     <main
@@ -44,128 +54,38 @@ export default async function AprovacoesPage() {
     >
       <div
         style={{
-          maxWidth: 1000,
+          maxWidth: 1100,
           margin: "0 auto",
         }}
       >
-        <div style={{ marginBottom: "2rem" }}>
-          <span className="eyebrow">ADMINISTRAÇÃO</span>
-
+        <div style={{ marginBottom: "1.75rem" }}>
           <h1
             style={{
-              fontSize: "2rem",
-              fontWeight: 800,
-              margin: "0.5rem 0",
+              fontSize: "1.75rem",
+              fontWeight: 750,
+              margin: 0,
+              letterSpacing: "-0.02em",
             }}
           >
-            Aprovação de oficinas
+            Aprovações
           </h1>
 
-          <p style={{ color: "var(--text-soft)" }}>
-            Oficinas aguardando análise de cadastro e documentação.
+          <p
+            style={{
+              color: "var(--text-soft)",
+              marginTop: "0.4rem",
+              fontSize: "0.9rem",
+            }}
+          >
+            Gerencie os cadastros das oficinas.
           </p>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "1rem",
-          }}
-        >
-          <div className="section-heading" style={{ marginBottom: 0 }}>
-            Oficinas pendentes ({oficinas?.length ?? 0})
-          </div>
-        </div>
-
-        <div className="card" style={{ overflow: "hidden" }}>
-          {(!oficinas || oficinas.length === 0) && (
-            <div
-              style={{
-                padding: "2rem",
-                textAlign: "center",
-                color: "var(--text-soft)",
-              }}
-            >
-              Nenhuma oficina aguardando aprovação.
-            </div>
-          )}
-
-          {oficinas?.map((oficina) => (
-            <div
-              key={oficina.id}
-              className="tbl-row"
-              style={{
-                padding: "1.25rem",
-                gap: "1rem",
-              }}
-            >
-              <div
-                className="icon-wrap icon-blue"
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  flexShrink: 0,
-                }}
-              />
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  {oficina.nome}
-                </div>
-
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-soft)",
-                    marginTop: "0.25rem",
-                  }}
-                >
-                  CNPJ: {oficina.cnpj || "Não informado"}
-                </div>
-
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-soft)",
-                  }}
-                >
-                  Telefone: {oficina.telefone || "Não informado"}
-                </div>
-              </div>
-
-              <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <span className="badge badge-amber">
-                    Pendente
-                  </span>
-
-                  <Link
-                    href={`/admin/aprovacoes/${oficina.id}`}
-                    className="btn-ghost"
-                    style={{
-                      fontSize: "0.75rem",
-                      padding: "0.45rem 0.75rem",
-                    }}
-                  >
-                    Analisar
-                  </Link>
-                </div>
-            </div>
-          ))}
-        </div>
+        <AprovacoesTabs
+          pendentes={pendentes}
+          aprovadas={aprovadas}
+          rejeitadas={rejeitadas}
+        />
       </div>
     </main>
   );
