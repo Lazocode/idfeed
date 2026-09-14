@@ -1,11 +1,11 @@
 "use server";
 
-import { requireRole } from "@/lib/security";
+import { requireAdmin } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function aprovarOficina(lojaId: string) {
-  await requireRole(["admin"]);
+  await requireAdmin();
 
   const { data: loja, error: lojaError } = await supabaseAdmin
     .from("lojas")
@@ -103,7 +103,7 @@ export async function rejeitarOficina(
   lojaId: string,
   observacao: string
 ) {
-  await requireRole(["admin"]);
+  await requireAdmin();
 
   const motivo = observacao.trim();
 

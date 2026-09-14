@@ -19,6 +19,18 @@ export default function LoginPage() {
             <Link href="/" className="login-back-link">
               ← Voltar para consulta de veículo
             </Link>
+            <div style={{ marginTop: "0.85rem", textAlign: "center" }}>
+              <Link
+                href="/admin/login"
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--text-muted)",
+                  textDecoration: "none",
+                }}
+              >
+                Acesso exclusivo para administradores
+              </Link>
+            </div>
           </div>
 
           <div className="login-help">

@@ -1,11 +1,14 @@
-import { requireRole } from "@/lib/security";
+import { requireAdmin } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import AprovacoesTabs from "@/components/aprovacoesTabs";
+import LogoutButton from "@/components/logout-button";
+import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function AprovacoesPage() {
-  await requireRole(["admin"]);
+  const session = await requireAdmin();
 
   const { data: oficinas, error } = await supabaseAdmin
     .from("lojas")
@@ -58,6 +61,76 @@ export default async function AprovacoesPage() {
           margin: "0 auto",
         }}
       >
+        {/* Barra superior administrativa */}
+        <header
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+            paddingBottom: "1.25rem",
+            marginBottom: "1.75rem",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                background: "#0f172a",
+                color: "#ffffff",
+              }}
+            >
+              <ShieldCheck size={18} />
+            </div>
+            <div>
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  color: "var(--text-muted)",
+                }}
+              >
+                Painel Administrativo
+              </span>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700 }}>
+                LOTE • Gestão Central
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <span
+              style={{
+                fontSize: "0.82rem",
+                color: "var(--text-soft)",
+                background: "var(--card-bg, #ffffff)",
+                padding: "0.35rem 0.75rem",
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+              }}
+            >
+              {session.user.email}
+            </span>
+            <Link
+              href="/"
+              className="btn-ghost"
+              style={{ fontSize: "0.78rem", padding: "0.4rem 0.8rem" }}
+            >
+              Início
+            </Link>
+            <LogoutButton redirectTo="/admin/login" />
+          </div>
+        </header>
+
         <div style={{ marginBottom: "1.75rem" }}>
           <h1
             style={{
@@ -77,7 +150,7 @@ export default async function AprovacoesPage() {
               fontSize: "0.9rem",
             }}
           >
-            Gerencie os cadastros das oficinas.
+            Gerencie e analise os cadastros e documentações das oficinas.
           </p>
         </div>
 

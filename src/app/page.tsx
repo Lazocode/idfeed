@@ -157,6 +157,19 @@ export default function Home() {
                 Cadastrar minha oficina
               </Link>
             </div>
+
+            <div style={{ marginTop: "1.25rem" }}>
+              <Link
+                href="/admin/login"
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--text-muted)",
+                  textDecoration: "none",
+                }}
+              >
+                Acesso Administrativo
+              </Link>
+            </div>
           </div>
         </div>
       </section>

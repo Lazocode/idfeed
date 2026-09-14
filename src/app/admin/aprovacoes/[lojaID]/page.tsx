@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { requireRole } from "@/lib/security";
+import { requireAdmin } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import AprovacaoOficina from "@/components/aprovacaoOficina";
+import LogoutButton from "@/components/logout-button";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function AnaliseOficinaPage({
 }: {
   params: Promise<{ lojaId: string }>;
 }) {
-  await requireRole(["admin"]);
+  const session = await requireAdmin();
 
   const { lojaId } = await params;
 
@@ -104,17 +105,40 @@ export default async function AnaliseOficinaPage({
           margin: "0 auto",
         }}
       >
-        <Link
-          href="/admin/aprovacoes"
+        <div
           style={{
-            color: "var(--blue)",
-            textDecoration: "none",
-            fontSize: "0.85rem",
-            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingBottom: "1rem",
+            marginBottom: "1.25rem",
+            borderBottom: "1px solid var(--border)",
           }}
         >
-          ← Voltar para aprovações
-        </Link>
+          <Link
+            href="/admin/aprovacoes"
+            style={{
+              color: "var(--blue)",
+              textDecoration: "none",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+            }}
+          >
+            ← Voltar para aprovações
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <span
+              style={{
+                fontSize: "0.82rem",
+                color: "var(--text-soft)",
+              }}
+            >
+              {session.user.email}
+            </span>
+            <LogoutButton redirectTo="/admin/login" />
+          </div>
+        </div>
 
         <div style={{ marginTop: "1.5rem", marginBottom: "2rem" }}>
           <span className="eyebrow">ANÁLISE DA OFICINA</span>

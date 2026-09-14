@@ -11,6 +11,24 @@ export type StatusLoja =
   | "bloqueada";
 
 /**
+ * Exige que o usuário esteja autenticado e possua o papel 'admin'
+ * para acessar áreas administrativas do sistema.
+ */
+export async function requireAdmin() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/admin/login");
+  }
+
+  if (session.user.papel !== "admin") {
+    redirect("/admin/login?erro=nao_autorizado");
+  }
+
+  return session;
+}
+
+/**
  * Exige que exista uma sessão válida.
  */
 export async function requireSession() {

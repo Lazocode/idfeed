@@ -6,25 +6,43 @@ export default auth((req) => {
   const isLojaRoute = pathname.startsWith("/loja");
   const isAdminRoute = pathname.startsWith("/admin");
 
-  // Rotas públicas da área da loja.
-  // /criar-conta precisa permanecer acessível sem autenticação para que
-  // novos clientes consigam cadastrar a própria loja e o primeiro admin.
+  // Rotas públicas
   const isPublicLojaRoute =
     pathname === "/loja/login" || pathname === "/loja/criar-conta";
+  const isPublicAdminRoute = pathname === "/admin/login";
 
   const isAuthenticated = !!req.auth?.user;
+  const userPapel = req.auth?.user?.papel;
 
-  // Se o usuário já estiver autenticado e tentar acessar /loja/login, redireciona para o dashboard
+  // Se o usuário já estiver autenticado e tentar acessar as páginas de login
   if (pathname === "/loja/login" && isAuthenticated) {
     return NextResponse.redirect(new URL("/loja/dashboard", req.url));
   }
 
-  if (
-    (isLojaRoute && !isPublicLojaRoute && !isAuthenticated) ||
-    (isAdminRoute && !isAuthenticated)
-  ) {
+  if (pathname === "/admin/login" && isAuthenticated && userPapel === "admin") {
+    return NextResponse.redirect(new URL("/admin/aprovacoes", req.url));
+  }
+
+  // Proteção de rotas da loja
+  if (isLojaRoute && !isPublicLojaRoute && !isAuthenticated) {
     const loginUrl = new URL("/loja/login", req.url);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Proteção de rotas do admin: apenas usuários autenticados com papel "admin"
+  if (isAdminRoute && !isPublicAdminRoute) {
+    if (!isAuthenticated) {
+      const adminLoginUrl = new URL("/admin/login", req.url);
+      return NextResponse.redirect(adminLoginUrl);
+    }
+
+    if (userPapel !== "admin") {
+      const unauthorizedUrl = new URL(
+        "/admin/login?erro=nao_autorizado",
+        req.url
+      );
+      return NextResponse.redirect(unauthorizedUrl);
+    }
   }
 
   return NextResponse.next();
