@@ -5,6 +5,9 @@ import { supabaseAdmin } from "./supabase";
 import { checkLoginRateLimit } from "./rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret:
+    process.env.AUTH_SECRET ||
+    "default-secret-lote-app-dev-key-change-in-prod",
   session: {
     strategy: "jwt",
   },

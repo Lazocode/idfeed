@@ -21,7 +21,7 @@ export async function requireSession() {
     !session.user.lojaId ||
     !session.user.papel
   ) {
-    throw new Error("Não autenticado.");
+    redirect("/loja/login");
   }
 
   return session;
@@ -34,9 +34,7 @@ export async function requireRole(roles: Papel[]) {
   const session = await requireSession();
 
   if (!roles.includes(session.user.papel as Papel)) {
-    throw new Error(
-      "Você não tem permissão para esta operação."
-    );
+    redirect("/loja/dashboard");
   }
 
   return session;
@@ -53,28 +51,12 @@ export async function requireApprovedStore() {
 
   const status = session.user.lojaStatus as StatusLoja;
 
-  if (status === "pendente") {
-    throw new Error(
-      "Sua oficina ainda está aguardando aprovação."
-    );
+  if (status === "pendente" || status === "rejeitada") {
+    redirect("/loja/enviar-documento");
   }
 
-  if (status === "rejeitada") {
-    throw new Error(
-      "O cadastro da sua oficina foi rejeitado."
-    );
-  }
-
-  if (status === "bloqueada") {
-    throw new Error(
-      "O acesso desta oficina está bloqueado."
-    );
-  }
-
-  if (status !== "aprovada") {
-    throw new Error(
-      "Não foi possível identificar o status da oficina."
-    );
+  if (status === "bloqueada" || status !== "aprovada") {
+    redirect("/loja/login");
   }
 
   return session;
@@ -90,7 +72,7 @@ export async function requireApprovedRole(roles: Papel[]) {
   const session = await requireSession();
 
   if (!roles.includes(session.user.papel as Papel)) {
-    throw new Error("Você não tem permissão para esta operação.");
+    redirect("/loja/dashboard");
   }
 
   const lojaId = session.user.lojaId;
@@ -102,25 +84,17 @@ export async function requireApprovedRole(roles: Papel[]) {
     .single();
 
   if (error || !loja) {
-    throw new Error("Oficina não encontrada.");
+    redirect("/loja/login");
   }
 
   const status = loja.status;
 
-  if (status === "pendente") {
+  if (status === "pendente" || status === "rejeitada") {
     redirect("/loja/enviar-documento");
   }
 
-  if (status === "rejeitada") {
-    redirect("/loja/enviar-documento");
-  }
-
-  if (status === "bloqueada") {
-    throw new Error("O acesso desta oficina está bloqueado.");
-  }
-
-  if (status !== "aprovada") {
-    throw new Error("Status da oficina inválido.");
+  if (status === "bloqueada" || status !== "aprovada") {
+    redirect("/loja/login");
   }
 
   return session;

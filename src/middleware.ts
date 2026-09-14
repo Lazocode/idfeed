@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   const isLojaRoute = pathname.startsWith("/loja");
+  const isAdminRoute = pathname.startsWith("/admin");
 
   // Rotas públicas da área da loja.
   // /criar-conta precisa permanecer acessível sem autenticação para que
@@ -11,7 +12,12 @@ export default auth((req) => {
   const isPublicLojaRoute =
     pathname === "/loja/login" || pathname === "/loja/criar-conta";
 
-  if (isLojaRoute && !isPublicLojaRoute && !req.auth) {
+  const isAuthenticated = !!req.auth?.user;
+
+  if (
+    (isLojaRoute && !isPublicLojaRoute && !isAuthenticated) ||
+    (isAdminRoute && !isAuthenticated)
+  ) {
     const loginUrl = new URL("/loja/login", req.nextUrl.origin);
     return NextResponse.redirect(loginUrl);
   }
@@ -20,5 +26,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/loja/:path*"],
+  matcher: ["/loja/:path*", "/admin/:path*"],
 };
