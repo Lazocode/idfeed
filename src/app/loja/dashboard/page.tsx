@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
-import { formatKm, formatPlaca } from "@/lib/utils";
+import { formatPlaca } from "@/lib/utils";
 import LogoutButton from "@/components/logout-button";
 
 export const dynamic = "force-dynamic";

@@ -13,9 +13,6 @@ export const dynamic = "force-dynamic";
 const TIPO_COLOR: Record<string, string> = {
   oleo: "badge-amber", freios: "badge-red", revisao: "badge-blue", eletrica: "badge-purple", outros: "badge-green",
 };
-const DOT_COLOR: Record<string, string> = {
-  oleo: "tl-dot-amber", freios: "tl-dot-red", revisao: "tl-dot-blue", eletrica: "tl-dot-purple", outros: "tl-dot-green",
-};
 
 export default async function VeiculoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

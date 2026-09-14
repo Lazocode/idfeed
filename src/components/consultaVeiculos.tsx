@@ -9,12 +9,29 @@ import {
   TIPO_SERVICO_LABEL,
 } from "@/lib/utils";
 
+interface OrdemServicoConsulta {
+  criado_em: string;
+  tipo_servico: keyof typeof TIPO_SERVICO_LABEL;
+  km_no_servico: number;
+}
+
+interface VeiculoConsulta {
+  id: string;
+  placa: string;
+  modelo: string;
+  km_atual: number;
+  km_proxima_revisao: number | null;
+  nota_proxima_revisao: string | null;
+  loja: { nome: string } | { nome: string }[] | null;
+  ordens_servico: OrdemServicoConsulta[];
+}
+
 export default function ConsultaVeiculo() {
   const [placa, setPlaca] = useState("");
   const [cpf, setCpf] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
-  const [veiculo, setVeiculo] = useState<any>(null);
+  const [veiculo, setVeiculo] = useState<VeiculoConsulta | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,10 +43,10 @@ export default function ConsultaVeiculo() {
     try {
       const resultado = await ConsultarVeiculo(placa, cpf);
 
-      if (resultado.erro) {
-        setErro(resultado.erro);
+      if (resultado.erro || !resultado.veiculo) {
+        setErro(resultado.erro || "Não foi possível realizar a consulta.");
       } else {
-        setVeiculo(resultado.veiculo);
+        setVeiculo(resultado.veiculo as unknown as VeiculoConsulta);
       }
     } catch (error) {
       console.error(error);
@@ -155,7 +172,10 @@ export default function ConsultaVeiculo() {
               </span>
 
               <span>
-                Oficina: {veiculo.loja?.nome}
+                Oficina:{" "}
+                {Array.isArray(veiculo.loja)
+                  ? veiculo.loja[0]?.nome
+                  : veiculo.loja?.nome}
               </span>
             </div>
 

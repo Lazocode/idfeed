@@ -14,16 +14,14 @@ export default function NovoRegistroPage() {
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
           <Link href="/loja/veiculo/novo" style={{ textDecoration: "none", color: "inherit" }}>
-            <div className="card card-blue" style={{ padding: "1.5rem", cursor: "pointer", transition: "background 0.15s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-raised)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--bg-card)")}>
+            <div className="card card-blue hover:bg-[var(--bg-raised)]" style={{ padding: "1.5rem", cursor: "pointer", transition: "background 0.15s" }}>
               <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}></div>
               <div style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "0.3rem" }}>Veículo novo</div>
               <div style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>Cadastre um veículo que chegou na loja pela primeira vez</div>
             </div>
           </Link>
           <Link href="/loja/material/novo" style={{ textDecoration: "none", color: "inherit" }}>
-            <div className="card card-green" style={{ padding: "1.5rem", cursor: "pointer", transition: "background 0.15s" }}>
+            <div className="card card-green hover:bg-[var(--bg-raised)]" style={{ padding: "1.5rem", cursor: "pointer", transition: "background 0.15s" }}>
               <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}></div>
               <div style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "0.3rem" }}>Material novo</div>
               <div style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>Adicione uma peça ou insumo que ainda não está no estoque</div>

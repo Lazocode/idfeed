@@ -70,22 +70,27 @@ export default function Home() {
             style={{
               display: "flex",
               justifyContent: "center",
-              marginBottom: "2rem",
+              alignItems: "center",
+              marginBottom: "1.5rem",
+              width: "100%",
             }}
-          ></div>
-
-          <img
-            src="/idfeed-logo.jpg"
-            alt="IDFeed - A identidade digital do seu veículo"
-            style={{
-            width: "100%",
-            maxWidth: 360,
-            height: "auto",
-            display: "block",
-            mixBlendMode: "multiply",
-            opacity: 0.92,
-            }}
-          />
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              id="idfeed-logo"
+              src="/IDfeed-logo.jpg"
+              alt="IDFeed - A identidade digital do seu veículo"
+              style={{
+                width: "100%",
+                maxWidth: 320,
+                height: "auto",
+                display: "block",
+                margin: "0 auto",
+                mixBlendMode: "multiply",
+                opacity: 0.95,
+              }}
+            />
+          </div>
 
           <h1
             style={{
