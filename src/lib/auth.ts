@@ -5,6 +5,7 @@ import { supabaseAdmin } from "./supabase";
 import { checkLoginRateLimit, clearLoginRateLimit } from "./rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   secret:
     process.env.AUTH_SECRET ||
     "default-secret-lote-app-dev-key-change-in-prod",
@@ -14,6 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   pages: {
     signIn: "/loja/login",
+    error: "/loja/login",
   },
 
   providers: [
