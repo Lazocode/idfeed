@@ -96,12 +96,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // O status será enviado para a sessão e o LoginForm
         // decidirá para qual página o usuário será encaminhado.
 
+        // Regra de segurança: Nenhum usuário pode ter o status "admin" além de Lázaro Miranda
+        const isLazaroMiranda =
+          normalizedEmail === "lazanha931@gmail.com" ||
+          normalizedEmail === "mirandalazaro560@gmail.com" ||
+          (usuario.nome && usuario.nome.toLowerCase().includes("lazaro"));
+
+        const papelEfetivo =
+          usuario.papel === "admin" && !isLazaroMiranda
+            ? "mecanico"
+            : usuario.papel;
+
         return {
           id: usuario.id,
           email: usuario.email,
           name: usuario.nome,
           lojaId: usuario.loja_id,
-          papel: usuario.papel,
+          papel: papelEfetivo,
           lojaStatus: loja.status,
         };
       },

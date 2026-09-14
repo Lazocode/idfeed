@@ -10,9 +10,21 @@ export type StatusLoja =
   | "rejeitada"
   | "bloqueada";
 
+export function isLazaroMirandaAdmin(user?: { email?: string | null; name?: string | null; papel?: string | null } | null): boolean {
+  if (!user || user.papel !== "admin") return false;
+  const email = (user.email || "").trim().toLowerCase();
+  const name = (user.name || "").trim().toLowerCase();
+  return (
+    email === "lazanha931@gmail.com" ||
+    email === "mirandalazaro560@gmail.com" ||
+    name.includes("lazaro") ||
+    name.includes("lázaro")
+  );
+}
+
 /**
  * Exige que o usuário esteja autenticado e possua o papel 'admin'
- * para acessar áreas administrativas do sistema.
+ * exclusivo de Lázaro Miranda para acessar áreas administrativas do sistema.
  */
 export async function requireAdmin() {
   const session = await auth();
@@ -21,7 +33,7 @@ export async function requireAdmin() {
     redirect("/admin/login");
   }
 
-  if (session.user.papel !== "admin") {
+  if (!isLazaroMirandaAdmin(session.user)) {
     redirect("/admin/login?erro=nao_autorizado");
   }
 

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { isLazaroMirandaAdmin } from "@/lib/security";
 import AdminLoginForm from "./admin-login-form";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +13,8 @@ export const metadata = {
 export default async function AdminLoginPage() {
   const session = await auth();
 
-  // Se já estiver autenticado como admin, vai direto para as aprovações
-  if (session?.user?.id && session.user.papel === "admin") {
+  // Se já estiver autenticado como o administrador geral Lázaro Miranda, vai direto para as aprovações
+  if (session?.user?.id && isLazaroMirandaAdmin(session.user)) {
     redirect("/admin/aprovacoes");
   }
 

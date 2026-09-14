@@ -99,7 +99,7 @@ export async function criarContaLoja(formData: FormData) {
     throw new Error("Não foi possível criar a oficina.");
   }
 
-  // Cria o usuário administrador
+  // Cria o usuário da oficina (papel operacional mecanico; papel admin é restrito exclusivamente ao administrador geral)
   const { error: userError } = await supabaseAdmin
     .from("usuarios")
     .insert({
@@ -109,7 +109,7 @@ export async function criarContaLoja(formData: FormData) {
       telefone,
       email,
       senha_hash: senhaHash,
-      papel: "admin",
+      papel: "mecanico",
     });
 
   if (userError) {

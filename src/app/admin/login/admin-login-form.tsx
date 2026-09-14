@@ -37,16 +37,24 @@ function LoginFormInner() {
         return;
       }
 
-      // Valida se o usuário autenticado realmente possui o papel de admin
+      // Valida se o usuário autenticado é Lázaro Miranda e possui o papel de admin
       const session = await getSession();
       const papel = session?.user?.papel;
+      const sessionEmail = session?.user?.email?.toLowerCase() || "";
+      const sessionNome = session?.user?.name?.toLowerCase() || "";
+      const isLazaroAdmin =
+        papel === "admin" &&
+        (sessionEmail === "lazanha931@gmail.com" ||
+          sessionEmail === "mirandalazaro560@gmail.com" ||
+          sessionNome.includes("lazaro") ||
+          sessionNome.includes("lázaro"));
 
-      if (papel !== "admin") {
-        // Desconecta se o usuário logado não for admin
+      if (!isLazaroAdmin) {
+        // Desconecta se o usuário logado não for o administrador Lázaro Miranda
         await signOut({ redirect: false });
         setLoading(false);
         setErro(
-          "Acesso negado: este perfil não possui privilégios de administrador geral."
+          "Acesso negado: este portal é restrito exclusivamente ao administrador geral Lázaro Miranda."
         );
         return;
       }

@@ -28,13 +28,13 @@ async function main() {
 
   const { data: usuario1 } = await supabase
     .from("usuarios")
-    .insert({ loja_id: lojaBomMotor.id, nome: "Diego Alves", email: "diego@bommotor.com", senha_hash: senhaHash, papel: "admin" })
+    .insert({ loja_id: lojaBomMotor.id, nome: "Diego Alves", email: "diego@bommotor.com", senha_hash: senhaHash, papel: "mecanico" })
     .select()
     .single();
 
   const { data: usuario2 } = await supabase
     .from("usuarios")
-    .insert({ loja_id: lojaAutoCenter.id, nome: "Fábio Reis", email: "fabio@autocenter.com", senha_hash: senhaHash, papel: "admin" })
+    .insert({ loja_id: lojaAutoCenter.id, nome: "Fábio Reis", email: "fabio@autocenter.com", senha_hash: senhaHash, papel: "mecanico" })
     .select()
     .single();
 
