@@ -11,3 +11,7 @@ export function checkLoginRateLimit(identifier: string) {
   current.count += 1;
   return true;
 }
+
+export function clearLoginRateLimit(identifier: string) {
+  attempts.delete(identifier);
+}

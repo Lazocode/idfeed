@@ -14,11 +14,16 @@ export default auth((req) => {
 
   const isAuthenticated = !!req.auth?.user;
 
+  // Se o usuário já estiver autenticado e tentar acessar /loja/login, redireciona para o dashboard
+  if (pathname === "/loja/login" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/loja/dashboard", req.url));
+  }
+
   if (
     (isLojaRoute && !isPublicLojaRoute && !isAuthenticated) ||
     (isAdminRoute && !isAuthenticated)
   ) {
-    const loginUrl = new URL("/loja/login", req.nextUrl.origin);
+    const loginUrl = new URL("/loja/login", req.url);
     return NextResponse.redirect(loginUrl);
   }
 

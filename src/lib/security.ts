@@ -84,6 +84,13 @@ export async function requireApprovedRole(roles: Papel[]) {
     .single();
 
   if (error || !loja) {
+    const fallbackStatus = session.user.lojaStatus as StatusLoja | undefined;
+    if (fallbackStatus === "aprovada") {
+      return session;
+    }
+    if (fallbackStatus === "pendente" || fallbackStatus === "rejeitada") {
+      redirect("/loja/enviar-documento");
+    }
     redirect("/loja/login");
   }
 

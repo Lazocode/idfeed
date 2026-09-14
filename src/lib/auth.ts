@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "./supabase";
-import { checkLoginRateLimit } from "./rate-limit";
+import { checkLoginRateLimit, clearLoginRateLimit } from "./rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret:
@@ -76,6 +76,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!senhaValida) {
           return null;
         }
+
+        clearLoginRateLimit(`login:${normalizedEmail}`);
 
         // Supabase pode retornar a relação como objeto ou array.
         const loja = Array.isArray(usuario.loja)

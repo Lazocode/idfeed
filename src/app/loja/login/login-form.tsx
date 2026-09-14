@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -18,32 +15,41 @@ export default function LoginForm() {
     setErro("");
     setLoading(true);
 
-    const res = await signIn("credentials", {
-      email,
-      senha,
-      redirect: false,
-    });
+    try {
+      const res = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        senha,
+        redirect: false,
+        callbackUrl: "/loja/dashboard",
+      });
 
-    setLoading(false);
+      if (!res || res.error) {
+        setLoading(false);
+        setErro("E-mail ou senha incorretos.");
+        return;
+      }
 
-    if (res?.error) {
-      setErro(
-        "E-mail e senha incorretos ou sua oficina ainda não foi aprovada."
-      );
-      return;
+      // Busca a sessão recém-criada para verificar o status da oficina
+      const session = await getSession();
+      const lojaStatus = (session?.user as { lojaStatus?: string })?.lojaStatus;
+
+      let targetUrl = "/loja/dashboard";
+      if (
+        lojaStatus === "pendente" ||
+        lojaStatus === "rejeitada" ||
+        lojaStatus === "reprovada"
+      ) {
+        targetUrl = "/loja/enviar-documento";
+      }
+
+      // Redirecionamento completo do navegador para carregar com os cookies de sessão
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = targetUrl;
+    } catch (error) {
+      console.error("Erro ao realizar login:", error);
+      setLoading(false);
+      setErro("Ocorreu um erro ao processar o login. Tente novamente.");
     }
-
-    // Check the session to decide where to redirect
-    const session = await getSession();
-    const lojaStatus = (session?.user as { lojaStatus?: string })?.lojaStatus;
-
-    if (lojaStatus === "pendente" || lojaStatus === "reprovada") {
-      router.push("/loja/enviar-documento");
-    } else {
-      router.push("/loja/dashboard");
-    }
-
-    router.refresh();
   }
 
   return (

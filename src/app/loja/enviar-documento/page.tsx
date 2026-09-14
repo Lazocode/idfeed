@@ -1,11 +1,13 @@
-import { requireRole } from "@/lib/security";
+import { requireSession } from "@/lib/security";
 import EnviarDocumentoForm from "@/components/enviar-documento-form";
+import LogoutButton from "@/components/logout-button";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export default async function EnviarDocumentoPage() {
-  const session = await requireRole(["admin"]);
+  const session = await requireSession();
+  const isAdmin = session.user.papel === "admin";
 
   const { data: documento } = await supabaseAdmin
     .from("documentos_oficina")
@@ -36,9 +38,12 @@ export default async function EnviarDocumentoPage() {
           padding: "2rem",
         }}
       >
-        <span className="eyebrow">
-          {documentoRejeitado ? "Documento rejeitado" : "Cadastro da oficina"}
-        </span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+          <span className="eyebrow">
+            {documentoRejeitado ? "Documento rejeitado" : "Cadastro da oficina"}
+          </span>
+          <LogoutButton />
+        </div>
 
         <h1
           style={{
@@ -52,8 +57,83 @@ export default async function EnviarDocumentoPage() {
             : "Envie seu documento"}
         </h1>
 
-        {documentoRejeitado ? (
+        {isAdmin ? (
           <>
+            {documentoRejeitado ? (
+              <>
+                <p
+                  style={{
+                    color: "var(--text-soft)",
+                    lineHeight: 1.6,
+                    marginBottom: "1rem",
+                  }}
+                >
+                  O documento enviado anteriormente foi rejeitado. Veja abaixo o
+                  motivo informado pela equipe:
+                </p>
+
+                <div
+                  style={{
+                    padding: "1rem",
+                    border: "1px solid #fecaca",
+                    borderRadius: 10,
+                    background: "#fef2f2",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  <strong style={{ display: "block", marginBottom: "0.35rem" }}>
+                    Motivo da rejeição
+                  </strong>
+
+                  <span
+                    style={{
+                      color: "var(--text-soft)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {documento?.observacao || "Nenhum motivo informado."}
+                  </span>
+                </div>
+
+                <p
+                  style={{
+                    color: "var(--text-soft)",
+                    lineHeight: 1.6,
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  Corrija o problema indicado e envie um novo documento para que
+                  nossa equipe possa realizar uma nova análise.
+                </p>
+              </>
+            ) : (
+              <p
+                style={{
+                  color: "var(--text-soft)",
+                  lineHeight: 1.6,
+                  marginBottom: "1.5rem",
+                }}
+              >
+                Para concluir o cadastro da oficina, envie um documento de
+                identificação com foto. Nossa equipe analisará o documento antes
+                de liberar o acesso ao sistema.
+              </p>
+            )}
+
+            <EnviarDocumentoForm />
+
+            <p
+              style={{
+                color: "var(--text-muted)",
+                fontSize: "0.75rem",
+                marginTop: "1rem",
+              }}
+            >
+              A análise pode levar até 24 horas.
+            </p>
+          </>
+        ) : (
+          <div style={{ marginTop: "1rem" }}>
             <p
               style={{
                 color: "var(--text-soft)",
@@ -61,69 +141,18 @@ export default async function EnviarDocumentoPage() {
                 marginBottom: "1rem",
               }}
             >
-              O documento enviado anteriormente foi rejeitado. Veja abaixo o
-              motivo informado pela equipe:
+              O cadastro da sua oficina ainda está em processo de validação pela equipe. Apenas o usuário administrador pode enviar os documentos da oficina.
             </p>
-
-            <div
-              style={{
-                padding: "1rem",
-                border: "1px solid #fecaca",
-                borderRadius: 10,
-                background: "#fef2f2",
-                marginBottom: "1.5rem",
-              }}
-            >
-              <strong style={{ display: "block", marginBottom: "0.35rem" }}>
-                Motivo da rejeição
-              </strong>
-
-              <span
-                style={{
-                  color: "var(--text-soft)",
-                  lineHeight: 1.5,
-                }}
-              >
-                {documento.observacao || "Nenhum motivo informado."}
-              </span>
-            </div>
-
             <p
               style={{
-                color: "var(--text-soft)",
-                lineHeight: 1.6,
-                marginBottom: "1.5rem",
+                color: "var(--text-muted)",
+                fontSize: "0.85rem",
               }}
             >
-              Corrija o problema indicado e envie um novo documento para que
-              nossa equipe possa realizar uma nova análise.
+              Solicite ao administrador da sua loja que acesse o painel e realize o envio do documento.
             </p>
-          </>
-        ) : (
-          <p
-            style={{
-              color: "var(--text-soft)",
-              lineHeight: 1.6,
-              marginBottom: "1.5rem",
-            }}
-          >
-            Para concluir o cadastro da oficina, envie um documento de
-            identificação com foto. Nossa equipe analisará o documento antes
-            de liberar o acesso ao sistema.
-          </p>
+          </div>
         )}
-
-        <EnviarDocumentoForm />
-
-        <p
-          style={{
-            color: "var(--text-muted)",
-            fontSize: "0.75rem",
-            marginTop: "1rem",
-          }}
-        >
-          A análise pode levar até 24 horas.
-        </p>
       </section>
     </main>
   );
