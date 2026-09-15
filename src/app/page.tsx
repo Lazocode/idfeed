@@ -1,13 +1,7 @@
 import ConsultaVeiculo from "@/components/consultaVeiculos";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Gauge,
-  FileCheck2,
-  Building2,
-  ArrowRight,
-  Lock,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

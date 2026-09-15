@@ -104,7 +104,7 @@ export default async function AprovacoesPage() {
                 Painel Administrativo
               </span>
               <div style={{ fontSize: "0.95rem", fontWeight: 700 }}>
-                LOTE • Gestão Central
+                IDfeed • Gestão Central
               </div>
             </div>
           </div>
