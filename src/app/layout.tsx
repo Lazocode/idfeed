@@ -3,8 +3,8 @@ import "./globals.css";
 import Providers from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "LOTE — Frota, materiais e manutenção",
-  description: "Consulta de histórico de veículo por placa e painel de gestão da loja.",
+  title: "IDfeed — Identidade Digital e Prontuário Veicular",
+  description: "Consulta de histórico de veículo por placa e CPF, e painel de gestão de frotas, materiais e ordens de serviço para oficinas.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

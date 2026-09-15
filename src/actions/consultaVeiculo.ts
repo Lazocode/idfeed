@@ -39,6 +39,7 @@ export async function ConsultarVeiculo(
       id,
       placa,
       modelo,
+      proprietario_nome,
       km_atual,
       km_proxima_revisao,
       nota_proxima_revisao,
