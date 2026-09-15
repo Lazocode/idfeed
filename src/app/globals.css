@@ -634,11 +634,8 @@ select.input option { background: #fff; color: var(--text); }
 /* Internal pages — horizontal header only, no sidebar. */
 .store-main {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 88% 0%, rgba(20,99,230,.07), transparent 24%),
-    linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%);
+  background: #f8fafc;
 }
-.store-main::before { content: ""; position: fixed; width: 520px; height: 520px; right: -280px; top: 80px; border: 1px solid rgba(20,99,230,.07); border-radius: 50%; pointer-events: none; }
 .store-app-shell .page-shell,
 .store-app-shell .page-shell-wide { max-width: 1180px; width: 100%; margin: 0 auto; padding: 2rem clamp(1rem, 3vw, 2.5rem) 4rem; }
 .store-app-shell .card,
