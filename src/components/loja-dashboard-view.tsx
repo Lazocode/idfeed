@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Car,
   Boxes,
-  ClipboardList,
   Search,
   Plus,
   Bell,
@@ -194,22 +193,6 @@ export default function LojaDashboardView({
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
                   Oficina & Ajuda
                 </p>
-
-                <Link
-                  href="/loja/enviar-documento"
-                  className="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
-                >
-                  <ClipboardList className="w-4 h-4" />
-                  <span>Documentos da Oficina</span>
-                </Link>
-
-                <Link
-                  href="/consulta"
-                  className="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
-                >
-                  <Search className="w-4 h-4" />
-                  <span>Consultar Placa</span>
-                </Link>
               </div>
             </div>
 

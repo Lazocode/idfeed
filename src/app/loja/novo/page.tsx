@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Car, Package, ArrowLeft, ArrowRight, Info, PlusCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Info } from "lucide-react";
 
 export default function NovoRegistroPage() {
   return (
@@ -34,10 +34,6 @@ export default function NovoRegistroPage() {
       {/* Main */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-14">
         <div className="mb-10 text-left">
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 tracking-wide uppercase mb-1.5">
-            <PlusCircle className="w-3.5 h-3.5" />
-            Cadastro
-          </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
             Novo Registro
           </h1>
@@ -52,9 +48,6 @@ export default function NovoRegistroPage() {
             href="/loja/veiculo/novo"
             className="group block p-8 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-blue-500 hover:shadow-xs transition-all text-left"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
-              <Car className="w-6 h-6" />
-            </div>
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
                 Veículo Novo
@@ -71,9 +64,6 @@ export default function NovoRegistroPage() {
             href="/loja/material/novo"
             className="group block p-8 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-blue-500 hover:shadow-xs transition-all text-left"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
-              <Package className="w-6 h-6" />
-            </div>
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
                 Material ou Peça
