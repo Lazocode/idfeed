@@ -11,12 +11,12 @@ import {
   Search,
   Plus,
   CalendarClock,
-  AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   Building2,
   ChevronRight,
   X,
-  Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -78,149 +78,171 @@ export default async function DashboardPage({
       .length ?? 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* ─── Topbar Moderna ─── */}
-      <header className="border-b border-slate-200/80 bg-white sticky top-0 z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/loja/dashboard" className="flex items-center gap-2">
-              <Image
-                src="/logo-idfeed.png"
-                alt="IDfeed"
-                width={112}
-                height={32}
-                priority
-                referrerPolicy="no-referrer"
-                className="h-7 sm:h-8 w-auto object-contain"
-              />
+    <div className="min-h-screen bg-slate-50/70 text-slate-900 flex flex-col font-sans">
+      {/* ─── Topbar Limpa (Branco & Azul) ─── */}
+      <header className="border-b border-slate-200/70 bg-white sticky top-0 z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-18 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <Link href="/loja/dashboard" className="flex items-center">
+              <div className="relative h-8 w-32 sm:w-36 flex items-center">
+                <Image
+                  src="/IDfeed-logo.jpg"
+                  alt="IDfeed - Identidade Digital Veicular"
+                  width={180}
+                  height={48}
+                  priority
+                  referrerPolicy="no-referrer"
+                  className="h-8 w-auto object-contain"
+                />
+              </div>
             </Link>
+
             <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100/90 px-2.5 py-1 rounded-md border border-slate-200/60 max-w-[180px] sm:max-w-none truncate">
-              <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-lg max-w-[200px] sm:max-w-none truncate">
+              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span className="truncate">{loja?.nome || "Oficina Credenciada"}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
             <Link
               href="/loja/novo"
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg shadow-xs hover:shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-colors"
             >
-              <Plus className="w-4 h-4 text-slate-300" />
+              <Plus className="w-4 h-4" />
               <span>Novo Registro</span>
             </Link>
 
             <LogoutButton
-              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer"
             />
           </div>
         </div>
       </header>
 
-      {/* ─── Conteúdo Principal ─── */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-        {/* Intro da Página */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
-              <Building2 className="w-4 h-4" />
-              Painel de Operações da Oficina
+      {/* ─── Conteúdo Principal com Espaçamentos Generosos ─── */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-10 space-y-8">
+        {/* Cabeçalho da Página */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 tracking-wide uppercase">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Painel Operacional
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Gestão de Veículos e Estoque
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Gestão da Oficina
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl">
-              Acompanhe veículos cadastrados, controle o estoque de peças e mantenha os registros de manutenção sempre atualizados.
+            <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">
+              Consulte e atualize o prontuário dos veículos cadastrados e controle o inventário de peças.
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs self-start sm:self-center shrink-0">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Operação Conectada
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200/80 shadow-2xs self-start sm:self-auto">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            Sistema Ativo
           </div>
         </div>
 
-        {/* ─── Cards de Métricas Estilo Consulta ─── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* ─── Métricas Resumidas em Azul & Branco ─── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* Card 1: Total de Veículos */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between gap-3">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <p>Total de Veículos</p>
-              <Car className="w-4 h-4 text-blue-600" />
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Veículos Cadastrados
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Car className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">
                 {totalVeiculos}
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                {totalVeiculos === 1 ? "1 veículo cadastrado" : `${totalVeiculos} veículos cadastrados`}
+              <p className="text-xs text-slate-400 mt-1">
+                {totalVeiculos === 1 ? "1 veículo registrado" : `${totalVeiculos} veículos registrados`}
               </p>
             </div>
           </div>
 
           {/* Card 2: Revisões Próximas */}
-          <div className="bg-white p-5 rounded-2xl border border-amber-200/80 bg-amber-50/20 shadow-xs hover:border-amber-300 transition-all flex flex-col justify-between gap-3">
-            <div className="flex items-center justify-between text-amber-900 text-xs font-semibold uppercase tracking-wider">
-              <p>Revisões Próximas</p>
-              <CalendarClock className="w-4 h-4 text-amber-600" />
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Revisões Próximas
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <CalendarClock className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-amber-950 tracking-tight">
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">
                 {revisaoProxima}
               </div>
-              <p className="text-[11px] text-amber-800 font-medium mt-0.5">
-                Próximas em até 3.000 km
+              <p className="text-xs text-slate-400 mt-1">
+                Em até 3.000 km
               </p>
             </div>
           </div>
 
           {/* Card 3: Estoque Baixo */}
-          <div className="bg-white p-5 rounded-2xl border border-rose-200/80 bg-rose-50/20 shadow-xs hover:border-rose-300 transition-all flex flex-col justify-between gap-3">
-            <div className="flex items-center justify-between text-rose-900 text-xs font-semibold uppercase tracking-wider">
-              <p>Estoque Baixo</p>
-              <AlertTriangle className="w-4 h-4 text-rose-600" />
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Alerta de Reposição
+              </span>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                estoqueBaixo > 0 ? "bg-rose-50 text-rose-600" : "bg-blue-50 text-blue-600"
+              }`}>
+                <AlertCircle className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-rose-950 tracking-tight">
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">
                 {estoqueBaixo}
               </div>
-              <p className="text-[11px] text-rose-800 font-medium mt-0.5">
-                {estoqueBaixo === 1 ? "Item abaixo da cota mínima" : "Itens abaixo da cota mínima"}
+              <p className="text-xs text-slate-400 mt-1">
+                {estoqueBaixo === 1 ? "Item abaixo do mínimo" : "Itens abaixo do mínimo"}
               </p>
             </div>
           </div>
 
-          {/* Card 4: Itens em Estoque */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between gap-3">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <p>Itens em Estoque</p>
-              <Boxes className="w-4 h-4 text-emerald-600" />
+          {/* Card 4: Total Itens */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Itens no Estoque
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Boxes className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">
                 {materiais?.length ?? 0}
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Peças e insumos catalogados
+              <p className="text-xs text-slate-400 mt-1">
+                Peças e insumos cadastrados
               </p>
             </div>
           </div>
         </div>
 
-        {/* ─── Campo de Busca Moderno ─── */}
+        {/* ─── Barra de Busca Elegante ─── */}
         <form method="get" className="relative flex items-center">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
           <input
             name="q"
             defaultValue={query}
-            placeholder="Buscar por placa, modelo do veículo, proprietário ou SKU de peça..."
-            className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-24 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-xs focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+            placeholder="Buscar por placa, modelo do veículo, proprietário ou SKU..."
+            className="w-full bg-white border border-slate-200/90 rounded-xl pl-11 pr-28 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-2xs focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
           />
-          <div className="absolute right-2 flex items-center gap-1.5">
+          <div className="absolute right-2.5 flex items-center gap-2">
             {query && (
               <Link
                 href="/loja/dashboard"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 title="Limpar busca"
               >
                 <X className="w-4 h-4" />
@@ -228,67 +250,66 @@ export default async function DashboardPage({
             )}
             <button
               type="submit"
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer shadow-xs"
             >
               Buscar
             </button>
           </div>
         </form>
 
-        {/* ─── Duas Colunas: Veículos e Materiais ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* ─── Listas Principais (Veículos & Materiais) com Linhas Abertas ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Coluna 1: Veículos */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 sm:p-6 text-left">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+          <section className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Car className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-slate-900 tracking-tight">
-                      Veículos
-                    </h2>
-                    <div className="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700">
-                      {veiculos?.length ?? 0}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-400">
-                    Histórico oficial e manutenções
-                  </p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                    Veículos
+                  </h2>
+                  <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700">
+                    {veiculos?.length ?? 0}
+                  </span>
                 </div>
               </div>
 
               <Link
                 href="/loja/veiculo/novo"
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Novo Veículo
+                <span>Novo Veículo</span>
               </Link>
             </div>
 
             {(!veiculos || veiculos.length === 0) ? (
-              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                <Car className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">
-                  {query ? "Nenhum veículo encontrado para esta busca." : "Nenhum veículo cadastrado na oficina."}
+              <div className="text-center py-12 px-6">
+                <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <Car className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-semibold text-slate-800">
+                  {query ? "Nenhum veículo encontrado." : "Nenhum veículo cadastrado."}
                 </p>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                  {query ? "Tente buscar com outros termos de placa ou modelo." : "Cadastre o primeiro veículo para registrar ordens de serviço e manutenções."}
+                  {query
+                    ? "Tente buscar por outra placa ou nome."
+                    : "Cadastre veículos para emitir o passaporte e registrar serviços."}
                 </p>
                 {!query && (
                   <Link
                     href="/loja/veiculo/novo"
-                    className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+                    className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Cadastrar Veículo
+                    Cadastrar Primeiro Veículo
                   </Link>
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-slate-100">
                 {veiculos.map((v) => {
                   const kmToGo = v.km_proxima_revisao
                     ? v.km_proxima_revisao - v.km_atual
@@ -299,107 +320,106 @@ export default async function DashboardPage({
                     <Link
                       key={v.id}
                       href={`/loja/veiculo/${v.id}`}
-                      className="group flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50/70 transition-all cursor-pointer"
+                      className="group flex items-center justify-between gap-4 px-6 py-4 hover:bg-slate-50/70 transition-colors"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center shrink-0">
-                          <Car className="w-5 h-5" />
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Car className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-mono text-sm font-black text-slate-900 tracking-wide">
+                            <span className="font-mono text-sm font-bold text-slate-900 tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">
                               {formatPlaca(v.placa)}
-                            </p>
+                            </span>
+                            <span className="text-sm font-medium text-slate-700 truncate">
+                              {v.modelo}
+                            </span>
                           </div>
-                          <p className="text-xs text-slate-600 font-medium truncate">
-                            {v.modelo}
-                          </p>
                           {v.proprietario_nome && (
-                            <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                              Prop.: {v.proprietario_nome}
+                            <p className="text-xs text-slate-400 truncate mt-1">
+                              Proprietário: {v.proprietario_nome}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="flex items-center gap-3 shrink-0">
                         {soon ? (
-                          <div className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center gap-1">
                             <CalendarClock className="w-3 h-3 text-amber-600" />
                             {Math.max(0, kmToGo).toLocaleString("pt-BR")} km
-                          </div>
+                          </span>
                         ) : kmToGo !== null ? (
-                          <div className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-blue-600" />
                             Em dia
-                          </div>
+                          </span>
                         ) : (
-                          <div className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                          <span className="text-xs text-slate-400">
                             Sem revisão
-                          </div>
+                          </span>
                         )}
 
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </Link>
                   );
                 })}
               </div>
             )}
-          </div>
+          </section>
 
           {/* Coluna 2: Materiais */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 sm:p-6 text-left">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+          <section className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Boxes className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-slate-900 tracking-tight">
-                      Materiais & Peças
-                    </h2>
-                    <div className="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700">
-                      {materiais?.length ?? 0}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-400">
-                    Estoque e reposições
-                  </p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                    Materiais & Peças
+                  </h2>
+                  <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700">
+                    {materiais?.length ?? 0}
+                  </span>
                 </div>
               </div>
 
               <Link
                 href="/loja/material/novo"
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Novo Material
+                <span>Novo Material</span>
               </Link>
             </div>
 
             {(!materiais || materiais.length === 0) ? (
-              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">
-                  {query ? "Nenhum material encontrado para esta busca." : "Nenhum material cadastrado no estoque."}
+              <div className="text-center py-12 px-6">
+                <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <Package className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-semibold text-slate-800">
+                  {query ? "Nenhum material encontrado." : "Nenhum material cadastrado."}
                 </p>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                  {query ? "Verifique se digitou o SKU ou o nome da peça corretamente." : "Cadastre peças, filtros ou óleos para vincular às ordens de serviço."}
+                  {query
+                    ? "Verifique o termo de busca ou SKU."
+                    : "Cadastre componentes e insumos para controle de estoque."}
                 </p>
                 {!query && (
                   <Link
                     href="/loja/material/novo"
-                    className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+                    className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Cadastrar Material
+                    Cadastrar Primeiro Material
                   </Link>
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-slate-100">
                 {materiais.map((m) => {
                   const baixo = m.quantidade_atual < m.quantidade_minima;
 
@@ -407,64 +427,53 @@ export default async function DashboardPage({
                     <Link
                       key={m.id}
                       href={`/loja/material/${m.id}`}
-                      className="group flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50/70 transition-all cursor-pointer"
+                      className="group flex items-center justify-between gap-4 px-6 py-4 hover:bg-slate-50/70 transition-colors"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                            baixo
-                              ? "bg-rose-50 text-rose-600 border border-rose-200/80"
-                              : "bg-slate-100 text-slate-600 border border-slate-200/80"
-                          }`}
-                        >
-                          {baixo ? (
-                            <AlertTriangle className="w-5 h-5" />
-                          ) : (
-                            <Package className="w-5 h-5" />
-                          )}
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                          baixo ? "bg-rose-50 text-rose-600" : "bg-blue-50 text-blue-600"
+                        }`}>
+                          <Package className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate">
+                          <p className="text-sm font-semibold text-slate-900 truncate">
                             {m.nome}
                           </p>
-                          <div className="flex items-center gap-2 text-xs text-slate-500 font-mono mt-0.5">
+                          <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
                             <span>SKU: {m.sku}</span>
                             <span>•</span>
-                            <span>Mín: {m.quantidade_minima}</span>
+                            <span>Mín: {m.quantidade_minima} un.</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="flex items-center gap-3 shrink-0">
                         {baixo ? (
-                          <div className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3 text-rose-600" />
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-rose-600" />
                             {m.quantidade_atual} un.
-                          </div>
+                          </span>
                         ) : (
-                          <div className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80">
                             {m.quantidade_atual} un.
-                          </div>
+                          </span>
                         )}
 
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </Link>
                   );
                 })}
               </div>
             )}
-          </div>
+          </section>
         </div>
 
         {/* Rodapé Interno Discreto */}
-        <div className="pt-6 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
-            <p>Painel operacional credenciado IDfeed • Histórico e certificação veicular</p>
-          </div>
+        <footer className="pt-8 pb-4 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <p>IDfeed • Sistema de Prontuário e Gestão para Oficinas Credenciadas</p>
           <p>© {new Date().getFullYear()} IDfeed. Todos os direitos reservados.</p>
-        </div>
+        </footer>
       </main>
     </div>
   );
