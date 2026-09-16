@@ -314,7 +314,6 @@ export default function ConsultaVeiculo() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
-                  <Car className="w-4 h-4" />
                   Veículo Homologado na Rede IDfeed
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -328,7 +327,6 @@ export default function ConsultaVeiculo() {
                   )}
                   {oficinaNome && (
                     <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
                       <span className="text-slate-400">Oficina emissora:</span> {oficinaNome}
                     </div>
                   )}
