@@ -1,10 +1,17 @@
 import Link from "next/link";
+import Image from "next/image";
 import { requireAdmin } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import AprovacaoOficina from "@/components/aprovacaoOficina";
 import LogoutButton from "@/components/logout-button";
+import { ArrowLeft, ExternalLink, FileText, Building2, Phone, Hash } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Análise Cadastral de Oficina • IDfeed Admin",
+  description: "Auditoria documental da oficina credenciada.",
+};
 
 export default async function AnaliseOficinaPage({
   params,
@@ -12,7 +19,6 @@ export default async function AnaliseOficinaPage({
   params: Promise<{ lojaId: string }>;
 }) {
   const session = await requireAdmin();
-
   const { lojaId } = await params;
 
   const { data: loja, error: lojaError } = await supabaseAdmin
@@ -23,64 +29,50 @@ export default async function AnaliseOficinaPage({
 
   if (lojaError || !loja) {
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "var(--bg)",
-          padding: "2rem",
-        }}
-      >
-        <div
-          className="card"
-          style={{
-            maxWidth: 700,
-            margin: "0 auto",
-            padding: "2rem",
-          }}
-        >
-          <h1>Oficina não encontrada</h1>
+      <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/IDfeed-logo.jpg"
+                alt="IDfeed - Identidade Digital Veicular"
+                width={180}
+                height={48}
+                priority
+                referrerPolicy="no-referrer"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+          </div>
+        </header>
 
-          <p
-            style={{
-              color: "var(--text-soft)",
-              marginTop: "0.5rem",
-            }}
-          >
-            Não foi possível encontrar os dados desta oficina.
-          </p>
-
-          <Link
-            href="/admin/aprovacoes"
-            className="btn-ghost"
-            style={{
-              display: "inline-flex",
-              marginTop: "1.5rem",
-            }}
-          >
-            Voltar para aprovações
-          </Link>
-        </div>
-      </main>
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-8 max-w-md text-center">
+            <h1 className="text-xl font-bold text-slate-900 mb-2">Oficina não encontrada</h1>
+            <p className="text-sm text-slate-500 mb-6">Não foi possível localizar os registros desta oficina.</p>
+            <Link
+              href="/admin/aprovacoes"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800"
+            >
+              Voltar para a lista
+            </Link>
+          </div>
+        </main>
+      </div>
     );
   }
 
   const { data: documentos, error: documentoError } = await supabaseAdmin
-  .from("documentos_oficina")
-  .select(
-    "id, nome_arquivo, caminho_arquivo, status, enviado_em"
-  )
-  .eq("loja_id", lojaId)
-  .order("enviado_em", { ascending: false });
+    .from("documentos_oficina")
+    .select("id, nome_arquivo, caminho_arquivo, status, enviado_em")
+    .eq("loja_id", lojaId)
+    .order("enviado_em", { ascending: false });
 
   if (documentoError) {
-    console.error(
-      "ERRO AO BUSCAR DOCUMENTOS:",
-      documentoError
-    );
+    console.error("ERRO AO BUSCAR DOCUMENTOS:", documentoError);
   }
 
   const documento = documentos?.[0];
-
   let documentoUrl: string | null = null;
 
   if (documento) {
@@ -92,198 +84,144 @@ export default async function AnaliseOficinaPage({
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        padding: "2rem",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingBottom: "1rem",
-            marginBottom: "1.25rem",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <Link
-            href="/admin/aprovacoes"
-            style={{
-              color: "var(--blue)",
-              textDecoration: "none",
-              fontSize: "0.85rem",
-              fontWeight: 600,
-            }}
-          >
-            ← Voltar para aprovações
-          </Link>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span
-              style={{
-                fontSize: "0.82rem",
-                color: "var(--text-soft)",
-              }}
-            >
-              {session.user.email}
+    <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Topbar */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/IDfeed-logo.jpg"
+                alt="IDfeed - Identidade Digital Veicular"
+                width={180}
+                height={48}
+                priority
+                referrerPolicy="no-referrer"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+            <span className="hidden sm:inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">
+              Admin
             </span>
-            <LogoutButton redirectTo="/admin/login" />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/aprovacoes"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Aprovações</span>
+            </Link>
+            <LogoutButton redirectTo="/admin/login" className="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors cursor-pointer" />
           </div>
         </div>
+      </header>
 
-        <div style={{ marginTop: "1.5rem", marginBottom: "2rem" }}>
-          <span className="eyebrow">ANÁLISE DA OFICINA</span>
-
-          <h1
-            style={{
-              fontSize: "2rem",
-              fontWeight: 800,
-              margin: "0.5rem 0",
-            }}
-          >
+      {/* Conteúdo Principal */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 text-left">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1 block">
+            Auditoria de Credenciamento
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {loja.nome}
           </h1>
-
-          <p style={{ color: "var(--text-soft)" }}>
-            Confira os dados e a documentação antes de liberar o
-            acesso.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Examine a documentação legal e aprove ou recuse o ingresso da oficina.
           </p>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "1rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <div className="card" style={{ padding: "1.5rem" }}>
-            <div className="section-heading">
-              Dados da oficina
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card 1: Dados da Oficina */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6">
+            <div className="pb-3 mb-4 border-b border-slate-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                Cadastro da Empresa
+              </span>
             </div>
 
-            <div style={{ marginTop: "1rem" }}>
-              <p>
-                <strong>Nome:</strong> {loja.nome}
-              </p>
+            <div className="space-y-3.5 text-sm">
+              <div className="flex items-center gap-2.5 text-slate-700">
+                <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                <span>Razão / Nome: <strong className="text-slate-900">{loja.nome}</strong></span>
+              </div>
 
-              <p style={{ marginTop: "0.6rem" }}>
-                <strong>CNPJ:</strong>{" "}
-                {loja.cnpj || "Não informado"}
-              </p>
+              <div className="flex items-center gap-2.5 text-slate-700">
+                <Hash className="w-4 h-4 text-slate-400 shrink-0" />
+                <span>CNPJ: <strong className="text-slate-900 font-mono">{loja.cnpj || "Não informado"}</strong></span>
+              </div>
 
-              <p style={{ marginTop: "0.6rem" }}>
-                <strong>Telefone:</strong>{" "}
-                {loja.telefone || "Não informado"}
-              </p>
+              <div className="flex items-center gap-2.5 text-slate-700">
+                <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                <span>Telefone: <strong className="text-slate-900">{loja.telefone || "Não informado"}</strong></span>
+              </div>
 
-              <p style={{ marginTop: "0.6rem" }}>
-                <strong>Status:</strong>{" "}
-                <span className="badge badge-amber">
-                  {loja.status}
+              <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                <span className="text-xs text-slate-400">Status Cadastral:</span>
+                <span
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                    loja.status === "pendente"
+                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                      : loja.status === "aprovada"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        : "bg-rose-50 text-rose-800 border-rose-200"
+                  }`}
+                >
+                  {loja.status.toUpperCase()}
                 </span>
-              </p>
+              </div>
             </div>
           </div>
 
-          <div className="card" style={{ padding: "1.5rem" }}>
-            <div className="section-heading">
-              Documento enviado
+          {/* Card 2: Documento Enviado */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6">
+            <div className="pb-3 mb-4 border-b border-slate-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                Documentação Comprobatória
+              </span>
             </div>
 
-                        {!documento && (
-              <p
-                style={{
-                  marginTop: "1rem",
-                  color: "var(--text-soft)",
-                }}
-              >
-                Nenhum documento foi enviado.
+            {!documento ? (
+              <p className="text-xs sm:text-sm text-slate-400 py-6 text-center">
+                Nenhum documento anexado até o momento.
               </p>
-            )}
-
-            {documento && (
-              <>
-                <AprovacaoOficina lojaId={lojaId} />
-
-                <div style={{ marginTop: "1rem" }}>
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "var(--text-soft)",
-                    }}
-                  >
-                    Arquivo:
-                  </p>
-
-                  <p
-                    style={{
-                      fontWeight: 700,
-                      marginTop: "0.25rem",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {documento.nome_arquivo}
-                  </p>
-
-                  <span
-                    className="badge badge-amber"
-                    style={{
-                      display: "inline-flex",
-                      marginTop: "0.75rem",
-                    }}
-                  >
-                    {documento.status}
-                  </span>
-
-                  {documentoUrl && (
-                    <div style={{ marginTop: "1.25rem" }}>
-                      <a
-                        href={documentoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-primary"
-                        style={{
-                          display: "inline-flex",
-                        }}
-                      >
-                        Visualizar documento
-                      </a>
-                    </div>
-                  )}
+            ) : (
+              <div className="space-y-4 text-sm">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-xs text-slate-800 truncate">
+                      {documento.nome_arquivo}
+                    </p>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      Status do arquivo: <strong className="text-slate-600">{documento.status}</strong>
+                    </span>
+                  </div>
                 </div>
-              </>
+
+                {documentoUrl && (
+                  <div>
+                    <a
+                      href={documentoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors shadow-2xs"
+                    >
+                      <span>Abrir Documento em Nova Aba</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                    </a>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-slate-100">
+                  <AprovacaoOficina lojaId={lojaId} />
+                </div>
+              </div>
             )}
           </div>
         </div>
-
-        <div className="card" style={{ padding: "1.5rem" }}>
-          <div className="section-heading">
-            Próxima etapa
-          </div>
-
-          <p
-            style={{
-              color: "var(--text-soft)",
-              marginTop: "0.75rem",
-              lineHeight: 1.6,
-            }}
-          >
-            Depois de conferir os dados e o documento, você poderá
-            aprovar ou rejeitar o cadastro da oficina.
-          </p>
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

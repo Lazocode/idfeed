@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
+import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -29,7 +30,6 @@ export default function LoginForm() {
         return;
       }
 
-      // Busca a sessão recém-criada para verificar o status da oficina
       const session = await getSession();
       const lojaStatus = (session?.user as { lojaStatus?: string })?.lojaStatus;
 
@@ -42,7 +42,6 @@ export default function LoginForm() {
         targetUrl = "/loja/enviar-documento";
       }
 
-      // Redirecionamento completo do navegador para carregar com os cookies de sessão
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = targetUrl;
     } catch (error) {
@@ -53,54 +52,61 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="login-form">
+    <form onSubmit={handleSubmit} className="space-y-4 text-left">
       <div>
-        <label className="label">E-mail</label>
-
+        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          E-mail da oficina
+        </label>
         <input
-          className="input login-input"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="seuemail@oficina.com"
           required
+          autoComplete="email"
+          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
         />
       </div>
 
       <div>
-        <label className="label">Senha</label>
-
+        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          Senha
+        </label>
         <input
-          className="input login-input"
           type="password"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
           placeholder="••••••••"
           required
+          autoComplete="current-password"
+          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
         />
       </div>
 
-      <button
-        type="submit"
-        className="btn-primary login-submit"
-        disabled={loading}
-      >
-        <span>
-          {loading ? "Entrando..." : "Entrar no painel"}
-        </span>
-
-        {!loading && (
-          <span aria-hidden="true">
-            →
-          </span>
-        )}
-      </button>
-
       {erro && (
-        <div className="alert-error">
-          {erro}
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-medium text-rose-700">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <span>{erro}</span>
         </div>
       )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 disabled:opacity-60 transition-all shadow-xs cursor-pointer mt-2"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Acessando...</span>
+          </>
+        ) : (
+          <>
+            <span>Entrar no Painel</span>
+            <ArrowRight className="w-4 h-4 text-slate-300" />
+          </>
+        )}
+      </button>
     </form>
   );
 }

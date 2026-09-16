@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -7,11 +8,29 @@ import { enviarFoto, removerFoto } from "@/actions/fotos";
 import { atualizarProximaRevisao } from "@/actions/veiculos";
 import type { OrdemServicoComRelacoes } from "@/lib/types";
 import { getSignedPhotoUrl } from "@/lib/photos";
+import {
+  ArrowLeft,
+  Plus,
+  Wrench,
+  Camera,
+  Trash2,
+  ExternalLink,
+  Edit3,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-const TIPO_COLOR: Record<string, string> = {
-  oleo: "badge-amber", freios: "badge-red", revisao: "badge-blue", eletrica: "badge-purple", outros: "badge-green",
+export const metadata = {
+  title: "Prontuário do Veículo • IDfeed",
+  description: "Histórico completo, revisões programadas e fotos do veículo.",
+};
+
+const TIPO_BADGE_STYLE: Record<string, string> = {
+  oleo: "bg-amber-50 text-amber-800 border-amber-200",
+  freios: "bg-red-50 text-red-800 border-red-200",
+  revisao: "bg-blue-50 text-blue-800 border-blue-200",
+  eletrica: "bg-purple-50 text-purple-800 border-purple-200",
+  outros: "bg-emerald-50 text-emerald-800 border-emerald-200",
 };
 
 export default async function VeiculoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,134 +41,303 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
   const { data: veiculo } = await supabaseAdmin
     .from("veiculos")
     .select(`*, ordens_servico(*, mecanico:usuarios(nome), pecas:ordem_servico_materiais(quantidade, material:materiais(nome)))`)
-    .eq("id", id).eq("loja_id", lojaId)
+    .eq("id", id)
+    .eq("loja_id", lojaId)
     .order("criado_em", { referencedTable: "ordens_servico", ascending: false })
     .maybeSingle();
+
   if (!veiculo) notFound();
 
-  const { data: fotos } = await supabaseAdmin.from("fotos").select("*").eq("entidade_tipo", "veiculo").eq("entidade_id", veiculo.id).order("criado_em", { ascending: false });
-  const fotosComUrl = await Promise.all((fotos ?? []).map(async (f) => ({ ...f, signedUrl: await getSignedPhotoUrl(f.url) })));
+  const { data: fotos } = await supabaseAdmin
+    .from("fotos")
+    .select("*")
+    .eq("entidade_tipo", "veiculo")
+    .eq("entidade_id", veiculo.id)
+    .order("criado_em", { ascending: false });
+
+  const fotosComUrl = await Promise.all(
+    (fotos ?? []).map(async (f) => ({ ...f, signedUrl: await getSignedPhotoUrl(f.url) }))
+  );
+
   const enviarFotoComId = enviarFoto.bind(null, "veiculo", veiculo.id);
   const kmToGo = veiculo.km_proxima_revisao ? veiculo.km_proxima_revisao - veiculo.km_atual : null;
   const soon = kmToGo !== null && kmToGo <= 3000;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      <div className="topbar">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div className="brand">L<span>O</span>TE</div>
-          <span style={{ color: "var(--border)" }}>|</span>
-          <span style={{ fontSize: "0.85rem", color: "var(--text-soft)" }}>Detalhe do Veículo</span>
+    <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Topbar Institucional */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+          <Link href="/loja/dashboard" className="flex items-center gap-3">
+            <Image
+              src="/IDfeed-logo.jpg"
+              alt="IDfeed - Identidade Digital Veicular"
+              width={180}
+              height={48}
+              priority
+              referrerPolicy="no-referrer"
+              className="h-8 w-auto object-contain"
+            />
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/loja/dashboard"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Painel</span>
+            </Link>
+          </div>
         </div>
-        <Link href="/loja/dashboard" className="btn-ghost" style={{ fontSize: "0.78rem", padding: "0.4rem 0.9rem" }}>← Painel</Link>
-      </div>
+      </header>
 
-      <div className="page-shell">
-        {/* Vehicle header */}
-        <div className="card card-blue" style={{ padding: "1.5rem", marginBottom: "1rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+      {/* Conteúdo Principal */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 text-left">
+        
+        {/* Cabeçalho do Veículo */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>Veículo</div>
-              <div style={{ fontSize: "2rem", fontWeight: 800, letterSpacing: "0.04em" }}>{formatPlaca(veiculo.placa)}</div>
-              <div style={{ color: "var(--text-soft)", marginTop: "0.2rem" }}>{veiculo.modelo}</div>
-              <div style={{ marginTop: "0.6rem", fontSize: "0.75rem", color: "var(--text-muted)" }}>Código de consulta pública: <code style={{ color: "var(--blue)" }}>{veiculo.public_token}</code></div>
-              <div style={{ display: "flex", gap: "1.5rem", marginTop: "0.6rem", fontSize: "0.82rem", color: "var(--text-soft)" }}>
-                <span> {veiculo.proprietario_nome}</span>
-                {veiculo.proprietario_contato && <span> {veiculo.proprietario_contato}</span>}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-mono text-base sm:text-lg font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                  {formatPlaca(veiculo.placa)}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                  Passaporte Ativo
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                {veiculo.modelo}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
+                <span>Proprietário: <strong className="text-slate-700 font-semibold">{veiculo.proprietario_nome || "Não informado"}</strong></span>
+                {veiculo.proprietario_contato && (
+                  <span>Contato: <strong className="text-slate-700 font-semibold">{veiculo.proprietario_contato}</strong></span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400">
+                <span>Consulta pública:</span>
+                <code className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px]">
+                  {veiculo.public_token}
+                </code>
+                <Link
+                  href={`/?placa=${veiculo.placa}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium ml-1"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Ver página pública</span>
+                </Link>
               </div>
             </div>
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-              <div className="metric-card" style={{ minWidth: 110 }}>
-                <div className="metric-value" style={{ color: "var(--blue)", fontSize: "1.3rem" }}>{formatKm(veiculo.km_atual)}</div>
-                <div className="metric-label">Km atual</div>
+
+            {/* Métricas Rápidas */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left min-w-[120px]">
+                <span className="block text-[11px] font-medium text-slate-500">Km Atual</span>
+                <span className="text-xl font-bold text-slate-900 tracking-tight">
+                  {formatKm(veiculo.km_atual)}
+                </span>
               </div>
-              <div className="metric-card" style={{ minWidth: 110 }}>
-                <div className="metric-value" style={{ color: veiculo.ordens_servico.length > 0 ? "var(--green)" : "var(--text-muted)", fontSize: "1.3rem" }}>{veiculo.ordens_servico.length}</div>
-                <div className="metric-label">Manutenções</div>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left min-w-[120px]">
+                <span className="block text-[11px] font-medium text-slate-500">Serviços</span>
+                <span className="text-xl font-bold text-slate-900 tracking-tight">
+                  {veiculo.ordens_servico.length}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Next service */}
+          {/* Alerta de Próxima Revisão */}
           {veiculo.km_proxima_revisao && (
-            <div style={{ marginTop: "1rem", background: soon ? "var(--amber-dim)" : "var(--bg)", border: `1px solid ${soon ? "var(--amber)" : "var(--border)"}`, borderRadius: 6, padding: "0.65rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "0.82rem", color: soon ? "var(--amber)" : "var(--text-soft)" }}>
-                ! {veiculo.nota_proxima_revisao ?? "Próxima revisão"}: {formatKm(veiculo.km_proxima_revisao)}
-                {kmToGo !== null && ` (faltam ${Math.max(0, kmToGo).toLocaleString("pt-BR")} km)`}
-              </span>
-              <details style={{ fontSize: "0.78rem" }}>
-                <summary style={{ cursor: "pointer", color: "var(--blue)" }}>Editar</summary>
-                <form action={atualizarProximaRevisao.bind(null, veiculo.id)} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
-                  <input className="input" name="kmProximaRevisao" type="number" defaultValue={veiculo.km_proxima_revisao ?? undefined} placeholder="Km" />
-                  <input className="input" name="notaProximaRevisao" defaultValue={veiculo.nota_proxima_revisao ?? ""} placeholder="Nota" />
-                  <button className="btn-primary" type="submit" style={{ fontSize: "0.78rem", padding: "0.4rem 0.8rem" }}>Salvar</button>
+            <div className={`mt-6 p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+              soon ? "bg-amber-50/70 border-amber-200 text-amber-900" : "bg-slate-50 border-slate-200 text-slate-700"
+            }`}>
+              <div>
+                <span className="font-bold">
+                  {veiculo.nota_proxima_revisao ?? "Próxima revisão programada"}:
+                </span>{" "}
+                {formatKm(veiculo.km_proxima_revisao)}
+                {kmToGo !== null && (
+                  <span className="ml-1 text-[11px] font-semibold">
+                    (faltam {Math.max(0, kmToGo).toLocaleString("pt-BR")} km)
+                  </span>
+                )}
+              </div>
+
+              <details className="text-xs">
+                <summary className="cursor-pointer font-semibold text-blue-600 hover:underline">
+                  Alterar agendamento
+                </summary>
+                <form
+                  action={atualizarProximaRevisao.bind(null, veiculo.id)}
+                  className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200/60"
+                >
+                  <input
+                    name="kmProximaRevisao"
+                    type="number"
+                    defaultValue={veiculo.km_proxima_revisao ?? undefined}
+                    placeholder="Km previsto"
+                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 w-28"
+                  />
+                  <input
+                    name="notaProximaRevisao"
+                    defaultValue={veiculo.nota_proxima_revisao ?? ""}
+                    placeholder="Observação"
+                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 w-44"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+                  >
+                    Salvar
+                  </button>
                 </form>
               </details>
             </div>
           )}
         </div>
 
-        {/* Photos */}
-        <div className="card" style={{ padding: "1rem 1.25rem", marginBottom: "1rem" }}>
-          <div className="section-heading">Fotos ({fotos?.length ?? 0})</div>
-          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+        {/* Galeria de Fotos */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-2">
+              <Camera className="w-4 h-4" />
+              Fotos do Veículo & Documentos ({fotos?.length ?? 0})
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap gap-3 mb-4">
             {fotosComUrl.map((f) => (
-              <div key={f.id} style={{ position: "relative" }}>
+              <div key={f.id} className="relative group rounded-xl overflow-hidden border border-slate-200 w-24 h-24 bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.signedUrl} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, border: "1px solid var(--border)" }} />
-                <form action={removerFoto.bind(null, f.id, "veiculo", veiculo.id)} style={{ position: "absolute", top: 3, right: 3 }}>
-                  <button style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--red)", border: "none", color: "#fff", fontSize: 10, cursor: "pointer", lineHeight: 1 }}>×</button>
+                <img src={f.signedUrl} alt="" className="w-full h-full object-cover" />
+                <form
+                  action={removerFoto.bind(null, f.id, "veiculo", veiculo.id)}
+                  className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <button
+                    title="Excluir foto"
+                    className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 shadow-xs cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </form>
               </div>
             ))}
           </div>
-          <form action={enviarFotoComId} style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-            <input type="file" name="foto" accept="image/*" style={{ fontSize: "0.8rem", color: "var(--text-soft)", flex: 1 }} required />
-            <button type="submit" className="btn-ghost" style={{ fontSize: "0.78rem", padding: "0.4rem 0.9rem", whiteSpace: "nowrap" }}>Enviar foto</button>
+
+          <form action={enviarFotoComId} className="flex flex-col sm:flex-row items-center gap-3">
+            <input
+              type="file"
+              name="foto"
+              accept="image/*"
+              required
+              className="w-full sm:w-auto flex-1 text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+            />
+            <button
+              type="submit"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer"
+            >
+              Adicionar Foto
+            </button>
           </form>
         </div>
 
-        {/* New maintenance CTA */}
-        <Link href={`/loja/veiculo/${veiculo.id}/nova-manutencao`} className="btn-green" style={{ display: "flex", justifyContent: "center", width: "100%", padding: "0.75rem", marginBottom: "1.25rem" }}>
-          + Registrar nova manutenção
-        </Link>
-
-        {/* History */}
-        <div className="section-heading">Histórico de manutenção</div>
-        {veiculo.ordens_servico.length === 0 && (
-          <p style={{ color: "var(--text-soft)", fontSize: "0.875rem" }}>Nenhum registro ainda. Clique em &quot;Registrar nova manutenção&quot; para começar.</p>
-        )}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {veiculo.ordens_servico.map((os: OrdemServicoComRelacoes) => (
-            <div key={os.id} className="card" style={{ padding: "1rem 1.25rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
-                  <span className={`badge ${TIPO_COLOR[os.tipo_servico] ?? "badge-blue"}`}>{TIPO_SERVICO_LABEL[os.tipo_servico]}</span>
-                </div>
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                  <span style={{ fontFamily: "monospace", color: "var(--green)", fontWeight: 700, fontSize: "0.9rem" }}>{formatMoeda(os.custo)}</span>
-                  <Link href={`/loja/veiculo/${veiculo.id}/ordem/${os.id}/editar`} style={{ fontSize: "0.75rem", color: "var(--blue)", textDecoration: "none" }}>editar</Link>
-                </div>
-              </div>
-              {os.observacao && <p style={{ color: "var(--text-soft)", fontSize: "0.82rem", margin: "0.4rem 0 0" }}>{os.observacao}</p>}
-              <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--text-muted)", flexWrap: "wrap" }}>
-                <span> {formatData(os.criado_em)}</span>
-                <span> {formatKm(os.km_no_servico)}</span>
-                {os.mecanico && <span> {os.mecanico.nome}</span>}
-              </div>
-              {os.pecas?.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.6rem" }}>
-                  {os.pecas.map((p, i: number) => (
-                    <span key={i} style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 20, padding: "0.15rem 0.6rem", fontSize: "0.72rem", color: "var(--text-soft)" }}>
-                      {p.material?.nome}{p.quantidade > 1 ? ` ×${p.quantidade}` : ""}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+        {/* Botão de Registro de Manutenção */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+            Histórico de Manutenções e Ordens de Serviço
+          </h2>
+          <Link
+            href={`/loja/veiculo/${veiculo.id}/nova-manutencao`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Registrar Manutenção</span>
+          </Link>
         </div>
-      </div>
+
+        {/* Lista do Histórico */}
+        {veiculo.ordens_servico.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-10 text-center">
+            <Wrench className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-slate-700">
+              Nenhuma manutenção registrada ainda
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Clique no botão acima para adicionar a primeira ordem de serviço com controle de peças e odômetro.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {veiculo.ordens_servico.map((os: OrdemServicoComRelacoes) => (
+              <div
+                key={os.id}
+                className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 transition-all hover:border-slate-300"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                        TIPO_BADGE_STYLE[os.tipo_servico] ?? "bg-slate-100 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {TIPO_SERVICO_LABEL[os.tipo_servico]}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {formatData(os.criado_em)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm font-bold text-slate-900">
+                      {formatMoeda(os.custo)}
+                    </span>
+                    <Link
+                      href={`/loja/veiculo/${veiculo.id}/ordem/${os.id}/editar`}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Editar</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {os.observacao && (
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-3">
+                    {os.observacao}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 mt-3 pt-2">
+                  <span>Odômetro: <strong className="text-slate-700 font-semibold">{formatKm(os.km_no_servico)}</strong></span>
+                  {os.mecanico && (
+                    <span>Técnico responsável: <strong className="text-slate-700 font-semibold">{os.mecanico.nome}</strong></span>
+                  )}
+                </div>
+
+                {os.pecas?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-100">
+                    <span className="text-[11px] text-slate-400 self-center mr-1">Peças aplicadas:</span>
+                    {os.pecas.map((p, i: number) => (
+                      <span
+                        key={i}
+                        className="bg-slate-50 border border-slate-200/80 rounded-full px-2.5 py-0.5 text-[11px] font-medium text-slate-700"
+                      >
+                        {p.material?.nome}{p.quantidade > 1 ? ` × ${p.quantidade}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 }

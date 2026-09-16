@@ -2,11 +2,14 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { isLazaroMirandaAdmin } from "@/lib/security";
 import AdminLoginForm from "./admin-login-form";
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Login Administrativo • LOTE",
+  title: "Login Administrativo • IDfeed",
   description: "Acesso restrito para administradores do sistema de aprovações.",
 };
 
@@ -19,91 +22,51 @@ export default async function AdminLoginPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--bg)",
-        padding: "1.5rem",
-      }}
-    >
-      <div
-        className="card"
-        style={{
-          width: "100%",
-          maxWidth: 440,
-          padding: "2.25rem 2rem",
-          textAlign: "center",
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03)",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: "#f1f5f9",
-            color: "#0f172a",
-            marginBottom: "1.25rem",
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-            <path d="M12 8v4" />
-            <path d="M12 16h.01" />
-          </svg>
+    <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Cabeçalho */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/IDfeed-logo.jpg"
+              alt="IDfeed - Identidade Digital Veicular"
+              width={180}
+              height={48}
+              priority
+              referrerPolicy="no-referrer"
+              className="h-8 w-auto object-contain"
+            />
+          </Link>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Consulta Pública</span>
+          </Link>
         </div>
+      </header>
 
-        <div style={{ marginBottom: "1.75rem" }}>
-          <span
-            className="badge"
-            style={{
-              display: "inline-block",
-              background: "#e2e8f0",
-              color: "#334155",
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              padding: "0.2rem 0.6rem",
-              borderRadius: 4,
-              marginBottom: "0.6rem",
-            }}
-          >
-            Acesso Restrito
-          </span>
+      {/* Conteúdo Central */}
+      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-8 text-center">
+            <div className="mb-6">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200 mb-2">
+                Acesso Restrito
+              </span>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">
+                Portal Administrativo
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                Área reservada para gestão cadastral e homologação de oficinas parceiras.
+              </p>
+            </div>
 
-          <h1
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 750,
-              letterSpacing: "-0.02em",
-              margin: 0,
-              color: "var(--text)",
-            }}
-          >
-            Portal do Administrador
-          </h1>
-
-          <p
-            style={{
-              color: "var(--text-soft)",
-              fontSize: "0.88rem",
-              marginTop: "0.4rem",
-              lineHeight: 1.5,
-            }}
-          >
-            Informe suas credenciais administrativas para gerenciar aprovações de oficinas.
-          </p>
+            <AdminLoginForm />
+          </div>
         </div>
-
-        <AdminLoginForm />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

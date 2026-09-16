@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn, signOut, getSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { ShieldCheck, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 
 function LoginFormInner() {
   const searchParams = useSearchParams();
@@ -37,7 +38,6 @@ function LoginFormInner() {
         return;
       }
 
-      // Valida se o usuário autenticado é Lázaro Miranda e possui o papel de admin
       const session = await getSession();
       const papel = session?.user?.papel;
       const sessionEmail = session?.user?.email?.toLowerCase() || "";
@@ -50,7 +50,6 @@ function LoginFormInner() {
           sessionNome.includes("lázaro"));
 
       if (!isLazaroAdmin) {
-        // Desconecta se o usuário logado não for o administrador Lázaro Miranda
         await signOut({ redirect: false });
         setLoading(false);
         setErro(
@@ -59,7 +58,6 @@ function LoginFormInner() {
         return;
       }
 
-      // Redireciona diretamente para o painel de aprovações
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = "/admin/aprovacoes";
     } catch (err) {
@@ -70,45 +68,16 @@ function LoginFormInner() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+    <form onSubmit={handleSubmit} className="space-y-4 text-left">
       {erro && (
-        <div
-          id="admin-login-error"
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "0.6rem",
-            padding: "0.85rem 1rem",
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: 8,
-            color: "#b91c1c",
-            fontSize: "0.86rem",
-            marginBottom: "1.25rem",
-            lineHeight: 1.45,
-            textAlign: "left",
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-medium text-rose-700">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
           <span>{erro}</span>
         </div>
       )}
 
-      <div style={{ marginBottom: "1.2rem", textAlign: "left" }}>
-        <label
-          htmlFor="admin-email"
-          style={{
-            display: "block",
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            marginBottom: "0.35rem",
-            color: "var(--text)",
-          }}
-        >
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
           E-mail de Administrador
         </label>
         <input
@@ -120,22 +89,12 @@ function LoginFormInner() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={loading}
-          className="input-base"
-          style={{ width: "100%" }}
+          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
         />
       </div>
 
-      <div style={{ marginBottom: "1.5rem", textAlign: "left" }}>
-        <label
-          htmlFor="admin-senha"
-          style={{
-            display: "block",
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            marginBottom: "0.35rem",
-            color: "var(--text)",
-          }}
-        >
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
           Senha de Acesso
         </label>
         <input
@@ -147,8 +106,7 @@ function LoginFormInner() {
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
           disabled={loading}
-          className="input-base"
-          style={{ width: "100%" }}
+          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
         />
       </div>
 
@@ -156,67 +114,33 @@ function LoginFormInner() {
         id="btn-admin-login-submit"
         type="submit"
         disabled={loading}
-        className="btn-primary"
-        style={{
-          width: "100%",
-          padding: "0.75rem 1rem",
-          fontWeight: 600,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0.5rem",
-        }}
+        className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 disabled:opacity-60 transition-all shadow-xs cursor-pointer mt-2"
       >
         {loading ? (
           <>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
+            <Loader2 className="w-4 h-4 animate-spin" />
             <span>Verificando credenciais...</span>
           </>
         ) : (
           <>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-              <path d="m9 12 2 2 4-4" />
-            </svg>
             <span>Entrar no Painel Administrativo</span>
+            <ArrowRight className="w-4 h-4 text-slate-300" />
           </>
         )}
       </button>
 
-      <div
-        style={{
-          marginTop: "1.75rem",
-          paddingTop: "1.25rem",
-          borderTop: "1px solid var(--border)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
-          fontSize: "0.82rem",
-        }}
-      >
+      <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col gap-2 text-center text-xs">
         <Link
           href="/loja/login"
-          style={{
-            color: "var(--text-soft)",
-            textDecoration: "none",
-          }}
+          className="text-slate-500 hover:text-slate-800 transition-colors"
         >
-          É uma oficina parceira? <strong style={{ color: "var(--text)" }}>Acesse a área da loja</strong>
+          É uma oficina credenciada? <strong className="text-slate-700">Acesse a área da loja</strong>
         </Link>
         <Link
           href="/"
-          style={{
-            color: "var(--text-soft)",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.35rem",
-          }}
+          className="text-slate-400 hover:text-slate-600 transition-colors"
         >
-          ← Voltar para o início
+          ← Voltar para a consulta pública
         </Link>
       </div>
     </form>
@@ -227,11 +151,9 @@ export default function AdminLoginForm() {
   return (
     <Suspense
       fallback={
-        <div style={{ padding: "2rem 0", textAlign: "center", color: "var(--text-soft)" }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin" style={{ margin: "0 auto 0.5rem" }}>
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
-          Carregando formulário...
+        <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+          <span>Carregando formulário...</span>
         </div>
       }
     >

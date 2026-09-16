@@ -3,8 +3,15 @@ import { supabaseAdmin } from "@/lib/supabase";
 import AprovacoesTabs from "@/components/aprovacoesTabs";
 import LogoutButton from "@/components/logout-button";
 import Link from "next/link";
+import Image from "next/image";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Gestão de Credenciamentos • IDfeed Admin",
+  description: "Homologação e análise de documentos das oficinas cadastradas.",
+};
 
 export default async function AprovacoesPage() {
   const session = await requireAdmin();
@@ -19,21 +26,36 @@ export default async function AprovacoesPage() {
     console.error("ERRO AO BUSCAR OFICINAS:", error);
 
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "var(--bg)",
-          padding: "2rem",
-        }}
-      >
-        <div className="card" style={{ padding: "2rem" }}>
-          <h1>Erro ao carregar aprovações</h1>
+      <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/IDfeed-logo.jpg"
+                alt="IDfeed - Identidade Digital Veicular"
+                width={180}
+                height={48}
+                priority
+                referrerPolicy="no-referrer"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+          </div>
+        </header>
 
-          <p style={{ color: "var(--text-soft)" }}>
-            Não foi possível carregar as oficinas.
-          </p>
-        </div>
-      </main>
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-8 max-w-md text-center">
+            <h1 className="text-xl font-bold text-slate-900 mb-2">Erro ao carregar aprovações</h1>
+            <p className="text-sm text-slate-500 mb-6">Não foi possível carregar a listagem de oficinas do banco de dados.</p>
+            <Link
+              href="/admin/login"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800"
+            >
+              Recarregar
+            </Link>
+          </div>
+        </main>
+      </div>
     );
   }
 
@@ -47,112 +69,51 @@ export default async function AprovacoesPage() {
     oficinas?.filter((oficina) => oficina.status === "rejeitada") ?? [];
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        padding: "2rem",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-        }}
-      >
-        {/* Barra superior administrativa */}
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "1rem",
-            paddingBottom: "1.25rem",
-            marginBottom: "1.75rem",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                background: "#0f172a",
-                color: "#ffffff",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </div>
-            <div>
-              <span
-                style={{
-                  fontSize: "0.72rem",
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                  letterSpacing: "0.06em",
-                  color: "var(--text-muted)",
-                }}
-              >
-                Painel Administrativo
-              </span>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700 }}>
-                IDfeed • Gestão Central
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Topbar Institucional */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/IDfeed-logo.jpg"
+                alt="IDfeed - Identidade Digital Veicular"
+                width={180}
+                height={48}
+                priority
+                referrerPolicy="no-referrer"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+            <span className="hidden sm:inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">
+              Admin
+            </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span
-              style={{
-                fontSize: "0.82rem",
-                color: "var(--text-soft)",
-                background: "var(--card-bg, #ffffff)",
-                padding: "0.35rem 0.75rem",
-                borderRadius: 6,
-                border: "1px solid var(--border)",
-              }}
-            >
+          <div className="flex items-center gap-3">
+            <span className="hidden md:inline-block text-xs text-slate-500 font-mono">
               {session.user.email}
             </span>
             <Link
               href="/"
-              className="btn-ghost"
-              style={{ fontSize: "0.78rem", padding: "0.4rem 0.8rem" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
             >
-              Início
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Consulta</span>
             </Link>
-            <LogoutButton redirectTo="/admin/login" />
+            <LogoutButton redirectTo="/admin/login" className="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors cursor-pointer" />
           </div>
-        </header>
+        </div>
+      </header>
 
-        <div style={{ marginBottom: "1.75rem" }}>
-          <h1
-            style={{
-              fontSize: "1.75rem",
-              fontWeight: 750,
-              margin: 0,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Aprovações
+      {/* Conteúdo Principal */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 text-left space-y-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Homologação de Oficinas
           </h1>
-
-          <p
-            style={{
-              color: "var(--text-soft)",
-              marginTop: "0.4rem",
-              fontSize: "0.9rem",
-            }}
-          >
-            Gerencie e analise os cadastros e documentações das oficinas.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Auditoria técnica de novos cadastros e documentos societários para credenciamento na rede IDfeed.
           </p>
         </div>
 
@@ -161,7 +122,7 @@ export default async function AprovacoesPage() {
           aprovadas={aprovadas}
           rejeitadas={rejeitadas}
         />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

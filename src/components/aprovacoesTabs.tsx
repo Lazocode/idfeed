@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ChevronRight, Clock, CheckCircle2, XCircle } from "lucide-react";
 
 type Oficina = {
   id: string;
@@ -23,9 +24,7 @@ export default function AprovacoesTabs({
   aprovadas,
   rejeitadas,
 }: Props) {
-  const [aba, setAba] = useState<
-    "pendentes" | "aprovadas" | "rejeitadas"
-  >("pendentes");
+  const [aba, setAba] = useState<"pendentes" | "aprovadas" | "rejeitadas">("pendentes");
 
   const oficinas =
     aba === "pendentes"
@@ -35,291 +34,130 @@ export default function AprovacoesTabs({
         : rejeitadas;
 
   return (
-    <>
-      {/* RESUMO */}
-      <div
-        style={{
-          display: "flex",
-          gap: "2rem",
-          borderBottom: "1px solid var(--border)",
-          paddingBottom: "1.25rem",
-          marginBottom: "1.25rem",
-        }}
-      >
-        <Resumo
-          titulo="Pendentes"
-          quantidade={pendentes.length}
-          ativo={aba === "pendentes"}
+    <div className="space-y-6">
+      {/* CARDS DE RESUMO */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <button
           onClick={() => setAba("pendentes")}
-        />
-
-        <Resumo
-          titulo="Aprovadas"
-          quantidade={aprovadas.length}
-          ativo={aba === "aprovadas"}
-          onClick={() => setAba("aprovadas")}
-        />
-
-        <Resumo
-          titulo="Rejeitadas"
-          quantidade={rejeitadas.length}
-          ativo={aba === "rejeitadas"}
-          onClick={() => setAba("rejeitadas")}
-        />
-      </div>
-
-      {/* ABAS */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0.25rem",
-          marginBottom: "1rem",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <Aba
-          titulo="Pendentes"
-          ativo={aba === "pendentes"}
-          onClick={() => setAba("pendentes")}
-        />
-
-        <Aba
-          titulo="Aprovadas"
-          ativo={aba === "aprovadas"}
-          onClick={() => setAba("aprovadas")}
-        />
-
-        <Aba
-          titulo="Rejeitadas"
-          ativo={aba === "rejeitadas"}
-          onClick={() => setAba("rejeitadas")}
-        />
-      </div>
-
-      {/* CABEÇALHO DA LISTA */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "0.75rem",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "0.9rem",
-            fontWeight: 700,
-          }}
+          className={`text-left p-5 rounded-2xl border transition-all cursor-pointer ${
+            aba === "pendentes"
+              ? "bg-amber-50/60 border-amber-300 ring-2 ring-amber-500/20 shadow-xs"
+              : "bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs"
+          }`}
         >
-          {aba === "pendentes" && "Oficinas pendentes"}
-          {aba === "aprovadas" && "Oficinas aprovadas"}
-          {aba === "rejeitadas" && "Oficinas rejeitadas"}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              Pendentes
+            </span>
+            <span className="text-xs text-slate-400">Aguardando</span>
+          </div>
+          <div className="text-3xl font-bold text-slate-900 tracking-tight">
+            {pendentes.length}
+          </div>
+        </button>
+
+        <button
+          onClick={() => setAba("aprovadas")}
+          className={`text-left p-5 rounded-2xl border transition-all cursor-pointer ${
+            aba === "aprovadas"
+              ? "bg-emerald-50/60 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs"
+              : "bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Aprovadas
+            </span>
+            <span className="text-xs text-slate-400">Credenciadas</span>
+          </div>
+          <div className="text-3xl font-bold text-slate-900 tracking-tight">
+            {aprovadas.length}
+          </div>
+        </button>
+
+        <button
+          onClick={() => setAba("rejeitadas")}
+          className={`text-left p-5 rounded-2xl border transition-all cursor-pointer ${
+            aba === "rejeitadas"
+              ? "bg-rose-50/60 border-rose-300 ring-2 ring-rose-500/20 shadow-xs"
+              : "bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-700 flex items-center gap-1.5">
+              <XCircle className="w-3.5 h-3.5" />
+              Rejeitadas
+            </span>
+            <span className="text-xs text-slate-400">Reprovadas</span>
+          </div>
+          <div className="text-3xl font-bold text-slate-900 tracking-tight">
+            {rejeitadas.length}
+          </div>
+        </button>
+      </div>
+
+      {/* LISTAGEM */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-800">
+            {aba === "pendentes" && "Oficinas Aguardando Parecer"}
+            {aba === "aprovadas" && "Oficinas Homologadas"}
+            {aba === "rejeitadas" && "Cadastros Recusados"}
+          </h2>
+          <span className="text-xs text-slate-400">
+            {oficinas.length} {oficinas.length === 1 ? "registro" : "registros"}
+          </span>
         </div>
 
-        <span
-          style={{
-            fontSize: "0.75rem",
-            color: "var(--text-soft)",
-          }}
-        >
-          {oficinas.length} registro
-          {oficinas.length !== 1 ? "s" : ""}
-        </span>
-      </div>
-
-      {/* LISTA */}
-      <div
-        className="card"
-        style={{
-          overflow: "hidden",
-          padding: 0,
-        }}
-      >
         {oficinas.length === 0 ? (
-          <div
-            style={{
-              padding: "3rem 1.5rem",
-              textAlign: "center",
-              color: "var(--text-soft)",
-              fontSize: "0.85rem",
-            }}
-          >
-            Nenhuma oficina nesta categoria.
+          <div className="py-12 px-4 text-center text-xs text-slate-400">
+            Nenhuma oficina nesta categoria no momento.
           </div>
         ) : (
-          oficinas.map((oficina) => (
-            <div
-              key={oficina.id}
-              className="tbl-row"
-              style={{
-                padding: "1rem 1.25rem",
-                gap: "1rem",
-              }}
-            >
+          <div className="divide-y divide-slate-100">
+            {oficinas.map((oficina) => (
               <div
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background:
-                    oficina.status === "pendente"
-                      ? "#d97706"
-                      : oficina.status === "aprovada"
-                        ? "#16a34a"
-                        : "#dc2626",
-                }}
-              />
-
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                }}
+                key={oficina.id}
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors"
               >
-                <div
-                  style={{
-                    fontWeight: 650,
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {oficina.nome}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        oficina.status === "pendente"
+                          ? "bg-amber-500"
+                          : oficina.status === "aprovada"
+                            ? "bg-emerald-500"
+                            : "bg-rose-500"
+                      }`}
+                    />
+                    <span className="font-semibold text-sm text-slate-900">
+                      {oficina.nome}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pl-4">
+                    <span>CNPJ: <strong className="text-slate-700 font-mono">{oficina.cnpj || "Não informado"}</strong></span>
+                    <span>Telefone: <strong className="text-slate-700">{oficina.telefone || "Não informado"}</strong></span>
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "1rem",
-                    flexWrap: "wrap",
-                    marginTop: "0.3rem",
-                    fontSize: "0.75rem",
-                    color: "var(--text-soft)",
-                  }}
-                >
-                  <span>
-                    CNPJ: {oficina.cnpj || "Não informado"}
-                  </span>
-
-                  <span>
-                    {oficina.telefone || "Telefone não informado"}
-                  </span>
+                <div className="flex items-center gap-3 self-end sm:self-center">
+                  <Link
+                    href={`/admin/aprovacoes/${oficina.id}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors shadow-2xs"
+                  >
+                    <span>{aba === "pendentes" ? "Analisar Documentos" : "Ver Detalhes"}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  </Link>
                 </div>
               </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "0.72rem",
-                    color: "var(--text-soft)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {aba === "pendentes" && "Pendente"}
-                  {aba === "aprovadas" && "Aprovada"}
-                  {aba === "rejeitadas" && "Rejeitada"}
-                </span>
-
-                <Link
-                  href={`/admin/aprovacoes/${oficina.id}`}
-                  className="btn-ghost"
-                  style={{
-                    fontSize: "0.75rem",
-                    padding: "0.4rem 0.7rem",
-                  }}
-                >
-                  {aba === "pendentes"
-                    ? "Analisar"
-                    : "Ver detalhes"}
-                </Link>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
-    </>
-  );
-}
-
-function Resumo({
-  titulo,
-  quantidade,
-  ativo,
-  onClick,
-}: {
-  titulo: string;
-  quantidade: number;
-  ativo: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        border: "none",
-        borderBottom: ativo
-          ? "2px solid var(--primary)"
-          : "2px solid transparent",
-        background: "transparent",
-        padding: "0 0 0.35rem",
-        cursor: "pointer",
-        textAlign: "left",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--text-soft)",
-          marginBottom: "0.2rem",
-        }}
-      >
-        {titulo}
-      </div>
-
-      <div
-        style={{
-          fontSize: "1.35rem",
-          fontWeight: 750,
-          color: "var(--text)",
-        }}
-      >
-        {quantidade}
-      </div>
-    </button>
-  );
-}
-
-function Aba({
-  titulo,
-  ativo,
-  onClick,
-}: {
-  titulo: string;
-  ativo: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        border: "none",
-        borderBottom: ativo
-          ? "2px solid var(--primary)"
-          : "2px solid transparent",
-        background: "transparent",
-        padding: "0.75rem 0.9rem",
-        cursor: "pointer",
-        fontSize: "0.85rem",
-        fontWeight: ativo ? 700 : 500,
-        color: ativo ? "var(--text)" : "var(--text-soft)",
-      }}
-    >
-      {titulo}
-    </button>
+    </div>
   );
 }

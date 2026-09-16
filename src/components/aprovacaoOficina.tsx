@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  aprovarOficina,
-  rejeitarOficina,
-} from "@/actions/aprovacao";
+import { aprovarOficina, rejeitarOficina } from "@/actions/aprovacao";
+import { Check, X, AlertCircle, Loader2 } from "lucide-react";
 
 export default function AprovacaoOficina({
   lojaId,
@@ -25,7 +23,6 @@ export default function AprovacaoOficina({
 
     try {
       await aprovarOficina(lojaId);
-
       router.refresh();
     } catch (error) {
       setErro(
@@ -50,7 +47,6 @@ export default function AprovacaoOficina({
 
     try {
       await rejeitarOficina(lojaId, observacao);
-
       router.refresh();
     } catch (error) {
       setErro(
@@ -64,21 +60,21 @@ export default function AprovacaoOficina({
   }
 
   return (
-    <div style={{ marginTop: "1.5rem" }}>
+    <div className="pt-2">
       {!modoRejeicao ? (
-        <>
+        <div className="flex flex-col sm:flex-row items-center gap-2.5">
           <button
             type="button"
             onClick={handleAprovar}
             disabled={loading}
-            className="btn-primary"
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              padding: "0.75rem",
-            }}
+            className="w-full flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-60 transition-all shadow-xs cursor-pointer"
           >
-            {loading ? "Aprovando..." : "Aprovar oficina"}
+            {loading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Check className="w-3.5 h-3.5" />
+            )}
+            <span>Aprovar Credenciamento</span>
           </button>
 
           <button
@@ -88,72 +84,47 @@ export default function AprovacaoOficina({
               setModoRejeicao(true);
             }}
             disabled={loading}
-            className="btn-ghost"
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              padding: "0.75rem",
-              marginTop: "0.75rem",
-            }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
           >
-            Rejeitar oficina
+            <X className="w-3.5 h-3.5" />
+            <span>Rejeitar</span>
           </button>
-        </>
+        </div>
       ) : (
-        <div>
-          <label
-            htmlFor="observacao"
-            style={{
-              display: "block",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Motivo da rejeição
-          </label>
+        <div className="space-y-3">
+          <div>
+            <label
+              htmlFor="observacao"
+              className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+            >
+              Motivo da Rejeição *
+            </label>
 
-          <textarea
-            id="observacao"
-            value={observacao}
-            onChange={(e) => setObservacao(e.target.value)}
-            placeholder="Informe por que o cadastro está sendo rejeitado..."
-            maxLength={500}
-            rows={4}
-            disabled={loading}
-            style={{
-              width: "100%",
-              resize: "vertical",
-              padding: "0.75rem",
-              borderRadius: 8,
-              border: "1px solid var(--border)",
-              background: "var(--surface)",
-              color: "var(--text)",
-              fontFamily: "inherit",
-              fontSize: "0.9rem",
-              boxSizing: "border-box",
-            }}
-          />
+            <textarea
+              id="observacao"
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              placeholder="Descreva o problema com a documentação para notificar o responsável..."
+              maxLength={500}
+              rows={3}
+              disabled={loading}
+              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 shadow-2xs transition-all resize-y"
+            />
+          </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "0.75rem",
-              marginTop: "0.75rem",
-            }}
-          >
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleRejeitar}
               disabled={loading}
-              className="btn-primary"
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                padding: "0.75rem",
-              }}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 disabled:opacity-60 transition-all shadow-xs cursor-pointer"
             >
-              {loading ? "Rejeitando..." : "Confirmar rejeição"}
+              {loading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <X className="w-3.5 h-3.5" />
+              )}
+              <span>Confirmar Rejeição</span>
             </button>
 
             <button
@@ -164,12 +135,7 @@ export default function AprovacaoOficina({
                 setModoRejeicao(false);
               }}
               disabled={loading}
-              className="btn-ghost"
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                padding: "0.75rem",
-              }}
+              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
             >
               Cancelar
             </button>
@@ -178,11 +144,9 @@ export default function AprovacaoOficina({
       )}
 
       {erro && (
-        <div
-          className="alert-error"
-          style={{ marginTop: "0.75rem" }}
-        >
-          {erro}
+        <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <span>{erro}</span>
         </div>
       )}
     </div>
