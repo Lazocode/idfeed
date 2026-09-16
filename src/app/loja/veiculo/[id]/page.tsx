@@ -257,7 +257,7 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>Registrar Manutenção</span>
+            <span>Registrar Nova Manutenção</span>
           </Link>
         </div>
 
