@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatData, TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
-import { enviarFoto, removerFoto } from "@/actions/fotos";
+import { removerFoto } from "@/actions/fotos";
 import type { MovimentacaoComRelacoes } from "@/lib/types";
 import { getSignedPhotoUrl } from "@/lib/photos";
+import FotoUploadForm from "@/components/foto-upload-form";
 import {
   ArrowLeft,
   Plus,
@@ -57,7 +58,6 @@ export default async function MaterialDetalhePage({ params }: { params: Promise<
     (fotos ?? []).map(async (f) => ({ ...f, signedUrl: await getSignedPhotoUrl(f.url) }))
   );
 
-  const enviarFotoComId = enviarFoto.bind(null, "material", material.id);
   const baixo = material.quantidade_atual < material.quantidade_minima;
 
   return (
@@ -165,21 +165,7 @@ export default async function MaterialDetalhePage({ params }: { params: Promise<
             ))}
           </div>
 
-          <form action={enviarFotoComId} className="flex flex-col sm:flex-row items-center gap-3">
-            <input
-              type="file"
-              name="foto"
-              accept="image/*"
-              required
-              className="w-full sm:w-auto flex-1 text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
-            />
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer"
-            >
-              Adicionar Foto
-            </button>
-          </form>
+          <FotoUploadForm entidadeTipo="material" entidadeId={material.id} />
         </div>
 
         {/* Movimentações de Estoque */}

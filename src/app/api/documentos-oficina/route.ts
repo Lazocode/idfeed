@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin, ensureBucketExists } from "@/lib/supabase";
 import crypto from "node:crypto";
 
 export const runtime = "nodejs";
@@ -110,19 +110,48 @@ export async function POST(request: Request) {
     const nomeArquivo = `${crypto.randomUUID()}.${extensao}`;
     const caminhoArquivo = `${lojaId}/${nomeArquivo}`;
 
+    // Garante que o bucket existe
+    await ensureBucketExists("documentos-oficinas", false);
+
     // Upload para o Storage
-    const { error: uploadError } = await supabaseAdmin.storage
+    let { error: uploadError } = await supabaseAdmin.storage
       .from("documentos-oficinas")
       .upload(caminhoArquivo, buffer, {
         contentType,
-        upsert: false,
+        upsert: true,
       });
+
+    if (uploadError) {
+      console.warn("Aviso no upload para documentos-oficinas:", uploadError);
+      const msg = uploadError.message?.toLowerCase() || "";
+      if (
+        msg.includes("not found") ||
+        msg.includes("bucket") ||
+        (uploadError as unknown as { statusCode?: string | number }).statusCode === "404"
+      ) {
+        try {
+          await supabaseAdmin.storage.createBucket("documentos-oficinas", {
+            public: false,
+            fileSizeLimit: 15 * 1024 * 1024,
+          });
+          const retry = await supabaseAdmin.storage
+            .from("documentos-oficinas")
+            .upload(caminhoArquivo, buffer, {
+              contentType,
+              upsert: true,
+            });
+          uploadError = retry.error;
+        } catch (bErr) {
+          console.error("Falha ao criar bucket documentos-oficinas:", bErr);
+        }
+      }
+    }
 
     if (uploadError) {
       console.error("ERRO NO UPLOAD:", uploadError);
 
       return NextResponse.json(
-        { error: "Não foi possível enviar o documento." },
+        { error: `Não foi possível enviar o documento: ${uploadError.message || "Erro no armazenamento."}` },
         { status: 500 }
       );
     }

@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseAdmin, FOTOS_BUCKET } from "@/lib/supabase";
+import { supabaseAdmin, FOTOS_BUCKET, ensureBucketExists } from "@/lib/supabase";
 import { requireRole } from "@/lib/security";
 import { revalidatePath } from "next/cache";
 import crypto from "node:crypto";
@@ -10,7 +10,7 @@ const ALLOWED: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = 10 * 1024 * 1024;
 type EntidadeFoto = "veiculo" | "material";
 
 async function verificarPropriedade(entidadeTipo: EntidadeFoto, entidadeId: string, lojaId: string) {
@@ -22,21 +22,59 @@ async function verificarPropriedade(entidadeTipo: EntidadeFoto, entidadeId: stri
 export async function enviarFoto(entidadeTipo: EntidadeFoto, entidadeId: string, formData: FormData) {
   const session = await requireRole(["admin", "mecanico"]);
   if (!["veiculo", "material"].includes(entidadeTipo)) throw new Error("Tipo de entidade inválido.");
-  if (!(await verificarPropriedade(entidadeTipo, entidadeId, session.user.lojaId))) throw new Error("Item não encontrado nesta loja.");
+  if (!(await verificarPropriedade(entidadeTipo, entidadeId, session.user.lojaId))) throw new Error("Item não encontrado nesta oficina.");
 
   const arquivo = formData.get("foto");
-  if (!(arquivo instanceof File) || arquivo.size === 0) throw new Error("Selecione uma foto.");
-  if (arquivo.size > MAX_SIZE) throw new Error("A foto deve ter no máximo 5 MB.");
+  if (!(arquivo instanceof File) || arquivo.size === 0) throw new Error("Selecione um arquivo de foto.");
+  if (arquivo.size > MAX_SIZE) throw new Error("A foto deve ter no máximo 10 MB.");
   const extensao = ALLOWED[arquivo.type];
   if (!extensao) throw new Error("Formato inválido. Use JPG, PNG ou WEBP.");
 
+  // Garante que o bucket 'fotos' existe no Supabase Storage
+  await ensureBucketExists(FOTOS_BUCKET, false);
+
   const caminho = `${entidadeTipo}/${entidadeId}/${crypto.randomUUID()}.${extensao}`;
   const buffer = Buffer.from(await arquivo.arrayBuffer());
-  const { error: erroUpload } = await supabaseAdmin.storage.from(FOTOS_BUCKET).upload(caminho, buffer, {
+
+  let { error: erroUpload } = await supabaseAdmin.storage.from(FOTOS_BUCKET).upload(caminho, buffer, {
     contentType: arquivo.type,
-    upsert: false,
+    upsert: true,
   });
-  if (erroUpload) throw new Error("Falha ao enviar a foto.");
+
+  // Se der erro de bucket inexistente (404), tenta criar o bucket e reenviar
+  if (erroUpload) {
+    console.warn("Aviso no upload inicial para Supabase Storage:", erroUpload);
+    const msg = erroUpload.message?.toLowerCase() || "";
+    if (
+      msg.includes("not found") ||
+      msg.includes("bucket") ||
+      (erroUpload as unknown as { statusCode?: string | number }).statusCode === "404" ||
+      (erroUpload as unknown as { status?: number }).status === 404
+    ) {
+      console.log(`Criando bucket "${FOTOS_BUCKET}" automaticamente...`);
+      try {
+        await supabaseAdmin.storage.createBucket(FOTOS_BUCKET, {
+          public: false,
+          fileSizeLimit: 15 * 1024 * 1024,
+        });
+
+        const retry = await supabaseAdmin.storage.from(FOTOS_BUCKET).upload(caminho, buffer, {
+          contentType: arquivo.type,
+          upsert: true,
+        });
+        erroUpload = retry.error;
+      } catch (createErr) {
+        console.error("Falha ao tentar criar bucket 'fotos':", createErr);
+      }
+    }
+  }
+
+  if (erroUpload) {
+    console.error("Erro definitivo no upload da foto:", erroUpload);
+    throw new Error(
+      `Falha ao enviar a foto: ${erroUpload.message || "Verifique se o bucket 'fotos' existe no Supabase Storage."}`
+    );
+  }
 
   const { error: dbError } = await supabaseAdmin.from("fotos").insert({
     entidade_tipo: entidadeTipo,
@@ -44,16 +82,19 @@ export async function enviarFoto(entidadeTipo: EntidadeFoto, entidadeId: string,
     url: caminho,
     enviado_por_usuario_id: session.user.id,
   });
+
   if (dbError) {
+    console.error("Erro ao registrar foto no banco de dados:", dbError);
     await supabaseAdmin.storage.from(FOTOS_BUCKET).remove([caminho]);
-    throw new Error("Não foi possível registrar a foto.");
+    throw new Error(`Não foi possível registrar a foto: ${dbError.message}`);
   }
+
   revalidatePath(`/loja/${entidadeTipo}/${entidadeId}`);
 }
 
 export async function removerFoto(fotoId: string, entidadeTipo: EntidadeFoto, entidadeId: string) {
   const session = await requireRole(["admin", "mecanico"]);
-  if (!(await verificarPropriedade(entidadeTipo, entidadeId, session.user.lojaId))) throw new Error("Item não encontrado nesta loja.");
+  if (!(await verificarPropriedade(entidadeTipo, entidadeId, session.user.lojaId))) throw new Error("Item não encontrado nesta oficina.");
 
   const { data: foto } = await supabaseAdmin.from("fotos").select("id, url, entidade_id, entidade_tipo").eq("id", fotoId).eq("entidade_id", entidadeId).eq("entidade_tipo", entidadeTipo).maybeSingle();
   if (!foto) throw new Error("Foto não encontrada.");
@@ -62,7 +103,14 @@ export async function removerFoto(fotoId: string, entidadeTipo: EntidadeFoto, en
   try {
     const marker = `/storage/v1/object/public/${FOTOS_BUCKET}/`;
     const idx = foto.url.indexOf(marker);
-    if (idx >= 0) await supabaseAdmin.storage.from(FOTOS_BUCKET).remove([decodeURIComponent(foto.url.slice(idx + marker.length))]);
-  } catch {}
+    if (idx >= 0) {
+      await supabaseAdmin.storage.from(FOTOS_BUCKET).remove([decodeURIComponent(foto.url.slice(idx + marker.length))]);
+    } else {
+      // foto.url é o caminho relativo salvo (ex: veiculo/id/arquivo.png)
+      await supabaseAdmin.storage.from(FOTOS_BUCKET).remove([foto.url]);
+    }
+  } catch (err) {
+    console.warn("Aviso ao remover foto do storage:", err);
+  }
   revalidatePath(`/loja/${entidadeTipo}/${entidadeId}`);
 }
