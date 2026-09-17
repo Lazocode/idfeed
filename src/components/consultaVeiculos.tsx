@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Lock,
-  Building2,
   Car,
   FileCheck2,
   Clock,
