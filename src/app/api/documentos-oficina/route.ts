@@ -23,9 +23,9 @@ import { checkUploadRateLimit } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 
 /**
- * Limite máximo em bytes para o tamanho do documento (5 MB).
+ * Limite máximo em bytes para o tamanho do documento (10 MB).
  */
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * Conjunto de MIME types suportados para envio de documentos.
@@ -153,19 +153,29 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // 8. Impede duplicidade de documentos com status pendente para a mesma oficina
+    // 8. Se já houver um documento com status 'pendente', substitui de forma segura
     const { data: documentoExistente } = await supabaseAdmin
       .from("documentos_oficina")
-      .select("id")
+      .select("id, caminho_arquivo")
       .eq("loja_id", lojaId)
       .eq("status", "pendente")
       .maybeSingle();
 
     if (documentoExistente) {
-      return NextResponse.json(
-        { error: "Já existe um documento comprobatório aguardando homologação." },
-        { status: 409 }
-      );
+      // Remove o arquivo físico anterior do storage
+      try {
+        await supabaseAdmin.storage
+          .from("documentos-oficinas")
+          .remove([documentoExistente.caminho_arquivo]);
+      } catch (errRemocao) {
+        console.warn("Aviso ao remover documento anterior do storage:", errRemocao);
+      }
+
+      // Remove o registro anterior do banco para dar lugar ao novo documento
+      await supabaseAdmin
+        .from("documentos_oficina")
+        .delete()
+        .eq("id", documentoExistente.id);
     }
 
     // 9. Nome de arquivo randômico não previsível

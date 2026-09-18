@@ -22,15 +22,17 @@ import { aprovarOficina, rejeitarOficina } from "@/actions/aprovacao";
 interface AprovacaoOficinaProps {
   /** Identificador único da oficina no banco de dados (UUID). */
   lojaId: string;
+  /** Status cadastral atual da oficina ('pendente', 'aprovada' ou 'rejeitada'). */
+  status?: string;
 }
 
 /**
  * Componente cliente com ações de moderação cadastral de oficinas credenciadas.
  *
- * @param props - Propriedades contendo o ID da loja a ser auditada.
+ * @param props - Propriedades contendo o ID da loja a ser auditada e seu status atual.
  * @returns Painel de botões de aprovação e modal/área de recusa com justificativa.
  */
-export default function AprovacaoOficina({ lojaId }: AprovacaoOficinaProps) {
+export default function AprovacaoOficina({ lojaId, status }: AprovacaoOficinaProps) {
   const router = useRouter();
 
   // Estados locais do fluxo de moderação
@@ -85,6 +87,15 @@ export default function AprovacaoOficina({ lojaId }: AprovacaoOficinaProps) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (status === "aprovada") {
+    return (
+      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2.5 font-medium">
+        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+        <span>Credenciamento homologado com sucesso. Oficina ativa no sistema.</span>
+      </div>
+    );
   }
 
   return (
