@@ -16,7 +16,7 @@
 "use client";
 
 // 1. Dependências e bibliotecas externas
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -28,11 +28,37 @@ import {
   ArrowRight,
   LogOut,
   ExternalLink,
+  Filter,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 // 2. Utilitários e formatadores internos
 import { formatPlaca, formatKm } from "@/lib/utils";
+
+/**
+ * Opções permitidas para o filtro de estado de conformidade veicular.
+ */
+export type FiltroEstadoVeiculo = "todos" | "conforme" | "proxima" | "vencida";
+
+/**
+ * Estrutura de visibilidade das colunas na tabela de prontuários.
+ */
+export interface ColunasVisiveis {
+  /** Coluna de matrícula / placa veicular. */
+  placa: boolean;
+  /** Coluna com modelo e versão comercial. */
+  modelo: boolean;
+  /** Coluna do titular / proprietário. */
+  proprietario: boolean;
+  /** Coluna de quilometragem aferida no odômetro. */
+  km_atual: boolean;
+  /** Coluna da estimativa para a próxima intervenção. */
+  km_proxima_revisao: boolean;
+  /** Coluna de indicador de estado de conformidade. */
+  estado: boolean;
+}
 
 /**
  * Interface estrita representando os atributos de um veículo no painel operacional.
@@ -276,49 +302,48 @@ export default function LojaDashboardView({
     listaVeiculos[0]?.id || "mock-v-1"
   );
 
-  // Viatura ativa no painel de inspeção lateral
-  const veiculoSelecionado = useMemo(() => {
-    return (
-      listaVeiculos.find((v) => v.id === selectedVehicleId) ||
-      listaVeiculos[0] ||
-      VEICULOS_HOMOLOGADOS_MOCK[0]
-    );
-  }, [listaVeiculos, selectedVehicleId]);
+  // Estados de controle para Filtros, Exportação CSV e Configuração de Colunas
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoVeiculo>("todos");
+  const [isFiltrosOpen, setIsFiltrosOpen] = useState(false);
+  const [isColunasOpen, setIsColunasOpen] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
-  // 1. Cálculos de métricas e KPIs operacionais da frota
-  const totalVeiculos = veiculos.length > 0 ? veiculos.length : 148;
+  // Referências para controle de clique externo nos popovers
+  const filtrosRef = useRef<HTMLDivElement>(null);
+  const colunasRef = useRef<HTMLDivElement>(null);
 
-  const emDia = useMemo(() => {
-    if (veiculos.length > 0) {
-      return veiculos.filter(
-        (v) => !v.km_proxima_revisao || v.km_proxima_revisao - v.km_atual > 3000
-      ).length;
-    }
-    return 131;
-  }, [veiculos]);
+  // Controle de visibilidade individual das colunas da tabela
+  const [colunasVisiveis, setColunasVisiveis] = useState<ColunasVisiveis>({
+    placa: true,
+    modelo: true,
+    proprietario: true,
+    km_atual: true,
+    km_proxima_revisao: true,
+    estado: true,
+  });
 
-  const revisaoProxima = useMemo(() => {
-    if (veiculos.length > 0) {
-      return veiculos.filter(
-        (v) => v.km_proxima_revisao && v.km_proxima_revisao - v.km_atual <= 3000
-      ).length;
-    }
-    return 14;
-  }, [veiculos]);
+  // Fecha os dropdowns abertos ao clicar fora de seus limites
+  useEffect(() => {
+    const handleClickFora = (evento: MouseEvent) => {
+      const target = evento.target as Node;
+      if (filtrosRef.current && !filtrosRef.current.contains(target)) {
+        setIsFiltrosOpen(false);
+      }
+      if (colunasRef.current && !colunasRef.current.contains(target)) {
+        setIsColunasOpen(false);
+      }
+    };
 
-  const estoqueBaixo = useMemo(() => {
-    if (materiais.length > 0) {
-      return materiais.filter((m) => m.quantidade_atual < m.quantidade_minima).length;
-    }
-    return 3;
-  }, [materiais]);
+    document.addEventListener("mousedown", handleClickFora);
+    return () => {
+      document.removeEventListener("mousedown", handleClickFora);
+    };
+  }, []);
 
-  const percentEmDia = useMemo(() => {
-    if (totalVeiculos > 0) {
-      return ((emDia / totalVeiculos) * 100).toFixed(1);
-    }
-    return "88.5";
-  }, [emDia, totalVeiculos]);
+  // Quantidade total de colunas atualmente ativas
+  const colunasAtivasCount = useMemo(() => {
+    return Object.values(colunasVisiveis).filter(Boolean).length;
+  }, [colunasVisiveis]);
 
   /**
    * Avalia a situação do estado de conformidade e formata a exibição do odômetro de próxima revisão.
@@ -368,6 +393,195 @@ export default function LojaDashboardView({
       estado: "Conforme" as const,
       corPonto: "bg-[#10B981]",
     };
+  };
+
+  // Contagem dinâmica por estado de conformidade para o painel de filtros
+  const contagemEstados = useMemo(() => {
+    let conforme = 0;
+    let proxima = 0;
+    let vencida = 0;
+
+    listaVeiculos.forEach((v) => {
+      const info = calcularEstadoRevisao(v);
+      if (info.estado === "Conforme") conforme++;
+      else if (info.estado === "Próxima" || info.estado === "Imediata") proxima++;
+      else if (info.estado === "Vencida") vencida++;
+    });
+
+    return { conforme, proxima, vencida };
+  }, [listaVeiculos]);
+
+  // Aplicação reativa do filtro de estado e da busca textual nos veículos
+  const veiculosFiltrados = useMemo(() => {
+    return listaVeiculos.filter((v) => {
+      // 1. Filtro por Estado
+      if (filtroEstado !== "todos") {
+        const info = calcularEstadoRevisao(v);
+        if (filtroEstado === "conforme" && info.estado !== "Conforme") {
+          return false;
+        }
+        if (
+          filtroEstado === "proxima" &&
+          info.estado !== "Próxima" &&
+          info.estado !== "Imediata"
+        ) {
+          return false;
+        }
+        if (filtroEstado === "vencida" && info.estado !== "Vencida") {
+          return false;
+        }
+      }
+
+      // 2. Filtro por busca textual (termo informado na barra de busca superior)
+      if (query && query.trim().length > 0) {
+        const termo = query.toLowerCase().trim();
+        const placaMatch = v.placa?.toLowerCase().includes(termo);
+        const modeloMatch = v.modelo?.toLowerCase().includes(termo);
+        const propMatch = v.proprietario_nome?.toLowerCase().includes(termo);
+        if (!placaMatch && !modeloMatch && !propMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [listaVeiculos, filtroEstado, query]);
+
+  // Viatura ativa no painel de inspeção lateral, mantida sincronizada com os filtros
+  const veiculoSelecionado = useMemo(() => {
+    if (veiculosFiltrados.length === 0) {
+      return listaVeiculos[0] || VEICULOS_HOMOLOGADOS_MOCK[0];
+    }
+    const encontrado = veiculosFiltrados.find((v) => v.id === selectedVehicleId);
+    return encontrado || veiculosFiltrados[0];
+  }, [veiculosFiltrados, selectedVehicleId, listaVeiculos]);
+
+  // 1. Cálculos de métricas e KPIs operacionais da frota
+  const totalVeiculos = veiculos.length > 0 ? veiculos.length : 148;
+
+  const emDia = useMemo(() => {
+    if (veiculos.length > 0) {
+      return veiculos.filter(
+        (v) => !v.km_proxima_revisao || v.km_proxima_revisao - v.km_atual > 3000
+      ).length;
+    }
+    return 131;
+  }, [veiculos]);
+
+  const revisaoProxima = useMemo(() => {
+    if (veiculos.length > 0) {
+      return veiculos.filter(
+        (v) => v.km_proxima_revisao && v.km_proxima_revisao - v.km_atual <= 3000
+      ).length;
+    }
+    return 14;
+  }, [veiculos]);
+
+  const estoqueBaixo = useMemo(() => {
+    if (materiais.length > 0) {
+      return materiais.filter((m) => m.quantidade_atual < m.quantidade_minima).length;
+    }
+    return 3;
+  }, [materiais]);
+
+  const percentEmDia = useMemo(() => {
+    if (totalVeiculos > 0) {
+      return ((emDia / totalVeiculos) * 100).toFixed(1);
+    }
+    return "88.5";
+  }, [emDia, totalVeiculos]);
+
+  /**
+   * Exporta a listagem atual de veículos filtrados em formato CSV estruturado.
+   * Aplica a marca de ordem de byte UTF-8 (\uFEFF) para visualização correta de acentos no Excel.
+   * Exporta estritamente as colunas configuradas como visíveis pelo operador.
+   */
+  const handleExportarCsv = () => {
+    if (veiculosFiltrados.length === 0) return;
+
+    const escapeCsv = (valor: string | number | null | undefined): string => {
+      if (valor === null || valor === undefined) return '""';
+      const texto = String(valor).replace(/"/g, '""');
+      return `"${texto}"`;
+    };
+
+    // Monta o cabeçalho respeitando a ordem e visibilidade das colunas
+    const cabecalhos: string[] = [];
+    if (colunasVisiveis.placa) cabecalhos.push("Matrícula / Placa");
+    if (colunasVisiveis.modelo) cabecalhos.push("Veículo & Versão");
+    if (colunasVisiveis.proprietario) cabecalhos.push("Proprietário");
+    if (colunasVisiveis.km_atual) cabecalhos.push("Odômetro Atual (km)");
+    if (colunasVisiveis.km_proxima_revisao) cabecalhos.push("Próxima Revisão");
+    if (colunasVisiveis.estado) cabecalhos.push("Estado");
+
+    // Monta as linhas de dados correspondentes
+    const linhas: string[] = veiculosFiltrados.map((v) => {
+      const colunasLinha: string[] = [];
+      const infoRevisao = calcularEstadoRevisao(v);
+
+      if (colunasVisiveis.placa) colunasLinha.push(escapeCsv(formatPlaca(v.placa)));
+      if (colunasVisiveis.modelo) colunasLinha.push(escapeCsv(v.modelo));
+      if (colunasVisiveis.proprietario) colunasLinha.push(escapeCsv(v.proprietario_nome || "—"));
+      if (colunasVisiveis.km_atual) colunasLinha.push(escapeCsv(formatKm(v.km_atual)));
+      if (colunasVisiveis.km_proxima_revisao) colunasLinha.push(escapeCsv(infoRevisao.textoProxima));
+      if (colunasVisiveis.estado) colunasLinha.push(escapeCsv(infoRevisao.estado));
+
+      return colunasLinha.join(";");
+    });
+
+    const conteudoCsv = [cabecalhos.join(";"), ...linhas].join("\r\n");
+
+    // Gera o blob com BOM UTF-8 (\uFEFF)
+    const blob = new Blob(["\uFEFF" + conteudoCsv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const dataAtual = new Date().toISOString().slice(0, 10);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `prontuarios-veiculares-${dataAtual}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Feedback visual temporário no botão
+    setExportando(true);
+    setTimeout(() => setExportando(false), 2000);
+  };
+
+  /**
+   * Alterna a visibilidade de uma coluna específica da tabela.
+   * Assegura que ao menos uma coluna permaneça sempre visível.
+   *
+   * @param chave - Identificador da coluna a ser alternada.
+   */
+  const handleToggleColuna = (chave: keyof ColunasVisiveis) => {
+    setColunasVisiveis((prev) => {
+      const ativas = Object.values(prev).filter(Boolean).length;
+      if (prev[chave] && ativas <= 1) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [chave]: !prev[chave],
+      };
+    });
+  };
+
+  /**
+   * Restaura todas as colunas para o estado visível padrão.
+   */
+  const handleRestaurarColunas = () => {
+    setColunasVisiveis({
+      placa: true,
+      modelo: true,
+      proprietario: true,
+      km_atual: true,
+      km_proxima_revisao: true,
+      estado: true,
+    });
   };
 
   /**
@@ -713,34 +927,280 @@ export default function LojaDashboardView({
                     Prontuários Veiculares Ativos
                   </h1>
                   <span className="text-xs text-slate-400 font-normal">
-                    {totalVeiculos} registos cadastrados na base homologada
+                    {filtroEstado === "todos" && (!query || query.trim() === "")
+                      ? `${veiculosFiltrados.length} registos cadastrados na base homologada`
+                      : `${veiculosFiltrados.length} de ${listaVeiculos.length} registos exibidos`}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Dropdown: Filtros */}
+                  <div className="relative" ref={filtrosRef}>
+                    <button
+                      id="btn-tabela-filtros"
+                      type="button"
+                      onClick={() => {
+                        setIsFiltrosOpen((prev) => !prev);
+                        setIsColunasOpen(false);
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
+                        filtroEstado !== "todos"
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : "text-slate-700 bg-white border-[#E2E8F0] hover:bg-slate-50"
+                      }`}
+                      title="Filtrar por estado de conformidade"
+                    >
+                      <span>Filtros</span>
+                      {filtroEstado !== "todos" && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+                      )}
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                          isFiltrosOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {/* Popover Menu: Filtros */}
+                    {isFiltrosOpen && (
+                      <div className="absolute right-0 top-full mt-1.5 w-60 bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
+                          <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                            Estado da Revisão
+                          </span>
+                          {filtroEstado !== "todos" && (
+                            <button
+                              type="button"
+                              onClick={() => setFiltroEstado("todos")}
+                              className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                            >
+                              Limpar
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFiltroEstado("todos");
+                              setIsFiltrosOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                              filtroEstado === "todos"
+                                ? "bg-slate-100 text-[#0F172A] font-bold"
+                                : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span>Todos</span>
+                            <span className="text-[11px] text-slate-400 font-mono font-normal">
+                              {listaVeiculos.length}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFiltroEstado("conforme");
+                              setIsFiltrosOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                              filtroEstado === "conforme"
+                                ? "bg-emerald-50 text-emerald-800 font-bold"
+                                : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                              <span>Conforme</span>
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-mono font-normal">
+                              {contagemEstados.conforme}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFiltroEstado("proxima");
+                              setIsFiltrosOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                              filtroEstado === "proxima"
+                                ? "bg-amber-50 text-amber-800 font-bold"
+                                : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                              <span>Próxima revisão</span>
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-mono font-normal">
+                              {contagemEstados.proxima}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFiltroEstado("vencida");
+                              setIsFiltrosOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                              filtroEstado === "vencida"
+                                ? "bg-rose-50 text-rose-800 font-bold"
+                                : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+                              <span>Vencida</span>
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-mono font-normal">
+                              {contagemEstados.vencida}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botão: Exportar CSV */}
                   <button
+                    id="btn-tabela-exportar"
                     type="button"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors cursor-pointer"
+                    onClick={handleExportarCsv}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
+                    title="Exportar registros filtrados em arquivo CSV (Excel)"
                   >
-                    <span>Filtros</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    {exportando ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700 font-semibold">Exportado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3 h-3 text-slate-400" />
+                        <span>Exportar</span>
+                      </>
+                    )}
                   </button>
 
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3 h-3 text-slate-400" />
-                    <span>Exportar</span>
-                  </button>
+                  {/* Dropdown: Configurar colunas */}
+                  <div className="relative" ref={colunasRef}>
+                    <button
+                      id="btn-tabela-configurar-colunas"
+                      type="button"
+                      onClick={() => {
+                        setIsColunasOpen((prev) => !prev);
+                        setIsFiltrosOpen(false);
+                      }}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
+                        isColunasOpen
+                          ? "bg-slate-50 text-slate-900 border-slate-300"
+                          : "text-slate-700 bg-white border-[#E2E8F0] hover:bg-slate-50"
+                      }`}
+                      title="Configurar visibilidade das colunas"
+                    >
+                      <SlidersHorizontal className="w-3 h-3 text-slate-400" />
+                      <span>Configurar colunas</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 transition-colors cursor-pointer"
-                  >
-                    <SlidersHorizontal className="w-3 h-3 text-slate-400" />
-                    <span>Configurar colunas</span>
-                  </button>
+                    {/* Popover Menu: Configurar Colunas */}
+                    {isColunasOpen && (
+                      <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
+                          <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                            Colunas Visíveis
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleRestaurarColunas}
+                            className="text-[11px] text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 cursor-pointer"
+                            title="Exibir todas as colunas padrão"
+                          >
+                            <RotateCcw className="w-2.5 h-2.5" />
+                            <span>Padrão</span>
+                          </button>
+                        </div>
+
+                        <div className="space-y-1 text-xs">
+                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={colunasVisiveis.placa}
+                              onChange={() => handleToggleColuna("placa")}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                            />
+                            <span className="text-slate-700">Matrícula / Placa</span>
+                          </label>
+
+                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={colunasVisiveis.modelo}
+                              onChange={() => handleToggleColuna("modelo")}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                            />
+                            <span className="text-slate-700">Veículo &amp; Versão</span>
+                          </label>
+
+                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={colunasVisiveis.proprietario}
+                              onChange={() => handleToggleColuna("proprietario")}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                            />
+                            <span className="text-slate-700">Proprietário</span>
+                          </label>
+
+                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={colunasVisiveis.km_atual}
+                              onChange={() => handleToggleColuna("km_atual")}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                            />
+                            <span className="text-slate-700">Odômetro Atual</span>
+                          </label>
+
+                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={colunasVisiveis.km_proxima_revisao}
+                              onChange={() => handleToggleColuna("km_proxima_revisao")}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                            />
+                            <span className="text-slate-700">Próxima Revisão</span>
+                          </label>
+
+                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={colunasVisiveis.estado}
+                              onChange={() => handleToggleColuna("estado")}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                            />
+                            <span className="text-slate-700">Estado</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Indicador de Filtro Ativo com Botão Limpar */}
+                  {filtroEstado !== "todos" && (
+                    <button
+                      type="button"
+                      onClick={() => setFiltroEstado("todos")}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                      title="Limpar filtro ativo"
+                    >
+                      <X className="w-3 h-3" />
+                      <span>Limpar</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -749,75 +1209,122 @@ export default function LojaDashboardView({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-[#E2E8F0] bg-[#FFFFFF] text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      <th className="py-3 px-4">Matrícula / Placa</th>
-                      <th className="py-3 px-4">Veículo &amp; Versão</th>
-                      <th className="py-3 px-4">Proprietário</th>
-                      <th className="py-3 px-4">Odômetro Atual</th>
-                      <th className="py-3 px-4">Próxima Revisão</th>
-                      <th className="py-3 px-4">Estado</th>
+                      {colunasVisiveis.placa && (
+                        <th className="py-3 px-4">Matrícula / Placa</th>
+                      )}
+                      {colunasVisiveis.modelo && (
+                        <th className="py-3 px-4">Veículo &amp; Versão</th>
+                      )}
+                      {colunasVisiveis.proprietario && (
+                        <th className="py-3 px-4">Proprietário</th>
+                      )}
+                      {colunasVisiveis.km_atual && (
+                        <th className="py-3 px-4">Odômetro Atual</th>
+                      )}
+                      {colunasVisiveis.km_proxima_revisao && (
+                        <th className="py-3 px-4">Próxima Revisão</th>
+                      )}
+                      {colunasVisiveis.estado && (
+                        <th className="py-3 px-4">Estado</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E2E8F0]">
-                    {listaVeiculos.map((v) => {
-                      const isSelected = veiculoSelecionado?.id === v.id;
-                      const { textoProxima, estado, corPonto } = calcularEstadoRevisao(v);
-
-                      return (
-                        <tr
-                          key={v.id}
-                          id={`row-veiculo-${v.id}`}
-                          onClick={() => setSelectedVehicleId(v.id)}
-                          className={`cursor-pointer transition-colors ${
-                            isSelected
-                              ? "bg-[#F8FAFC]"
-                              : "hover:bg-slate-50/80 bg-white"
-                          }`}
+                    {veiculosFiltrados.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={colunasAtivasCount}
+                          className="py-12 text-center text-slate-400 text-xs"
                         >
-                          {/* Coluna 1: Matrícula / Placa com Badge */}
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <span className="inline-block px-2.5 py-1 rounded-md bg-[#F8FAFC] border border-[#E2E8F0] font-mono text-xs font-bold text-[#0F172A] tracking-wider text-center min-w-[76px]">
-                              {formatPlaca(v.placa)}
-                            </span>
-                          </td>
-
-                          {/* Coluna 2: Veículo & Versão */}
-                          <td className="py-3 px-4">
-                            <span
-                              className={`text-xs ${
-                                isSelected
-                                  ? "font-bold text-[#0F172A]"
-                                  : "font-medium text-slate-700"
-                              }`}
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Filter className="w-5 h-5 text-slate-300" />
+                            <p className="font-semibold text-slate-700">
+                              Nenhum veículo encontrado para os filtros ativos.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setFiltroEstado("todos")}
+                              className="text-xs text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
                             >
-                              {v.modelo}
-                            </span>
-                          </td>
+                              Limpar filtro de estado
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      veiculosFiltrados.map((v) => {
+                        const isSelected = veiculoSelecionado?.id === v.id;
+                        const { textoProxima, estado, corPonto } = calcularEstadoRevisao(v);
 
-                          {/* Coluna 3: Proprietário */}
-                          <td className="py-3 px-4 text-slate-600 text-xs">
-                            {v.proprietario_nome || "—"}
-                          </td>
+                        return (
+                          <tr
+                            key={v.id}
+                            id={`row-veiculo-${v.id}`}
+                            onClick={() => setSelectedVehicleId(v.id)}
+                            className={`cursor-pointer transition-colors ${
+                              isSelected
+                                ? "bg-[#F8FAFC]"
+                                : "hover:bg-slate-50/80 bg-white"
+                            }`}
+                          >
+                            {/* Coluna 1: Matrícula / Placa com Badge */}
+                            {colunasVisiveis.placa && (
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <span className="inline-block px-2.5 py-1 rounded-md bg-[#F8FAFC] border border-[#E2E8F0] font-mono text-xs font-bold text-[#0F172A] tracking-wider text-center min-w-[76px]">
+                                  {formatPlaca(v.placa)}
+                                </span>
+                              </td>
+                            )}
 
-                          {/* Coluna 4: Odômetro Atual */}
-                          <td className="py-3 px-4 font-mono font-bold text-[#0F172A] text-xs whitespace-nowrap">
-                            {formatKm(v.km_atual)}
-                          </td>
+                            {/* Coluna 2: Veículo & Versão */}
+                            {colunasVisiveis.modelo && (
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`text-xs ${
+                                    isSelected
+                                      ? "font-bold text-[#0F172A]"
+                                      : "font-medium text-slate-700"
+                                  }`}
+                                >
+                                  {v.modelo}
+                                </span>
+                              </td>
+                            )}
 
-                          {/* Coluna 5: Próxima Revisão */}
-                          <td className="py-3 px-4 text-slate-600 text-xs whitespace-nowrap">
-                            {textoProxima}
-                          </td>
+                            {/* Coluna 3: Proprietário */}
+                            {colunasVisiveis.proprietario && (
+                              <td className="py-3 px-4 text-slate-600 text-xs">
+                                {v.proprietario_nome || "—"}
+                              </td>
+                            )}
 
-                          {/* Coluna 6: Estado com Indicador de Ponto */}
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0F172A]">
-                              <span className={`w-2 h-2 rounded-full ${corPonto}`} />
-                              <span>{estado}</span>
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            {/* Coluna 4: Odômetro Atual */}
+                            {colunasVisiveis.km_atual && (
+                              <td className="py-3 px-4 font-mono font-bold text-[#0F172A] text-xs whitespace-nowrap">
+                                {formatKm(v.km_atual)}
+                              </td>
+                            )}
+
+                            {/* Coluna 5: Próxima Revisão */}
+                            {colunasVisiveis.km_proxima_revisao && (
+                              <td className="py-3 px-4 text-slate-600 text-xs whitespace-nowrap">
+                                {textoProxima}
+                              </td>
+                            )}
+
+                            {/* Coluna 6: Estado com Indicador de Ponto */}
+                            {colunasVisiveis.estado && (
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0F172A]">
+                                  <span className={`w-2 h-2 rounded-full ${corPonto}`} />
+                                  <span>{estado}</span>
+                                </span>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
