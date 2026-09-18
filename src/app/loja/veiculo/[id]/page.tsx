@@ -224,24 +224,24 @@ export default async function VeiculoDetalhePage({ params }: VeiculoDetalhePageP
                 </summary>
                 <form
                   action={atualizarProximaRevisao.bind(null, veiculo.id)}
-                  className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200/60"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 pt-2 border-t border-slate-200/60 w-full"
                 >
                   <input
                     name="kmProximaRevisao"
                     type="number"
                     defaultValue={veiculo.km_proxima_revisao ?? undefined}
                     placeholder="Km previsto"
-                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 w-28"
+                    className="w-full sm:w-32 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 sm:py-1 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <input
                     name="notaProximaRevisao"
                     defaultValue={veiculo.nota_proxima_revisao ?? ""}
-                    placeholder="Observação"
-                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 w-44"
+                    placeholder="Observação da revisão"
+                    className="w-full sm:flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 sm:py-1 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-1.5 sm:py-1 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors cursor-pointer text-center"
                   >
                     Salvar
                   </button>

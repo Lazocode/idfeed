@@ -217,26 +217,26 @@ export default async function NovaManutencaoPage({ params }: NovaManutencaoPageP
 
               <div className="divide-y divide-slate-100">
                 {materiais.map((m) => (
-                  <div key={m.id} className="py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                  <div key={m.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <input
                         id={`check-peca-${m.id}`}
                         type="checkbox"
                         name={`peca_${m.id}`}
                         disabled={m.quantidade_atual === 0}
-                        className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+                        className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50 shrink-0"
                       />
-                      <label htmlFor={`check-peca-${m.id}`} className="cursor-pointer">
-                        <span className="text-sm font-medium text-slate-800 block">
+                      <label htmlFor={`check-peca-${m.id}`} className="cursor-pointer min-w-0 flex-1">
+                        <span className="text-sm font-medium text-slate-800 block truncate">
                           {m.nome}
                         </span>
-                        <span className={`text-xs ${m.quantidade_atual === 0 ? "text-rose-500 font-semibold" : "text-slate-400"}`}>
+                        <span className={`text-xs block ${m.quantidade_atual === 0 ? "text-rose-500 font-semibold" : "text-slate-400"}`}>
                           {m.quantidade_atual === 0 ? "Sem estoque" : `${m.quantidade_atual} un. disponíveis no estoque`}
                         </span>
                       </label>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-auto pl-7 sm:pl-0">
                       <label htmlFor={`qtd-peca-${m.id}`} className="text-xs text-slate-500">Qtd:</label>
                       <input
                         id={`qtd-peca-${m.id}`}
@@ -246,7 +246,7 @@ export default async function NovaManutencaoPage({ params }: NovaManutencaoPageP
                         max={m.quantidade_atual}
                         defaultValue={1}
                         disabled={m.quantidade_atual === 0}
-                        className="w-16 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-sm text-center text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                        className="w-20 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-sm text-center text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                       />
                     </div>
                   </div>

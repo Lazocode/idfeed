@@ -110,13 +110,15 @@ body {
 /* ─── Form inputs ────────────────────────────────── */
 .input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.6rem 0.8rem;
   color: var(--text);
   font-size: 0.875rem;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .input:focus {
   outline: none;
@@ -728,6 +730,14 @@ body > div { min-height: 100vh; }
   .login-feature-card small { display: none; }
   .login-panel { padding: 38px 16px 48px; }
   .login-card { padding: 22px 18px; border-radius: 20px; }
+
+  /* Prevenção de zoom forçado no iOS Safari e melhor ergonomia em telas compactas */
+  .input,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .card, .metric-card, .login-feature-card, .login-card, .btn-primary, .btn-green, .btn-ghost { transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease; }
@@ -746,11 +756,39 @@ html, body {
   overflow-x: hidden;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 img, svg, video, canvas {
   max-width: 100%;
 }
 
 button, input, select, textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Evita overflow horizontal em containers de formulário e labels longos */
+form {
+  max-width: 100%;
+  min-width: 0;
+}
+
+label {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* Campos de texto e números fluidos */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+select,
+textarea {
   max-width: 100%;
 }
 
