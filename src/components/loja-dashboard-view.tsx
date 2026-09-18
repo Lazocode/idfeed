@@ -28,9 +28,9 @@ import {
   ArrowRight,
   LogOut,
   ExternalLink,
-  Filter,
   RotateCcw,
   X,
+  Search,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -302,6 +302,34 @@ export default function LojaDashboardView({
     listaVeiculos[0]?.id || "mock-v-1"
   );
 
+  // Termo da barra de pesquisa com sincronização instantânea
+  const [termoBusca, setTermoBusca] = useState<string>(query || "");
+  const inputBuscaRef = useRef<HTMLInputElement>(null);
+
+  // Detecção de plataforma para o rótulo do atalho de teclado (⌘K no Mac / Ctrl+K no Windows e Linux)
+  const isMac =
+    typeof navigator !== "undefined"
+      ? /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent)
+      : false;
+  const atalhoTeclado = isMac ? "⌘K" : "Ctrl+K";
+
+  // Hook do atalho de teclado ⌘K / Ctrl+K para foco imediato no campo de pesquisa
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ativa o atalho se pressionado Ctrl+K (Windows/Linux) ou ⌘K (Mac)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputBuscaRef.current?.focus();
+        inputBuscaRef.current?.select();
+      } else if (e.key === "Escape" && document.activeElement === inputBuscaRef.current) {
+        inputBuscaRef.current?.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // Estados de controle para Filtros, Exportação CSV e Configuração de Colunas
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoVeiculo>("todos");
   const [isFiltrosOpen, setIsFiltrosOpen] = useState(false);
@@ -411,10 +439,21 @@ export default function LojaDashboardView({
     return { conforme, proxima, vencida };
   }, [listaVeiculos]);
 
+  /**
+   * Sanitiza identificadores (placas, tokens, códigos) removendo hífens, pontos e caracteres especiais.
+   *
+   * @param valor - Texto de entrada a ser normalizado.
+   * @returns String alfanumérica limpa em caixa baixa.
+   */
+  const sanitizarIdentificador = (valor: string | null | undefined): string => {
+    if (!valor) return "";
+    return valor.toLowerCase().replace(/[^a-z0-9]/g, "");
+  };
+
   // Aplicação reativa do filtro de estado e da busca textual nos veículos
   const veiculosFiltrados = useMemo(() => {
     return listaVeiculos.filter((v) => {
-      // 1. Filtro por Estado
+      // 1. Filtro por Estado de Revisão
       if (filtroEstado !== "todos") {
         const info = calcularEstadoRevisao(v);
         if (filtroEstado === "conforme" && info.estado !== "Conforme") {
@@ -432,29 +471,49 @@ export default function LojaDashboardView({
         }
       }
 
-      // 2. Filtro por busca textual (termo informado na barra de busca superior)
-      if (query && query.trim().length > 0) {
-        const termo = query.toLowerCase().trim();
-        const placaMatch = v.placa?.toLowerCase().includes(termo);
-        const modeloMatch = v.modelo?.toLowerCase().includes(termo);
-        const propMatch = v.proprietario_nome?.toLowerCase().includes(termo);
-        if (!placaMatch && !modeloMatch && !propMatch) {
+      // 2. Filtro instantâneo por busca textual (placa, modelo/versão, proprietário ou token)
+      if (termoBusca && termoBusca.trim().length > 0) {
+        const termoTrim = termoBusca.trim().toLowerCase();
+        const termoSanitizado = sanitizarIdentificador(termoBusca);
+
+        // Correspondência por Placa (insensível a hífens, maiúsculas/minúsculas e espaços)
+        const placaSanitizada = sanitizarIdentificador(v.placa);
+        const placaMatch =
+          placaSanitizada.includes(termoSanitizado) ||
+          (v.placa ? v.placa.toLowerCase().includes(termoTrim) : false);
+
+        // Correspondência por Modelo e Versão
+        const modeloMatch = v.modelo
+          ? v.modelo.toLowerCase().includes(termoTrim)
+          : false;
+
+        // Correspondência por Nome do Proprietário
+        const propMatch = v.proprietario_nome
+          ? v.proprietario_nome.toLowerCase().includes(termoTrim)
+          : false;
+
+        // Correspondência por Token Público / Ordem de Serviço / ID
+        const tokenMatch =
+          (v.public_token && v.public_token.toLowerCase().includes(termoTrim)) ||
+          v.id.toLowerCase().includes(termoTrim);
+
+        if (!placaMatch && !modeloMatch && !propMatch && !tokenMatch) {
           return false;
         }
       }
 
       return true;
     });
-  }, [listaVeiculos, filtroEstado, query]);
+  }, [listaVeiculos, filtroEstado, termoBusca]);
 
-  // Viatura ativa no painel de inspeção lateral, mantida sincronizada com os filtros
-  const veiculoSelecionado = useMemo(() => {
+  // Viatura ativa no painel de inspeção lateral, mantida sincronizada com os filtros e busca
+  const veiculoSelecionado = useMemo<VeiculoDashboard | null>(() => {
     if (veiculosFiltrados.length === 0) {
-      return listaVeiculos[0] || VEICULOS_HOMOLOGADOS_MOCK[0];
+      return null;
     }
     const encontrado = veiculosFiltrados.find((v) => v.id === selectedVehicleId);
     return encontrado || veiculosFiltrados[0];
-  }, [veiculosFiltrados, selectedVehicleId, listaVeiculos]);
+  }, [veiculosFiltrados, selectedVehicleId]);
 
   // 1. Cálculos de métricas e KPIs operacionais da frota
   const totalVeiculos = veiculos.length > 0 ? veiculos.length : 148;
@@ -585,6 +644,23 @@ export default function LojaDashboardView({
   };
 
   /**
+   * Limpa o termo de pesquisa e devolve o foco imediatamente ao campo de busca.
+   */
+  const handleLimparBusca = () => {
+    setTermoBusca("");
+    inputBuscaRef.current?.focus();
+  };
+
+  /**
+   * Limpa o termo de pesquisa e redefine o filtro de estado para exibir todos os registros.
+   */
+  const handleLimparBuscaEFiltros = () => {
+    setTermoBusca("");
+    setFiltroEstado("todos");
+    inputBuscaRef.current?.focus();
+  };
+
+  /**
    * Copia a chave pública de auditoria (token LGPD) para a área de transferência.
    *
    * @param token - Chave pública alfanumérica.
@@ -640,26 +716,44 @@ export default function LojaDashboardView({
             </div>
           </div>
 
-          {/* Centro: Campo Amplo de Pesquisa Integrada */}
+          {/* Centro: Barra de Pesquisa Rápida com Atalho ⌘K / Ctrl+K */}
           <div className="flex-1 max-w-xl mx-2">
-            <form
-              method="get"
-              action="/loja/dashboard"
-              className="relative flex items-center w-full"
-            >
+            <div className="relative flex items-center w-full">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
               <input
+                ref={inputBuscaRef}
                 id="input-busca-dashboard"
                 name="q"
-                defaultValue={query}
+                type="text"
+                value={termoBusca}
+                onChange={(e) => setTermoBusca(e.target.value)}
                 placeholder="Buscar por matrícula, proprietário ou ordem de serviço..."
-                className="w-full bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-lg pl-4 pr-12 py-2 text-xs text-[#0F172A] placeholder:text-slate-400 transition-colors focus:outline-none"
+                className="w-full bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-lg pl-9 pr-14 py-2 text-xs text-[#0F172A] placeholder:text-slate-400 transition-colors focus:outline-none"
               />
-              <div className="absolute right-3 flex items-center gap-1.5 pointer-events-none">
-                <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-[#E2E8F0] rounded shadow-2xs">
-                  ⌘K
-                </kbd>
+              <div className="absolute right-2.5 flex items-center gap-1.5">
+                {termoBusca.length > 0 ? (
+                  <button
+                    id="btn-limpar-busca-input"
+                    type="button"
+                    onClick={handleLimparBusca}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-md transition-colors cursor-pointer"
+                    title="Limpar pesquisa (Esc)"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <kbd
+                    onClick={() => {
+                      inputBuscaRef.current?.focus();
+                    }}
+                    className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-[#E2E8F0] rounded shadow-2xs cursor-pointer select-none"
+                    title={`Pressione ${atalhoTeclado} para pesquisar`}
+                  >
+                    {atalhoTeclado}
+                  </kbd>
+                )}
               </div>
-            </form>
+            </div>
           </div>
 
           {/* Lado Direito: Ação + Registrar e Perfil do Usuário */}
@@ -952,9 +1046,11 @@ export default function LojaDashboardView({
                     Prontuários Veiculares Ativos
                   </h1>
                   <span className="text-xs text-slate-400 font-normal">
-                    {filtroEstado === "todos" && (!query || query.trim() === "")
-                      ? `${veiculosFiltrados.length} registos cadastrados na base homologada`
-                      : `${veiculosFiltrados.length} de ${listaVeiculos.length} registos exibidos`}
+                    {veiculosFiltrados.length}{" "}
+                    {veiculosFiltrados.length === 1
+                      ? "registro cadastrado"
+                      : "registros cadastrados"}{" "}
+                    na base homologada
                   </span>
                 </div>
 
@@ -1262,16 +1358,23 @@ export default function LojaDashboardView({
                           className="py-12 text-center text-slate-400 text-xs"
                         >
                           <div className="flex flex-col items-center justify-center gap-2">
-                            <Filter className="w-5 h-5 text-slate-300" />
+                            <Search className="w-5 h-5 text-slate-300" />
                             <p className="font-semibold text-slate-700">
-                              Nenhum veículo encontrado para os filtros ativos.
+                              {termoBusca
+                                ? `Nenhum veículo encontrado para "${termoBusca}".`
+                                : "Nenhum veículo encontrado para os filtros ativos."}
+                            </p>
+                            <p className="text-[11px] text-slate-400 max-w-sm">
+                              {termoBusca
+                                ? "Tente buscar por outra placa, modelo ou proprietário."
+                                : "Tente alterar ou redefinir os filtros selecionados."}
                             </p>
                             <button
                               type="button"
-                              onClick={() => setFiltroEstado("todos")}
-                              className="text-xs text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
+                              onClick={handleLimparBuscaEFiltros}
+                              className="mt-1 px-3 py-1.5 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md font-semibold cursor-pointer transition-colors"
                             >
-                              Limpar filtro de estado
+                              {termoBusca ? "Limpar busca" : "Limpar filtros"}
                             </button>
                           </div>
                         </td>
@@ -1358,180 +1461,207 @@ export default function LojaDashboardView({
             {/* ════════════ LADO DIREITO: PAINEL INSPETOR (DOSSIÊ DO VEÍCULO) ════════════ */}
             <aside
               aria-label="Dossiê Técnico do Veículo Selecionado"
-              className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-2xs flex flex-col justify-between"
+              className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-2xs flex flex-col justify-between min-h-[480px]"
             >
-              <div>
-                {/* Cabeçalho do Inspetor */}
-                <div className="pb-2">
-                  <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider block mb-1">
-                    Detalhe do Prontuário
-                  </span>
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-xl font-bold font-mono text-[#0F172A] tracking-tight">
-                      {formatPlaca(veiculoSelecionado.placa)}
-                    </span>
-                    <span className="text-sm font-medium text-slate-600">
-                      {veiculoSelecionado.modelo}
-                    </span>
-                  </div>
-                </div>
+              {veiculoSelecionado ? (
+                <>
+                  <div>
+                    {/* Cabeçalho do Inspetor */}
+                    <div className="pb-2">
+                      <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider block mb-1">
+                        Detalhe do Prontuário
+                      </span>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-xl font-bold font-mono text-[#0F172A] tracking-tight">
+                          {formatPlaca(veiculoSelecionado.placa)}
+                        </span>
+                        <span className="text-sm font-medium text-slate-600">
+                          {veiculoSelecionado.modelo}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Card Chave Pública de Auditoria (LGPD) */}
-                <div className="mt-4 p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">
-                      Chave Pública de Auditoria (LGPD)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleCopyToken(
-                          veiculoSelecionado.public_token || veiculoSelecionado.id
-                        )
-                      }
-                      className="text-slate-400 hover:text-slate-700 p-0.5 rounded cursor-pointer"
-                      title="Copiar token"
+                    {/* Card Chave Pública de Auditoria (LGPD) */}
+                    <div className="mt-4 p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">
+                          Chave Pública de Auditoria (LGPD)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopyToken(
+                              veiculoSelecionado.public_token || veiculoSelecionado.id
+                            )
+                          }
+                          className="text-slate-400 hover:text-slate-700 p-0.5 rounded cursor-pointer"
+                          title="Copiar token"
+                        >
+                          {tokenCopiado ? (
+                            <Check className="w-3.5 h-3.5 text-[#10B981]" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="mt-1">
+                        <span
+                          onClick={() =>
+                            handleCopyToken(
+                              veiculoSelecionado.public_token || veiculoSelecionado.id
+                            )
+                          }
+                          className="text-xs font-mono font-semibold text-[#2563EB] hover:underline cursor-pointer break-all"
+                        >
+                          {veiculoSelecionado.public_token ||
+                            `token-${veiculoSelecionado.id.slice(0, 24)}`}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        Válida para consulta pública sem expor CPF.
+                      </p>
+                    </div>
+
+                    {/* Seção: Histórico Recente de Serviços */}
+                    <div className="mt-6">
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-3">
+                        Histórico Recente de Serviços
+                      </span>
+
+                      <div className="space-y-4 text-xs">
+                        {/* Item 1 da Linha do Tempo */}
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0 mt-1.5" />
+                          <div className="flex-1">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="font-bold text-[#0F172A]">
+                                Revisão Preventiva ({formatKm(veiculoSelecionado.km_atual)})
+                              </span>
+                              <span className="font-mono font-bold text-[#0F172A]">
+                                R$ 510,00
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Realizado em 12 Ago 2026 por Diego Alves
+                            </p>
+                            <p className="text-[11px] text-slate-600 mt-0.5">
+                              Peças: Óleo 5W30, Filtro Óleo, Filtro Ar
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Item 2 da Linha do Tempo */}
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5" />
+                          <div className="flex-1">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="font-bold text-[#0F172A]">
+                                Sistema de Travões (46.800 km)
+                              </span>
+                              <span className="font-mono font-bold text-[#0F172A]">
+                                R$ 380,00
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Realizado em 20 Mar 2026 por Diego Alves
+                            </p>
+                            <p className="text-[11px] text-slate-600 mt-0.5">
+                              Peças: Pastilhas Dianteiras, Fluido DOT4
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Item 3 da Linha do Tempo */}
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5" />
+                          <div className="flex-1">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="font-bold text-[#0F172A]">
+                                Substituição Bateria (38.500 km)
+                              </span>
+                              <span className="font-mono font-bold text-[#0F172A]">
+                                R$ 590,00
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Realizado em 14 Nov 2025 por Diego Alves
+                            </p>
+                            <p className="text-[11px] text-slate-600 mt-0.5">
+                              Peças: Bateria Moura 60Ah Selada
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Seção: Comprovação Visual Aferida (Fotos) */}
+                    <div className="mt-6">
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-3">
+                        Comprovação Visual Aferida (Fotos)
+                      </span>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Mini-Card 1: Odômetro */}
+                        <div className="p-3 rounded-lg border border-[#E2E8F0] bg-white">
+                          <span className="text-xs font-bold text-[#0F172A] block">
+                            [Odômetro {formatKm(veiculoSelecionado.km_atual).replace(" km", "")}]
+                          </span>
+                          <span className="text-[10px] text-slate-400 block mt-0.5">
+                            12/08/2026 • Painel
+                          </span>
+                        </div>
+
+                        {/* Mini-Card 2: NF & Peças */}
+                        <div className="p-3 rounded-lg border border-[#E2E8F0] bg-white">
+                          <span className="text-xs font-bold text-[#0F172A] block">
+                            [NF &amp; Peças]
+                          </span>
+                          <span className="text-[10px] text-slate-400 block mt-0.5">
+                            12/08/2026 • Comprovativo
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botão de Ação Inferior: Abrir Prontuário Completo */}
+                  <div className="mt-8 pt-2">
+                    <Link
+                      id="btn-abrir-prontuario-completo"
+                      href={`/loja/veiculo/${veiculoSelecionado.id}`}
+                      className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 text-white text-xs font-semibold tracking-wide transition-colors shadow-xs cursor-pointer text-center"
                     >
-                      {tokenCopiado ? (
-                        <Check className="w-3.5 h-3.5 text-[#10B981]" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
+                      <span>Abrir Prontuário Completo</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
                   </div>
-
-                  <div className="mt-1">
-                    <span
-                      onClick={() =>
-                        handleCopyToken(
-                          veiculoSelecionado.public_token || veiculoSelecionado.id
-                        )
-                      }
-                      className="text-xs font-mono font-semibold text-[#2563EB] hover:underline cursor-pointer break-all"
-                    >
-                      {veiculoSelecionado.public_token ||
-                        `token-${veiculoSelecionado.id.slice(0, 24)}`}
-                    </span>
+                </>
+              ) : (
+                /* Empty State do Painel Inspetor */
+                <div className="h-full my-auto flex flex-col items-center justify-center text-center py-16 px-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <Search className="w-6 h-6 text-slate-400" />
                   </div>
-
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Válida para consulta pública sem expor CPF.
+                  <h3 className="text-sm font-bold text-[#0F172A] mb-1">
+                    Nenhum veículo selecionado
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-[240px] mb-4">
+                    {termoBusca
+                      ? `Nenhum veículo corresponde à busca por "${termoBusca}".`
+                      : "Nenhum prontuário atende aos filtros atuais."}
                   </p>
+                  <button
+                    id="btn-limpar-busca-inspetor"
+                    type="button"
+                    onClick={handleLimparBuscaEFiltros}
+                    className="px-3.5 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Limpar busca
+                  </button>
                 </div>
-
-                {/* Seção: Histórico Recente de Serviços */}
-                <div className="mt-6">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-3">
-                    Histórico Recente de Serviços
-                  </span>
-
-                  <div className="space-y-4 text-xs">
-                    {/* Item 1 da Linha do Tempo */}
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0 mt-1.5" />
-                      <div className="flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-bold text-[#0F172A]">
-                            Revisão Preventiva ({formatKm(veiculoSelecionado.km_atual)})
-                          </span>
-                          <span className="font-mono font-bold text-[#0F172A]">
-                            R$ 510,00
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Realizado em 12 Ago 2026 por Diego Alves
-                        </p>
-                        <p className="text-[11px] text-slate-600 mt-0.5">
-                          Peças: Óleo 5W30, Filtro Óleo, Filtro Ar
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Item 2 da Linha do Tempo */}
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5" />
-                      <div className="flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-bold text-[#0F172A]">
-                            Sistema de Travões (46.800 km)
-                          </span>
-                          <span className="font-mono font-bold text-[#0F172A]">
-                            R$ 380,00
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Realizado em 20 Mar 2026 por Diego Alves
-                        </p>
-                        <p className="text-[11px] text-slate-600 mt-0.5">
-                          Peças: Pastilhas Dianteiras, Fluido DOT4
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Item 3 da Linha do Tempo */}
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5" />
-                      <div className="flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-bold text-[#0F172A]">
-                            Substituição Bateria (38.500 km)
-                          </span>
-                          <span className="font-mono font-bold text-[#0F172A]">
-                            R$ 590,00
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Realizado em 14 Nov 2025 por Diego Alves
-                        </p>
-                        <p className="text-[11px] text-slate-600 mt-0.5">
-                          Peças: Bateria Moura 60Ah Selada
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção: Comprovação Visual Aferida (Fotos) */}
-                <div className="mt-6">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-3">
-                    Comprovação Visual Aferida (Fotos)
-                  </span>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Mini-Card 1: Odômetro */}
-                    <div className="p-3 rounded-lg border border-[#E2E8F0] bg-white">
-                      <span className="text-xs font-bold text-[#0F172A] block">
-                        [Odômetro {formatKm(veiculoSelecionado.km_atual).replace(" km", "")}]
-                      </span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
-                        12/08/2026 • Painel
-                      </span>
-                    </div>
-
-                    {/* Mini-Card 2: NF & Peças */}
-                    <div className="p-3 rounded-lg border border-[#E2E8F0] bg-white">
-                      <span className="text-xs font-bold text-[#0F172A] block">
-                        [NF &amp; Peças]
-                      </span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
-                        12/08/2026 • Comprovativo
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botão de Ação Inferior: Abrir Prontuário Completo */}
-              <div className="mt-8 pt-2">
-                <Link
-                  id="btn-abrir-prontuario-completo"
-                  href={`/loja/veiculo/${veiculoSelecionado.id}`}
-                  className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 text-white text-xs font-semibold tracking-wide transition-colors shadow-xs cursor-pointer text-center"
-                >
-                  <span>Abrir Prontuário Completo</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+              )}
             </aside>
 
           </div>
