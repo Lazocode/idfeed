@@ -685,39 +685,61 @@ export default function LojaDashboardView({
           1. BARRA SUPERIOR (HEADER PRINCIPAL COM BUSCA E REGISTRO)
       ───────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0]">
-        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 md:py-0 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">
           
-          {/* Lado Esquerdo: Marca IDfeed e Seletor de Oficina */}
-          <div className="flex items-center gap-3 shrink-0">
-            <Link
-              href="/loja/dashboard"
-              className="flex items-center gap-2 group focus:outline-none"
-              title="IDfeed - Identidade Digital Veicular"
-            >
-              {/* Logo estilizado IDfeed */}
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs">
-                  ID
+          {/* Linha Superior no Mobile / Lado Esquerdo no Desktop */}
+          <div className="flex items-center justify-between md:justify-start gap-2 sm:gap-3 w-full md:w-auto shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href="/loja/dashboard"
+                className="flex items-center gap-2 group focus:outline-none"
+                title="IDfeed - Identidade Digital Veicular"
+              >
+                {/* Logo estilizado IDfeed */}
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs">
+                    ID
+                  </div>
+                  <span className="text-base font-bold text-[#0F172A] tracking-tight">
+                    IDfeed
+                  </span>
                 </div>
-                <span className="text-base font-bold text-[#0F172A] tracking-tight">
-                  IDfeed
+              </Link>
+
+              <div className="h-4 w-px bg-[#E2E8F0] mx-0.5 sm:mx-1" aria-hidden="true" />
+
+              {/* Dropdown de Seleção da Oficina Mecânica */}
+              <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-[#0F172A] hover:bg-slate-50 rounded-md cursor-pointer transition-colors">
+                <span className="truncate max-w-[130px] sm:max-w-[200px]">
+                  {loja?.nome || "Oficina Bom Motor"}
                 </span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               </div>
-            </Link>
+            </div>
 
-            <div className="h-4 w-px bg-[#E2E8F0] mx-1" aria-hidden="true" />
-
-            {/* Dropdown de Seleção da Oficina Mecânica */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-[#0F172A] hover:bg-slate-50 rounded-md cursor-pointer transition-colors">
-              <span className="truncate max-w-[160px] sm:max-w-[220px]">
-                {loja?.nome || "Oficina Bom Motor"}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            {/* Ações compactas no Mobile: Registrar e Sair */}
+            <div className="flex md:hidden items-center gap-2">
+              <Link
+                id="btn-cadastrar-novo-mobile"
+                href="/loja/novo"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 transition-colors shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Registrar</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/loja/login" })}
+                title="Encerrar Sessão"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
-          {/* Centro: Barra de Pesquisa Rápida com Atalho ⌘K / Ctrl+K */}
-          <div className="flex-1 max-w-xl mx-2">
+          {/* Centro: Barra de Pesquisa Rápida com Atalho ⌘K / Ctrl+K (100% no mobile, flex-1 no desktop) */}
+          <div className="w-full md:flex-1 md:max-w-xl md:mx-2">
             <div className="relative flex items-center w-full">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
               <input
@@ -756,8 +778,8 @@ export default function LojaDashboardView({
             </div>
           </div>
 
-          {/* Lado Direito: Ação + Registrar e Perfil do Usuário */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Lado Direito Desktop: Ação + Registrar e Perfil do Usuário */}
+          <div className="hidden md:flex items-center gap-3 shrink-0">
             <Link
               id="btn-cadastrar-novo"
               href="/loja/novo"
@@ -791,7 +813,7 @@ export default function LojaDashboardView({
           2. SEGUNDA BARRA (NAVEGAÇÃO POR ABAS HORIZONTAIS)
       ───────────────────────────────────────────────────────────── */}
       <nav className="bg-white border-b border-[#E2E8F0]">
-        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 flex items-center gap-8 text-xs">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 flex items-center gap-6 sm:gap-8 text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
           
           <button
             type="button"
@@ -1015,7 +1037,7 @@ export default function LojaDashboardView({
               className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl shadow-2xs overflow-hidden"
             >
               {/* Header da Tabela com Título e Ações Secundárias */}
-              <div className="px-5 py-4 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
+              <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <h1 className="text-sm font-bold text-[#0F172A]">
                     Prontuários Veiculares Ativos
@@ -1029,7 +1051,7 @@ export default function LojaDashboardView({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Dropdown: Filtros */}
                   <div className="relative" ref={filtrosRef}>
                     <button
@@ -1059,7 +1081,7 @@ export default function LojaDashboardView({
 
                     {/* Popover Menu: Filtros */}
                     {isFiltrosOpen && (
-                      <div className="absolute right-0 top-full mt-1.5 w-60 bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="absolute left-0 top-full mt-1.5 w-60 max-w-[calc(100vw-2.5rem)] bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
                         <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
                           <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
                             Estado da Revisão
@@ -1204,7 +1226,7 @@ export default function LojaDashboardView({
 
                     {/* Popover Menu: Configurar Colunas */}
                     {isColunasOpen && (
-                      <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="absolute right-0 top-full mt-1.5 w-64 max-w-[calc(100vw-2.5rem)] bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
                         <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
                           <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
                             Colunas Visíveis
