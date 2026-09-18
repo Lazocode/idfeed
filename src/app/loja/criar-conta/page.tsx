@@ -1,13 +1,33 @@
+/**
+ * @file page.tsx
+ * @description Página de autocadastro e credenciamento de oficinas mecânicas.
+ * Coleta os dados do responsável legal, informações societárias da oficina (CNPJ, nome fantasia)
+ * e credenciais de segurança para ingresso no ecossistema IDfeed.
+ * @module app/loja/criar-conta/page
+ * @recommendedPath src/app/loja/criar-conta/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
-import { criarContaLoja } from "@/actions/conta";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { criarContaLoja } from "@/actions/conta";
+
+/**
+ * Metadados estáticos da página para cabeçalho HTTP e SEO.
+ */
 export const metadata = {
   title: "Cadastrar Oficina • IDfeed",
   description: "Credencie sua oficina mecânica e comece a emitir prontuários veiculares auditados.",
 };
 
+/**
+ * Componente funcional da Página de Criação de Conta da Oficina.
+ *
+ * @returns Interface do formulário de adesão com seções de responsável, oficina e credenciais.
+ */
 export default function CriarContaPage() {
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -59,10 +79,14 @@ export default function CriarContaPage() {
 
                 <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="cad-nome"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       Nome completo *
                     </label>
                     <input
+                      id="cad-nome"
                       name="nome"
                       required
                       maxLength={100}
@@ -74,10 +98,14 @@ export default function CriarContaPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label
+                        htmlFor="cad-cpf"
+                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                      >
                         CPF *
                       </label>
                       <input
+                        id="cad-cpf"
                         name="cpf"
                         required
                         maxLength={14}
@@ -88,10 +116,14 @@ export default function CriarContaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label
+                        htmlFor="cad-telefone"
+                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                      >
                         Telefone *
                       </label>
                       <input
+                        id="cad-telefone"
                         name="telefone"
                         required
                         maxLength={20}
@@ -104,10 +136,14 @@ export default function CriarContaPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="cad-email"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       E-mail de acesso *
                     </label>
                     <input
+                      id="cad-email"
                       type="email"
                       name="email"
                       required
@@ -130,10 +166,14 @@ export default function CriarContaPage() {
 
                 <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="cad-nomeloja"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       Nome fantasia da oficina *
                     </label>
                     <input
+                      id="cad-nomeloja"
                       name="nomeLoja"
                       required
                       maxLength={100}
@@ -145,10 +185,14 @@ export default function CriarContaPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label
+                        htmlFor="cad-cnpj"
+                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                      >
                         CNPJ *
                       </label>
                       <input
+                        id="cad-cnpj"
                         name="cnpj"
                         required
                         maxLength={18}
@@ -159,10 +203,14 @@ export default function CriarContaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label
+                        htmlFor="cad-telefoneloja"
+                        className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                      >
                         Telefone da oficina *
                       </label>
                       <input
+                        id="cad-telefoneloja"
                         name="telefoneLoja"
                         required
                         maxLength={20}
@@ -186,10 +234,14 @@ export default function CriarContaPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="cad-senha"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       Senha (mínimo 10 carac.) *
                     </label>
                     <input
+                      id="cad-senha"
                       type="password"
                       name="senha"
                       required
@@ -201,10 +253,14 @@ export default function CriarContaPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="cad-confirmarsenha"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       Confirmar senha *
                     </label>
                     <input
+                      id="cad-confirmarsenha"
                       type="password"
                       name="confirmarSenha"
                       required
@@ -219,6 +275,7 @@ export default function CriarContaPage() {
               </div>
 
               <button
+                id="btn-criar-conta-submit"
                 type="submit"
                 className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs cursor-pointer mt-4"
               >
@@ -241,3 +298,4 @@ export default function CriarContaPage() {
     </div>
   );
 }
+

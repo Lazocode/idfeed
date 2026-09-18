@@ -1,12 +1,31 @@
+/**
+ * @file conta.ts
+ * @description Server Actions para criação e credenciamento de oficinas e seus usuários técnicos.
+ * Realiza validação estrita com Zod, hashing HMAC do CPF, criptografia bcrypt da senha e transação segura.
+ * @module actions/conta
+ * @recommendedPath src/actions/conta.ts
+ */
+
 "use server";
 
-import { supabaseAdmin } from "@/lib/supabase";
-import bcrypt from "bcryptjs";
+// 1. Dependências e bibliotecas externas
 import crypto from "node:crypto";
-import { signupSchema } from "@/lib/validation";
+import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 
-export async function criarContaLoja(formData: FormData) {
+// 2. Serviços e utilitários internos
+import { supabaseAdmin } from "@/lib/supabase";
+import { signupSchema } from "@/lib/validation";
+
+/**
+ * Cadastra uma nova oficina no status 'pendente' e cria o usuário responsável com papel operacional.
+ *
+ * @param formData - Dados do formulário de cadastro (oficina, responsável, credenciais e contatos).
+ * @throws {Error} Se a validação dos dados falhar, ou se e-mail, CPF ou CNPJ já estiverem registrados.
+ * @returns {Promise<never>} Redireciona para a tela de login com flag `criada=1`.
+ */
+export async function criarContaLoja(formData: FormData): Promise<never> {
+  // Validação estrita do payload via Zod
   const parsed = signupSchema.safeParse({
     nomeLoja: formData.get("nomeLoja"),
     nome: formData.get("nome"),
@@ -34,7 +53,7 @@ export async function criarContaLoja(formData: FormData) {
     senha,
   } = parsed.data;
 
-  // Verifica e-mail existente
+  // 1. Verifica duplicidade de e-mail de usuário
   const { data: existingEmail } = await supabaseAdmin
     .from("usuarios")
     .select("id")
@@ -45,7 +64,7 @@ export async function criarContaLoja(formData: FormData) {
     throw new Error("Já existe uma conta com este e-mail.");
   }
 
-  // Chave usada para gerar o HMAC do CPF
+  // 2. Chave de assinatura usada para gerar o HMAC do CPF
   const cpfSecret = process.env.CPF_HASH_SECRET;
 
   if (!cpfSecret) {
@@ -58,7 +77,7 @@ export async function criarContaLoja(formData: FormData) {
     .update(cpf)
     .digest("hex");
 
-  // Verifica CPF existente
+  // 3. Verifica duplicidade de CPF cadastrado
   const { data: existingCpf } = await supabaseAdmin
     .from("usuarios")
     .select("id")
@@ -69,7 +88,7 @@ export async function criarContaLoja(formData: FormData) {
     throw new Error("Já existe uma conta cadastrada com este CPF.");
   }
 
-  // Verifica CNPJ existente
+  // 4. Verifica duplicidade de CNPJ da oficina
   const { data: existingCnpj } = await supabaseAdmin
     .from("lojas")
     .select("id")
@@ -80,9 +99,10 @@ export async function criarContaLoja(formData: FormData) {
     throw new Error("Já existe uma oficina cadastrada com este CNPJ.");
   }
 
+  // 5. Gera o hash seguro da senha com fator de custo 12
   const senhaHash = await bcrypt.hash(senha, 12);
 
-  // Cria a oficina como PENDENTE
+  // 6. Cria o registro da oficina com status PENDENTE de aprovação
   const { data: loja, error: lojaError } = await supabaseAdmin
     .from("lojas")
     .insert({
@@ -99,7 +119,7 @@ export async function criarContaLoja(formData: FormData) {
     throw new Error("Não foi possível criar a oficina.");
   }
 
-  // Cria o usuário da oficina (papel operacional mecanico; papel admin é restrito exclusivamente ao administrador geral)
+  // 7. Cria o usuário da oficina (papel operacional 'mecanico'; papel 'admin' é restrito exclusivamente ao superadministrador)
   const { error: userError } = await supabaseAdmin
     .from("usuarios")
     .insert({
@@ -115,7 +135,7 @@ export async function criarContaLoja(formData: FormData) {
   if (userError) {
     console.error("ERRO AO CRIAR USUÁRIO:", userError);
 
-    // Rollback da oficina se o usuário não puder ser criado
+    // Rollback: remove o registro da loja se a criação do usuário falhar
     await supabaseAdmin
       .from("lojas")
       .delete()
@@ -124,5 +144,6 @@ export async function criarContaLoja(formData: FormData) {
     throw new Error("Não foi possível criar a conta. Tente novamente.");
   }
 
+  // Redireciona o usuário para o login com mensagem de sucesso
   redirect("/loja/login?criada=1");
 }

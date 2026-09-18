@@ -1,22 +1,45 @@
+/**
+ * @file login-form.tsx
+ * @description Formulário interativo de autenticação da oficina mecânica.
+ * Valida credenciais com NextAuth, consulta a situação cadastral da loja
+ * e direciona o usuário para o dashboard ou fluxo de homologação documental.
+ * @module app/loja/login/login-form
+ * @recommendedPath src/app/loja/login/login-form.tsx
+ */
+
 "use client";
 
+// 1. Dependências e bibliotecas externas
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 
+/**
+ * Componente funcional do Formulário de Login da Loja.
+ *
+ * @returns Interface do formulário com e-mail, senha e feedback de status.
+ */
 export default function LoginForm() {
+  // Estados locais do formulário
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  /**
+   * Processa o envio do formulário de autenticação da oficina.
+   *
+   * @param e - Evento de submissão do formulário HTML.
+   * @returns Promessa assíncrona resolvida após autenticação e redirecionamento.
+   */
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setErro("");
     setLoading(true);
 
     try {
+      // 1. Solicita autenticação de credenciais via NextAuth
       const res = await signIn("credentials", {
         email: email.trim().toLowerCase(),
         senha,
@@ -30,18 +53,22 @@ export default function LoginForm() {
         return;
       }
 
+      // 2. Obtém a sessão autenticada para verificar a situação de homologação da oficina
       const session = await getSession();
-      const lojaStatus = (session?.user as { lojaStatus?: string })?.lojaStatus;
+      const lojaStatus = session?.user?.lojaStatus;
 
+      // 3. Define a rota de destino com base no status cadastral da oficina
       let targetUrl = "/loja/dashboard";
       if (
         lojaStatus === "pendente" ||
         lojaStatus === "rejeitada" ||
-        lojaStatus === "reprovada"
+        lojaStatus === "reprovada" ||
+        lojaStatus === "sem_documento"
       ) {
         targetUrl = "/loja/enviar-documento";
       }
 
+      // 4. Efetua a transição de rota
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = targetUrl;
     } catch (error) {
@@ -54,10 +81,14 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 text-left">
       <div>
-        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+        <label
+          htmlFor="loja-email"
+          className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+        >
           E-mail da oficina
         </label>
         <input
+          id="loja-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -69,10 +100,14 @@ export default function LoginForm() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+        <label
+          htmlFor="loja-senha"
+          className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+        >
           Senha
         </label>
         <input
+          id="loja-senha"
           type="password"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
@@ -91,6 +126,7 @@ export default function LoginForm() {
       )}
 
       <button
+        id="btn-loja-login-submit"
         type="submit"
         disabled={loading}
         className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 disabled:opacity-60 transition-all shadow-xs cursor-pointer mt-2"
@@ -110,3 +146,4 @@ export default function LoginForm() {
     </form>
   );
 }
+

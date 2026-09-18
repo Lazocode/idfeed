@@ -1,15 +1,31 @@
+/**
+ * @file admin-login-form.tsx
+ * @description Formulário de autenticação de administradores do IDfeed.
+ * Realiza autenticação via credenciais NextAuth e valida se o usuário possui
+ * os privilégios exclusivos de superadministrador (Lázaro Miranda).
+ * @module app/admin/login/admin-login-form
+ * @recommendedPath src/app/admin/login/admin-login-form.tsx
+ */
+
 "use client";
 
+// 1. Dependências e bibliotecas externas
 import { useState, Suspense } from "react";
 import { signIn, signOut, getSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { AlertCircle, Loader2, ArrowRight } from "lucide-react";
 
+/**
+ * Componente interno do formulário que consome os parâmetros da URL (`useSearchParams`).
+ *
+ * @returns Elemento JSX do formulário de login administrativo.
+ */
 function LoginFormInner() {
   const searchParams = useSearchParams();
   const erroParam = searchParams.get("erro");
 
+  // Estados locais do formulário de autenticação
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState(
@@ -19,12 +35,19 @@ function LoginFormInner() {
   );
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  /**
+   * Manipula o envio do formulário de login e valida permissões de administrador.
+   *
+   * @param e - Evento de submissão do formulário HTML.
+   * @returns Promessa assíncrona resolvida após autenticação e redirecionamento.
+   */
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro("");
     setLoading(true);
 
     try {
+      // 1. Executa a autenticação via credenciais do NextAuth
       const res = await signIn("credentials", {
         email: email.trim().toLowerCase(),
         senha,
@@ -38,6 +61,7 @@ function LoginFormInner() {
         return;
       }
 
+      // 2. Obtém a sessão recém-criada para verificar as credenciais específicas de superadministrador
       const session = await getSession();
       const papel = session?.user?.papel;
       const sessionEmail = session?.user?.email?.toLowerCase() || "";
@@ -49,6 +73,7 @@ function LoginFormInner() {
           sessionNome.includes("lazaro") ||
           sessionNome.includes("lázaro"));
 
+      // 3. Se a conta não for o administrador geral autorizado, encerra a sessão imediatamente
       if (!isLazaroAdmin) {
         await signOut({ redirect: false });
         setLoading(false);
@@ -58,6 +83,7 @@ function LoginFormInner() {
         return;
       }
 
+      // 4. Redireciona o administrador validado para a área de aprovação cadastral
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = "/admin/aprovacoes";
     } catch (err) {
@@ -77,7 +103,10 @@ function LoginFormInner() {
       )}
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+        <label
+          htmlFor="admin-email"
+          className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+        >
           E-mail de Administrador
         </label>
         <input
@@ -94,7 +123,10 @@ function LoginFormInner() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+        <label
+          htmlFor="admin-senha"
+          className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+        >
           Senha de Acesso
         </label>
         <input
@@ -147,6 +179,11 @@ function LoginFormInner() {
   );
 }
 
+/**
+ * Componente principal do formulário de login do administrador com wrapper Suspense.
+ *
+ * @returns Interface do formulário encapsulada com fallback de carregamento.
+ */
 export default function AdminLoginForm() {
   return (
     <Suspense
@@ -161,3 +198,4 @@ export default function AdminLoginForm() {
     </Suspense>
   );
 }
+

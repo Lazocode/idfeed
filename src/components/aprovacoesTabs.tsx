@@ -1,31 +1,56 @@
+/**
+ * @file aprovacoesTabs.tsx
+ * @description Painel com abas e cartões de métricas para triagem de credenciamento de oficinas.
+ * Permite alternar a visualização entre oficinas pendentes de análise, homologadas e reprovadas.
+ * @module components/aprovacoesTabs
+ * @recommendedPath src/components/aprovacoesTabs.tsx
+ */
+
 "use client";
 
+// 1. Dependências e bibliotecas externas
+import React, { useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
 import { ChevronRight, Clock, CheckCircle2, XCircle } from "lucide-react";
 
-type Oficina = {
+/**
+ * Estrutura de dados representativa de uma oficina para fins de triagem administrativa.
+ */
+export interface OficinaResumo {
   id: string;
   nome: string;
   cnpj: string | null;
   telefone: string | null;
   status: string;
   criado_em: string;
-};
+}
 
-type Props = {
-  pendentes: Oficina[];
-  aprovadas: Oficina[];
-  rejeitadas: Oficina[];
-};
+/**
+ * Propriedades do componente `AprovacoesTabs`.
+ */
+interface AprovacoesTabsProps {
+  /** Oficinas aguardando parecer e conferência documental. */
+  pendentes: OficinaResumo[];
+  /** Oficinas credenciadas e homologadas ativas. */
+  aprovadas: OficinaResumo[];
+  /** Oficinas com credenciamento recusado. */
+  rejeitadas: OficinaResumo[];
+}
 
+/**
+ * Componente cliente com abas interativas e lista de oficinas segmentadas por status.
+ *
+ * @param props - Listas de oficinas agrupadas por status de aprovação.
+ * @returns Painel de triagem com contadores rápidos e navegação detalhada.
+ */
 export default function AprovacoesTabs({
   pendentes,
   aprovadas,
   rejeitadas,
-}: Props) {
+}: AprovacoesTabsProps) {
   const [aba, setAba] = useState<"pendentes" | "aprovadas" | "rejeitadas">("pendentes");
 
+  // Filtra as oficinas com base na aba ativa selecionada
   const oficinas =
     aba === "pendentes"
       ? pendentes
@@ -35,9 +60,11 @@ export default function AprovacoesTabs({
 
   return (
     <div className="space-y-6">
-      {/* CARDS DE RESUMO */}
+      {/* CARDS DE RESUMO / ABAS DE NAVEGAÇÃO */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button
+          id="tab-oficinas-pendentes"
+          type="button"
           onClick={() => setAba("pendentes")}
           className={`text-left p-5 rounded-2xl border transition-all cursor-pointer ${
             aba === "pendentes"
@@ -58,6 +85,8 @@ export default function AprovacoesTabs({
         </button>
 
         <button
+          id="tab-oficinas-aprovadas"
+          type="button"
           onClick={() => setAba("aprovadas")}
           className={`text-left p-5 rounded-2xl border transition-all cursor-pointer ${
             aba === "aprovadas"
@@ -78,6 +107,8 @@ export default function AprovacoesTabs({
         </button>
 
         <button
+          id="tab-oficinas-rejeitadas"
+          type="button"
           onClick={() => setAba("rejeitadas")}
           className={`text-left p-5 rounded-2xl border transition-all cursor-pointer ${
             aba === "rejeitadas"
@@ -98,7 +129,7 @@ export default function AprovacoesTabs({
         </button>
       </div>
 
-      {/* LISTAGEM */}
+      {/* LISTAGEM DE OFICINAS */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">
@@ -146,6 +177,7 @@ export default function AprovacoesTabs({
 
                 <div className="flex items-center gap-3 self-end sm:self-center">
                   <Link
+                    id={`link-analisar-oficina-${oficina.id}`}
                     href={`/admin/aprovacoes/${oficina.id}`}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors shadow-2xs"
                   >
@@ -161,3 +193,4 @@ export default function AprovacoesTabs({
     </div>
   );
 }
+

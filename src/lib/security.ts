@@ -1,15 +1,38 @@
-import { auth } from "@/lib/auth";
+/**
+ * @file security.ts
+ * @description Funções de controle de acesso (RBAC), autorização e guardas de rota no lado do servidor.
+ * Assegura que páginas e ações sensíveis sejam executadas apenas por administradores ou oficinas ativas.
+ * @module lib/security
+ * @recommendedPath src/lib/security.ts
+ */
+
+// 1. Dependências e bibliotecas externas
 import { redirect } from "next/navigation";
+
+// 2. Bibliotecas e serviços internos
+import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 
+/**
+ * Papéis de usuário suportados no sistema.
+ */
 export type Papel = "admin" | "mecanico" | "atendente";
 
+/**
+ * Status de ciclo de vida cadastral de uma oficina mecânica.
+ */
 export type StatusLoja =
   | "pendente"
   | "aprovada"
   | "rejeitada"
   | "bloqueada";
 
+/**
+ * Verifica de forma rígida se o usuário autenticado corresponde ao perfil de superadministrador (Lázaro Miranda).
+ *
+ * @param user - Objeto do usuário autenticado contendo e-mail, nome e papel.
+ * @returns `true` se for o superadministrador do sistema; caso contrário, `false`.
+ */
 export function isLazaroMirandaAdmin(user?: { email?: string | null; name?: string | null; papel?: string | null } | null): boolean {
   if (!user || user.papel !== "admin") return false;
   const email = (user.email || "").trim().toLowerCase();
@@ -25,6 +48,9 @@ export function isLazaroMirandaAdmin(user?: { email?: string | null; name?: stri
 /**
  * Exige que o usuário esteja autenticado e possua o papel 'admin'
  * exclusivo de Lázaro Miranda para acessar áreas administrativas do sistema.
+ *
+ * @returns Sessão de autenticação válida com privilégio de administrador.
+ * @throws Redireciona para `/admin/login` caso não esteja autenticado ou não autorizado.
  */
 export async function requireAdmin() {
   const session = await auth();
@@ -41,7 +67,10 @@ export async function requireAdmin() {
 }
 
 /**
- * Exige que exista uma sessão válida.
+ * Exige que exista uma sessão de usuário autenticado válida no sistema.
+ *
+ * @returns Sessão do usuário logado.
+ * @throws Redireciona para `/loja/login` se a sessão for inválida ou incompleta.
  */
 export async function requireSession() {
   const session = await auth();
@@ -58,7 +87,11 @@ export async function requireSession() {
 }
 
 /**
- * Exige que o usuário tenha um dos papéis informados.
+ * Exige que o usuário autenticado pertença a um dos papéis informados.
+ *
+ * @param roles - Lista de papéis permitidos para a rota ou operação.
+ * @returns Sessão de autenticação do usuário.
+ * @throws Redireciona para `/loja/dashboard` se o papel não for autorizado.
  */
 export async function requireRole(roles: Papel[]) {
   const session = await requireSession();
@@ -71,10 +104,11 @@ export async function requireRole(roles: Papel[]) {
 }
 
 /**
- * Exige que a oficina esteja aprovada.
+ * Exige que a oficina mecânica vinculada ao usuário esteja com status 'aprovada'.
+ * Redireciona lojas pendentes ou com pendência de documentos para a tela de envio.
  *
- * Use esta função nas páginas que fazem parte
- * do sistema operacional da oficina.
+ * @returns Sessão de autenticação ativa da oficina aprovada.
+ * @throws Redireciona conforme a condição cadastral da loja.
  */
 export async function requireApprovedStore() {
   const session = await requireSession();
@@ -93,10 +127,12 @@ export async function requireApprovedStore() {
 }
 
 /**
- * Exige papel + oficina aprovada.
+ * Guarda combinada: exige papel de usuário autorizado E que a oficina mecânica esteja devidamente aprovada no banco.
+ * Realiza consulta em tempo real ao Supabase para verificar se não houve revogação recente de aprovação.
  *
- * É a função que usaremos na maioria das páginas
- * internas da oficina.
+ * @param roles - Papéis de usuário autorizados para a rota.
+ * @returns Sessão de autenticação verificada.
+ * @throws Redireciona para a tela de documentação, dashboard ou login caso reprovado.
  */
 export async function requireApprovedRole(roles: Papel[]) {
   const session = await requireSession();

@@ -1,10 +1,31 @@
-import ConsultaVeiculo from "@/components/consultaVeiculos";
+/**
+ * @file page.tsx
+ * @description Página inicial pública (Landing Page) da plataforma IDfeed.
+ * Contém a interface de consulta pública de veículos com verificação HMAC/CPF,
+ * apresentação dos pilares de segurança e acessos rápidos para oficinas e administradores.
+ * @module app/page
+ * @recommendedPath src/app/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
+// 2. Componentes internos
+import ConsultaVeiculo from "@/components/consultaVeiculos";
+
+/**
+ * Força a renderização dinâmica para garantir que dados recentes sejam obtidos na consulta.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Componente funcional da Página Inicial (Home).
+ *
+ * @returns Interface completa da página inicial pública com cabeçalho, hero de consulta,
+ * pilares de transparência/procedência e chamada para oficinas mecânicas.
+ */
 export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -67,7 +88,7 @@ export default function Home() {
               mecânicas credenciadas.
             </p>
 
-            {/* Componente de Consulta Interativa */}
+            {/* Componente de Consulta Interativa com Validação HMAC */}
             <div className="w-full max-w-2xl mx-auto">
               <ConsultaVeiculo />
             </div>
@@ -87,7 +108,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1 */}
+              {/* Card 1: Auditoria de odômetro */}
               <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-colors">
                 <h3 className="text-base font-bold text-slate-900 mb-2">
                   Proteção Contra Fraude de Odômetro
@@ -99,7 +120,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Card 2 */}
+              {/* Card 2: Dossiê completo */}
               <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-colors">
                 <h3 className="text-base font-bold text-slate-900 mb-2">
                   Dossiê Completo de Serviços
@@ -110,7 +131,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Card 3 */}
+              {/* Card 3: LGPD e Segurança */}
               <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-colors">
                 <h3 className="text-base font-bold text-slate-900 mb-2">
                   Sigilo e Conformidade LGPD

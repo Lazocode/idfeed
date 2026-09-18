@@ -1,13 +1,16 @@
+/**
+ * @file page.tsx
+ * @description Página de detalhes do material/insumo da oficina.
+ * Exibe a quantidade atual em estoque, alertas de reposição mínima,
+ * galeria de fotos do componente e histórico completo de movimentações de estoque.
+ * @module app/loja/material/[id]/page
+ * @recommendedPath src/app/loja/material/[id]/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
-import { formatData, TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
-import { removerFoto } from "@/actions/fotos";
-import type { MovimentacaoComRelacoes } from "@/lib/types";
-import { getSignedPhotoUrl } from "@/lib/photos";
-import FotoUploadForm from "@/components/foto-upload-form";
 import {
   ArrowLeft,
   Plus,
@@ -18,13 +21,37 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+// 2. Componentes internos
+import FotoUploadForm from "@/components/foto-upload-form";
+
+// 3. Ações de servidor (Server Actions)
+import { removerFoto } from "@/actions/fotos";
+
+// 4. Bibliotecas, serviços e utilitários internos
+import { auth } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+import { getSignedPhotoUrl } from "@/lib/photos";
+import { formatData, TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
+
+// 5. Tipos e interfaces
+import type { MovimentacaoComRelacoes } from "@/lib/types";
+
+/**
+ * Força a renderização dinâmica da página de detalhes do material.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para a página de detalhes de material.
+ */
 export const metadata = {
   title: "Detalhe do Material • IDfeed",
   description: "Controle de saldo em estoque e histórico de movimentações da peça.",
 };
 
+/**
+ * Mapeamento de estilos visuais (Tailwind CSS) para os tipos de movimentação de estoque.
+ */
 const MOV_BADGE_STYLE: Record<string, string> = {
   entrada: "bg-emerald-50 text-emerald-800 border-emerald-200",
   saida: "bg-rose-50 text-rose-800 border-rose-200",
@@ -32,11 +59,25 @@ const MOV_BADGE_STYLE: Record<string, string> = {
   inventario: "bg-amber-50 text-amber-800 border-amber-200",
 };
 
-export default async function MaterialDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+/**
+ * Propriedades recebidas pela página de detalhes do material.
+ */
+interface MaterialDetalhePageProps {
+  params: Promise<{ id: string }>;
+}
+
+/**
+ * Componente assíncrono da Página de Detalhe do Material.
+ *
+ * @param props - Propriedades contendo a Promise com o identificador do material (`params.id`).
+ * @returns Interface com detalhes de saldo, galeria de imagens e histórico de movimentações.
+ */
+export default async function MaterialDetalhePage({ params }: MaterialDetalhePageProps) {
   const { id } = await params;
   const session = await auth();
   const lojaId = session!.user.lojaId;
 
+  // Busca o material com suas movimentações de estoque e responsáveis associados
   const { data: material } = await supabaseAdmin
     .from("materiais")
     .select("*, movimentacoes:movimentacoes_estoque(*, responsavel:usuarios(nome))")
@@ -47,6 +88,7 @@ export default async function MaterialDetalhePage({ params }: { params: Promise<
 
   if (!material) notFound();
 
+  // Consulta fotos anexadas ao material
   const { data: fotos } = await supabaseAdmin
     .from("fotos")
     .select("*")
@@ -54,10 +96,12 @@ export default async function MaterialDetalhePage({ params }: { params: Promise<
     .eq("entidade_id", material.id)
     .order("criado_em", { ascending: false });
 
+  // Gera URLs assinadas para exibição segura das fotos
   const fotosComUrl = await Promise.all(
     (fotos ?? []).map(async (f) => ({ ...f, signedUrl: await getSignedPhotoUrl(f.url) }))
   );
 
+  // Determina se o material está abaixo do nível mínimo de reposição
   const baixo = material.quantidade_atual < material.quantidade_minima;
 
   return (
@@ -245,3 +289,4 @@ export default async function MaterialDetalhePage({ params }: { params: Promise<
     </div>
   );
 }
+

@@ -1,24 +1,58 @@
+/**
+ * @file page.tsx
+ * @description Página de edição de anotações da movimentação de estoque.
+ * Permite complementar ou retificar descrições e números de nota fiscal
+ * de movimentações já registradas sem alterar os saldos contábeis físicos.
+ * @module app/loja/material/[id]/movimentacao/[movId]/editar/page
+ * @recommendedPath src/app/loja/material/[id]/movimentacao/[movId]/editar/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
-import { editarMovimentacao } from "@/actions/movimentacoes";
-import { TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
 import { ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { editarMovimentacao } from "@/actions/movimentacoes";
+
+// 3. Bibliotecas, serviços e utilitários internos
+import { auth } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+import { TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
+
+/**
+ * Força a renderização dinâmica da página de edição.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para a página de edição de movimentação.
+ */
 export const metadata = {
   title: "Editar Movimentação • IDfeed",
   description: "Atualize anotações da movimentação de estoque.",
 };
 
-export default async function EditarMovimentacaoPage({ params }: { params: Promise<{ id: string; movId: string }> }) {
+/**
+ * Interface tipada para as propriedades de parâmetros da URL.
+ */
+interface EditarMovimentacaoPageProps {
+  params: Promise<{ id: string; movId: string }>;
+}
+
+/**
+ * Componente assíncrono da Página de Edição de Movimentação.
+ *
+ * @param props - Propriedades contendo a Promise com o ID do material e o ID da movimentação.
+ * @returns Interface do formulário para ajuste de anotações.
+ */
+export default async function EditarMovimentacaoPage({ params }: EditarMovimentacaoPageProps) {
   const { id, movId } = await params;
   const session = await auth();
   const lojaId = session!.user.lojaId;
 
+  // 1. Localiza o material assegurando a posse pela loja
   const { data: material } = await supabaseAdmin
     .from("materiais")
     .select("id, nome")
@@ -28,6 +62,7 @@ export default async function EditarMovimentacaoPage({ params }: { params: Promi
 
   if (!material) notFound();
 
+  // 2. Localiza a movimentação específica vinculada ao material
   const { data: mv } = await supabaseAdmin
     .from("movimentacoes_estoque")
     .select("*")
@@ -37,6 +72,7 @@ export default async function EditarMovimentacaoPage({ params }: { params: Promi
 
   if (!mv) notFound();
 
+  // Vincula os parâmetros de identificadores à ação de edição
   const acao = editarMovimentacao.bind(null, mv.id, id);
 
   return (
@@ -87,10 +123,14 @@ export default async function EditarMovimentacaoPage({ params }: { params: Promi
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-8">
           <form action={acao} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="edit-mov-observacao"
+                className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
                 Observações / Descrição do Lançamento
               </label>
               <textarea
+                id="edit-mov-observacao"
                 name="observacao"
                 rows={3}
                 defaultValue={mv.observacao ?? ""}
@@ -107,6 +147,7 @@ export default async function EditarMovimentacaoPage({ params }: { params: Promi
 
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
               <button
+                id="btn-editar-mov-submit"
                 type="submit"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs cursor-pointer"
               >
@@ -126,3 +167,4 @@ export default async function EditarMovimentacaoPage({ params }: { params: Promi
     </div>
   );
 }
+

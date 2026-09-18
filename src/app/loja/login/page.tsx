@@ -1,13 +1,32 @@
-import LoginForm from "./login-form";
+/**
+ * @file page.tsx
+ * @description Página de autenticação das oficinas credenciadas no IDfeed.
+ * Apresenta a interface de login da loja e links de apoio para cadastro e acesso administrativo.
+ * @module app/loja/login/page
+ * @recommendedPath src/app/loja/login/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
+// 2. Componentes internos
+import LoginForm from "./login-form";
+
+/**
+ * Metadados estáticos da página para cabeçalho HTTP e SEO.
+ */
 export const metadata = {
   title: "Acesso da Oficina • IDfeed",
   description: "Faça login para gerenciar prontuários, revisões e estoque da oficina credenciada.",
 };
 
+/**
+ * Componente funcional da Página de Login da Oficina.
+ *
+ * @returns Interface de autenticação com formulário de login e links de cadastro.
+ */
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -72,3 +91,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

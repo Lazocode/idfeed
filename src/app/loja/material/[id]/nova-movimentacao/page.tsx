@@ -1,23 +1,57 @@
+/**
+ * @file page.tsx
+ * @description Página de registro de nova movimentação de estoque para um insumo/peça.
+ * Permite registrar entradas (compras), baixas operacionais (saídas), ajustes de inventário
+ * ou transferências físicas de prateleira na oficina.
+ * @module app/loja/material/[id]/nova-movimentacao/page
+ * @recommendedPath src/app/loja/material/[id]/nova-movimentacao/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
-import { registrarMovimentacao } from "@/actions/movimentacoes";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { registrarMovimentacao } from "@/actions/movimentacoes";
+
+// 3. Bibliotecas e serviços internos
+import { auth } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+
+/**
+ * Força a renderização dinâmica para carregar sempre os dados atualizados do saldo do material.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para a tela de nova movimentação.
+ */
 export const metadata = {
   title: "Registrar Movimentação • IDfeed",
   description: "Entrada, saída ou ajuste de inventário no estoque da oficina.",
 };
 
-export default async function NovaMovimentacaoPage({ params }: { params: Promise<{ id: string }> }) {
+/**
+ * Interface tipada para as propriedades de rota recebidas pela página.
+ */
+interface NovaMovimentacaoPageProps {
+  params: Promise<{ id: string }>;
+}
+
+/**
+ * Componente assíncrono da Página de Nova Movimentação de Estoque.
+ *
+ * @param props - Propriedades contendo a Promise com o identificador do material (`params.id`).
+ * @returns Interface do formulário de lançamento de movimentação.
+ */
+export default async function NovaMovimentacaoPage({ params }: NovaMovimentacaoPageProps) {
   const { id } = await params;
   const session = await auth();
   const lojaId = session!.user.lojaId;
 
+  // Busca o material assegurando o isolamento multi-tenant pela loja do usuário
   const { data: material } = await supabaseAdmin
     .from("materiais")
     .select("*")
@@ -27,6 +61,7 @@ export default async function NovaMovimentacaoPage({ params }: { params: Promise
 
   if (!material) notFound();
 
+  // Vincula o identificador do material à ação de servidor
   const acao = registrarMovimentacao.bind(null, material.id);
 
   return (
@@ -78,10 +113,14 @@ export default async function NovaMovimentacaoPage({ params }: { params: Promise
           <form action={acao} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="mov-tipo"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Tipo de Movimentação *
                 </label>
                 <select
+                  id="mov-tipo"
                   name="tipo"
                   required
                   defaultValue=""
@@ -96,10 +135,14 @@ export default async function NovaMovimentacaoPage({ params }: { params: Promise
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="mov-quantidade"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Quantidade *
                 </label>
                 <input
+                  id="mov-quantidade"
                   name="quantidade"
                   type="number"
                   min={1}
@@ -111,10 +154,14 @@ export default async function NovaMovimentacaoPage({ params }: { params: Promise
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="mov-observacao"
+                className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
                 Observações / Número da Nota
               </label>
               <textarea
+                id="mov-observacao"
                 name="observacao"
                 rows={3}
                 placeholder="Ex: NF 10425 - Fornecedor Autopeças Brasil"
@@ -124,6 +171,7 @@ export default async function NovaMovimentacaoPage({ params }: { params: Promise
 
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
               <button
+                id="btn-registrar-mov-submit"
                 type="submit"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs cursor-pointer"
               >
@@ -143,3 +191,4 @@ export default async function NovaMovimentacaoPage({ params }: { params: Promise
     </div>
   );
 }
+

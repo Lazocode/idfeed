@@ -1,12 +1,15 @@
+/**
+ * @file consultaVeiculos.tsx
+ * @description Componente público para consulta de prontuário veicular digital com autenticação cruzada (Placa e CPF).
+ * Apresenta odômetro oficial, próxima revisão preventiva, certificação de autenticidade e histórico de ordens de serviço.
+ * @module components/consultaVeiculos
+ * @recommendedPath src/components/consultaVeiculos.tsx
+ */
+
 "use client";
 
-import { useState } from "react";
-import { ConsultarVeiculo } from "@/actions/consultaVeiculo";
-import {
-  formatKm,
-  formatData,
-  TIPO_SERVICO_LABEL,
-} from "@/lib/utils";
+// 1. Dependências e bibliotecas externas
+import React, { useState } from "react";
 import {
   Search,
   ShieldCheck,
@@ -25,12 +28,28 @@ import {
   Zap,
 } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { ConsultarVeiculo } from "@/actions/consultaVeiculo";
+
+// 3. Utilitários e formatadores internos
+import {
+  formatKm,
+  formatData,
+  TIPO_SERVICO_LABEL,
+} from "@/lib/utils";
+
+/**
+ * Resumo de ordem de serviço retornada na consulta veicular pública.
+ */
 interface OrdemServicoConsulta {
   criado_em: string;
   tipo_servico: keyof typeof TIPO_SERVICO_LABEL;
   km_no_servico: number;
 }
 
+/**
+ * Prontuário digital veicular completo retornado para o proprietário.
+ */
 interface VeiculoConsulta {
   id: string;
   placa: string;
@@ -43,7 +62,13 @@ interface VeiculoConsulta {
   ordens_servico: OrdemServicoConsulta[];
 }
 
-function maskCpf(value: string) {
+/**
+ * Aplica máscara visual de CPF (000.000.000-00) em tempo real durante a digitação.
+ *
+ * @param value - Sequência numérica ou formatada de entrada.
+ * @returns String formatada com pontos e traço.
+ */
+function maskCpf(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
@@ -52,7 +77,13 @@ function maskCpf(value: string) {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 }
 
-function getServiceIcon(tipo: string) {
+/**
+ * Seleciona o ícone representativo com base no tipo de intervenção mecânica realizada.
+ *
+ * @param tipo - Código do tipo de serviço mecânico.
+ * @returns Elemento JSX com o ícone colorido apropriado.
+ */
+function getServiceIcon(tipo: string): React.JSX.Element {
   switch (tipo) {
     case "oleo":
       return <Wrench className="w-4 h-4 text-amber-600" />;
@@ -67,6 +98,11 @@ function getServiceIcon(tipo: string) {
   }
 }
 
+/**
+ * Componente cliente para consulta e emissão do prontuário digital veicular.
+ *
+ * @returns Formulário de consulta e visualização completa do histórico veicular certificado.
+ */
 export default function ConsultaVeiculo() {
   const [placa, setPlaca] = useState("");
   const [cpf, setCpf] = useState("");
@@ -74,15 +110,24 @@ export default function ConsultaVeiculo() {
   const [erro, setErro] = useState("");
   const [veiculo, setVeiculo] = useState<VeiculoConsulta | null>(null);
 
+  /**
+   * Normaliza a placa para caracteres alfanuméricos em caixa alta (máximo 7 caracteres).
+   */
   function handlePlacaChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     setPlaca(raw.slice(0, 7));
   }
 
+  /**
+   * Atualiza o estado do CPF aplicando a máscara pontuada automaticamente.
+   */
   function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCpf(maskCpf(e.target.value));
   }
 
+  /**
+   * Limpa o estado da consulta e redefine os campos do formulário para nova busca.
+   */
   function handleReset() {
     setVeiculo(null);
     setErro("");
@@ -90,12 +135,18 @@ export default function ConsultaVeiculo() {
     setCpf("");
   }
 
+  /**
+   * Aciona a caixa de diálogo nativa de impressão/salvamento em PDF do navegador.
+   */
   function handlePrint() {
     if (typeof window !== "undefined") {
       window.print();
     }
   }
 
+  /**
+   * Processa a busca do prontuário enviando placa e CPF validados para a Server Action.
+   */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -136,6 +187,7 @@ export default function ConsultaVeiculo() {
     }
   }
 
+  // Resolução segura do nome da oficina mecânica emissora
   const oficinaNome = veiculo
     ? Array.isArray(veiculo.loja)
       ? veiculo.loja[0]?.nome
@@ -288,6 +340,7 @@ export default function ConsultaVeiculo() {
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
+                id="btn-imprimir-prontuario"
                 type="button"
                 onClick={handlePrint}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
@@ -298,6 +351,7 @@ export default function ConsultaVeiculo() {
               </button>
 
               <button
+                id="btn-nova-consulta-prontuario"
                 type="button"
                 onClick={handleReset}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
@@ -332,7 +386,7 @@ export default function ConsultaVeiculo() {
                 </div>
               </div>
 
-              {/* Tag Limpa e Tipográfica da Placa (Sem desenho de chapa) */}
+              {/* Tag Limpa e Tipográfica da Placa */}
               <div className="self-start md:self-center shrink-0">
                 <div className="bg-slate-100 border border-slate-200 rounded-xl px-4 py-2 text-center min-w-32">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -485,6 +539,7 @@ export default function ConsultaVeiculo() {
                 <p>Autenticidade garantida pela rede de oficinas credenciadas IDfeed</p>
               </div>
               <button
+                id="btn-outra-consulta-rodape"
                 type="button"
                 onClick={handleReset}
                 className="no-print text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
@@ -498,3 +553,4 @@ export default function ConsultaVeiculo() {
     </div>
   );
 }
+

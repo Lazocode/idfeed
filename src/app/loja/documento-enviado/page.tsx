@@ -1,12 +1,30 @@
+/**
+ * @file page.tsx
+ * @description Página de confirmação de envio documental da oficina mecânica.
+ * Informa ao gestor da oficina que seus arquivos foram recebidos e estão
+ * sob protocolo de análise técnica e homologação do time de auditoria.
+ * @module app/loja/documento-enviado/page
+ * @recommendedPath src/app/loja/documento-enviado/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
 
+/**
+ * Metadados estáticos para a tela de confirmação de envio.
+ */
 export const metadata = {
   title: "Documento Enviado • IDfeed",
   description: "Confirmação de recebimento da documentação para análise.",
 };
 
+/**
+ * Componente funcional da Página de Confirmação de Documento Enviado.
+ *
+ * @returns Interface com status de recebimento e prazos da auditoria cadastral.
+ */
 export default function DocumentoEnviadoPage() {
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -65,3 +83,4 @@ export default function DocumentoEnviadoPage() {
     </div>
   );
 }
+

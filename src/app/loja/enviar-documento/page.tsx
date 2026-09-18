@@ -1,22 +1,49 @@
-import { requireSession } from "@/lib/security";
-import EnviarDocumentoForm from "@/components/enviar-documento-form";
-import LogoutButton from "@/components/logout-button";
-import { supabaseAdmin } from "@/lib/supabase";
-import Image from "next/image";
+/**
+ * @file page.tsx
+ * @description Página de envio de documentos comprobatórios da oficina mecânica.
+ * Permite ao responsável legal fazer upload do contrato social ou documento com foto
+ * para análise e homologação cadastral no IDfeed.
+ * @module app/loja/enviar-documento/page
+ * @recommendedPath src/app/loja/enviar-documento/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
+import Image from "next/image";
 import { AlertTriangle, Clock } from "lucide-react";
 
+// 2. Componentes internos
+import EnviarDocumentoForm from "@/components/enviar-documento-form";
+import LogoutButton from "@/components/logout-button";
+
+// 3. Bibliotecas e serviços internos
+import { requireSession } from "@/lib/security";
+import { supabaseAdmin } from "@/lib/supabase";
+
+/**
+ * Força a renderização dinâmica da página de envio de documentos.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para a página de envio de documentos.
+ */
 export const metadata = {
   title: "Envio de Documentos • IDfeed",
   description: "Envio de documentação comprobatória da oficina para análise e liberação cadastral.",
 };
 
+/**
+ * Componente assíncrono da Página de Envio de Documento da Oficina.
+ *
+ * @returns Interface com formulário de upload de documentos e feedback de análises anteriores.
+ */
 export default async function EnviarDocumentoPage() {
+  // Exige que o usuário possua uma sessão ativa no sistema
   const session = await requireSession();
   const isAdmin = session.user.papel === "admin";
 
+  // Busca o último documento submetido pela oficina para verificação de status (ex: rejeitado)
   const { data: documento } = await supabaseAdmin
     .from("documentos_oficina")
     .select("status, observacao, enviado_em")
@@ -106,3 +133,4 @@ export default async function EnviarDocumentoPage() {
     </div>
   );
 }
+

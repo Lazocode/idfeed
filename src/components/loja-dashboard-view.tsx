@@ -1,3 +1,18 @@
+/**
+ * @file loja-dashboard-view.tsx
+ * @path src/components/loja-dashboard-view.tsx
+ * @description Visão técnica e analítica do painel operacional da oficina mecânica (IDfeed).
+ * Implementa arquitetura Split View com tabela homologada de alta densidade à esquerda
+ * e painel inspetor com dossiê técnico da viatura selecionada à direita, em tema claro.
+ * 
+ * Dependências Principais:
+ * - react: Hooks de gerenciamento de estado e memoização (useState, useMemo)
+ * - next/link: Roteamento declarativo do Next.js
+ * - next-auth/react: Autenticação de sessão e encerramento (signOut)
+ * - lucide-react: Conjunto padronizado de ícones vetoriais
+ * - @/lib/utils: Utilitários de formatação de placa e odômetro
+ */
+
 "use client";
 
 // 1. Dependências e bibliotecas externas

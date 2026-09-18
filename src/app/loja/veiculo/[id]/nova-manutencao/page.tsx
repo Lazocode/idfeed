@@ -1,24 +1,58 @@
+/**
+ * @file page.tsx
+ * @description Página para registro de nova manutenção (Ordem de Serviço) veicular.
+ * Permite registrar categoria do serviço, quilometragem no momento do atendimento,
+ * valor cobrado, diagnóstico técnico e selecionar peças de reposição para baixa automática no estoque.
+ * @module app/loja/veiculo/[id]/nova-manutencao/page
+ * @recommendedPath src/app/loja/veiculo/[id]/nova-manutencao/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
-import { criarOrdemServico } from "@/actions/ordensServico";
-import { formatPlaca } from "@/lib/utils";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { criarOrdemServico } from "@/actions/ordensServico";
+
+// 3. Bibliotecas, serviços e utilitários internos
+import { auth } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+import { formatPlaca } from "@/lib/utils";
+
+/**
+ * Força a renderização dinâmica para carregar o estoque mais recente da oficina.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para a tela de registro de manutenção.
+ */
 export const metadata = {
   title: "Registrar Manutenção • IDfeed",
   description: "Registre uma ordem de serviço no prontuário digital do veículo.",
 };
 
-export default async function NovaManutencaoPage({ params }: { params: Promise<{ id: string }> }) {
+/**
+ * Interface tipada para os parâmetros da rota.
+ */
+interface NovaManutencaoPageProps {
+  params: Promise<{ id: string }>;
+}
+
+/**
+ * Componente assíncrono da Página de Registro de Manutenção.
+ *
+ * @param props - Propriedades contendo a Promise com o ID do veículo (`params.id`).
+ * @returns Formulário de abertura de ordem de serviço com controle de odômetro e peças.
+ */
+export default async function NovaManutencaoPage({ params }: NovaManutencaoPageProps) {
   const { id } = await params;
   const session = await auth();
   const lojaId = session!.user.lojaId;
 
+  // 1. Busca os dados do veículo garantindo pertencimento à oficina logada
   const { data: veiculo } = await supabaseAdmin
     .from("veiculos")
     .select("*")
@@ -28,12 +62,14 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
 
   if (!veiculo) notFound();
 
+  // 2. Carrega a lista de materiais/peças em estoque da oficina para opção de baixa
   const { data: materiais } = await supabaseAdmin
     .from("materiais")
     .select("*")
     .eq("loja_id", lojaId)
     .order("nome", { ascending: true });
 
+  // 3. Vincula o ID do veículo à ação de criação da ordem de serviço
   const acao = criarOrdemServico.bind(null, veiculo.id);
 
   return (
@@ -92,10 +128,14 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="manut-tipo-servico"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Tipo de Serviço *
                 </label>
                 <select
+                  id="manut-tipo-servico"
                   name="tipoServico"
                   required
                   defaultValue=""
@@ -111,10 +151,14 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="manut-km-servico"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Km Atual no Momento do Serviço *
                 </label>
                 <input
+                  id="manut-km-servico"
                   name="kmNoServico"
                   type="number"
                   min={0}
@@ -125,10 +169,14 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="manut-custo"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Valor Total do Serviço (R$)
                 </label>
                 <input
+                  id="manut-custo"
                   name="custo"
                   type="number"
                   step="0.01"
@@ -139,10 +187,14 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="manut-observacao"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Observações / Diagnóstico
                 </label>
                 <input
+                  id="manut-observacao"
                   name="observacao"
                   placeholder="Ex: Substituição de pastilhas dianteiras e fluido"
                   className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
@@ -168,24 +220,26 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
                   <div key={m.id} className="py-3 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <input
+                        id={`check-peca-${m.id}`}
                         type="checkbox"
                         name={`peca_${m.id}`}
                         disabled={m.quantidade_atual === 0}
                         className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
                       />
-                      <div>
+                      <label htmlFor={`check-peca-${m.id}`} className="cursor-pointer">
                         <span className="text-sm font-medium text-slate-800 block">
                           {m.nome}
                         </span>
                         <span className={`text-xs ${m.quantidade_atual === 0 ? "text-rose-500 font-semibold" : "text-slate-400"}`}>
                           {m.quantidade_atual === 0 ? "Sem estoque" : `${m.quantidade_atual} un. disponíveis no estoque`}
                         </span>
-                      </div>
+                      </label>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500">Qtd:</span>
+                      <label htmlFor={`qtd-peca-${m.id}`} className="text-xs text-slate-500">Qtd:</label>
                       <input
+                        id={`qtd-peca-${m.id}`}
                         type="number"
                         name={`qtd_${m.id}`}
                         min={1}
@@ -204,6 +258,7 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
           {/* Botões de Ação */}
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
             <button
+              id="btn-gravar-manutencao-submit"
               type="submit"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs cursor-pointer"
             >
@@ -222,3 +277,4 @@ export default async function NovaManutencaoPage({ params }: { params: Promise<{
     </div>
   );
 }
+

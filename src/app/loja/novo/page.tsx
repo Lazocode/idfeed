@@ -1,7 +1,30 @@
+/**
+ * @file page.tsx
+ * @description Seletor de novos cadastros da oficina.
+ * Permite ao colaborador escolher entre cadastrar um veículo ou cadastrar
+ * um novo material/insumo no estoque da oficina mecânica.
+ * @module app/loja/novo/page
+ * @recommendedPath src/app/loja/novo/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Info } from "lucide-react";
 
+/**
+ * Metadados estáticos para a página de seleção de novo cadastro.
+ */
+export const metadata = {
+  title: "Novo Registro • IDfeed",
+  description: "Selecione o tipo de cadastro a ser realizado na oficina: veículo ou material.",
+};
+
+/**
+ * Componente funcional da Página de Seleção de Cadastro (Novo Registro).
+ *
+ * @returns Interface de escolha entre criação de veículo ou peça/material.
+ */
 export default function NovoRegistroPage() {
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-900 flex flex-col font-sans">
@@ -86,3 +109,4 @@ export default function NovoRegistroPage() {
     </div>
   );
 }
+

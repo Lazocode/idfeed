@@ -1,22 +1,47 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { isLazaroMirandaAdmin } from "@/lib/security";
-import AdminLoginForm from "./admin-login-form";
+/**
+ * @file page.tsx
+ * @description Página de autenticação administrativa do IDfeed.
+ * Apresenta a interface de login restrita para administradores gerais do sistema,
+ * com redirecionamento automático se já autenticado com privilégios de auditoria.
+ * @module app/admin/login/page
+ * @recommendedPath src/app/admin/login/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+// 2. Componentes internos
+import AdminLoginForm from "./admin-login-form";
+
+// 3. Bibliotecas e serviços internos
+import { auth } from "@/lib/auth";
+import { isLazaroMirandaAdmin } from "@/lib/security";
+
+/**
+ * Força a renderização dinâmica da página de login administrativo.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos da página para cabeçalho HTTP e SEO.
+ */
 export const metadata = {
   title: "Login Administrativo • IDfeed",
   description: "Acesso restrito para administradores do sistema de aprovações.",
 };
 
+/**
+ * Componente assíncrono da Página de Login Administrativo.
+ *
+ * @returns Interface de autenticação do administrador com validação prévia de sessão.
+ */
 export default async function AdminLoginPage() {
   const session = await auth();
 
-  // Se já estiver autenticado como o administrador geral Lázaro Miranda, vai direto para as aprovações
+  // Se já estiver autenticado como o administrador geral Lázaro Miranda, redireciona diretamente para o painel de aprovações
   if (session?.user?.id && isLazaroMirandaAdmin(session.user)) {
     redirect("/admin/aprovacoes");
   }
@@ -70,3 +95,4 @@ export default async function AdminLoginPage() {
     </div>
   );
 }
+

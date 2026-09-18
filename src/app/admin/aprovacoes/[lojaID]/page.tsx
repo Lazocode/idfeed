@@ -1,26 +1,63 @@
+/**
+ * @file page.tsx
+ * @description Página de detalhe e auditoria cadastral de uma oficina mecânica específica.
+ * Permite ao administrador inspecionar o contrato social ou documento comprobatório
+ * via URL assinada segura e realizar a aprovação ou recusa com registro de justificativa.
+ * @module app/admin/aprovacoes/[lojaID]/page
+ * @recommendedPath src/app/admin/aprovacoes/[lojaID]/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
-import { requireAdmin } from "@/lib/security";
-import { supabaseAdmin } from "@/lib/supabase";
-import AprovacaoOficina from "@/components/aprovacaoOficina";
-import LogoutButton from "@/components/logout-button";
 import { ArrowLeft, ExternalLink, FileText, Building2, Phone, Hash } from "lucide-react";
 
+// 2. Componentes internos
+import AprovacaoOficina from "@/components/aprovacaoOficina";
+import LogoutButton from "@/components/logout-button";
+
+// 3. Bibliotecas e serviços internos
+import { requireAdmin } from "@/lib/security";
+import { supabaseAdmin } from "@/lib/supabase";
+
+/**
+ * Força a renderização dinâmica da página de auditoria documental.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para a página de análise cadastral.
+ */
 export const metadata = {
   title: "Análise Cadastral de Oficina • IDfeed Admin",
   description: "Auditoria documental da oficina credenciada.",
 };
 
-export default async function AnaliseOficinaPage({
-  params,
-}: {
-  params: Promise<{ lojaId: string }>;
-}) {
-  const session = await requireAdmin();
-  const { lojaId } = await params;
+/**
+ * Interface tipada para os parâmetros da rota dinâmica de aprovação de oficina.
+ */
+interface AnaliseOficinaPageProps {
+  params: Promise<{
+    lojaID?: string;
+    lojaId?: string;
+  }>;
+}
 
+/**
+ * Componente assíncrono da Página de Análise Cadastral da Oficina.
+ *
+ * @param props - Propriedades contendo a Promise com o ID da oficina a ser auditada.
+ * @returns Interface de análise detalhada dos dados e documentos com ações de aprovação.
+ */
+export default async function AnaliseOficinaPage({ params }: AnaliseOficinaPageProps) {
+  // Exige permissões de administrador geral
+  await requireAdmin();
+
+  // Resolução defensiva do parâmetro para cobrir variações de case da pasta dinâmica
+  const resolvedParams = await params;
+  const lojaId = resolvedParams.lojaID || resolvedParams.lojaId || "";
+
+  // Busca os dados cadastrais da oficina
   const { data: loja, error: lojaError } = await supabaseAdmin
     .from("lojas")
     .select("id, nome, cnpj, telefone, status, criado_em")
@@ -62,6 +99,7 @@ export default async function AnaliseOficinaPage({
     );
   }
 
+  // Busca o documento mais recente anexado pela oficina para credenciamento
   const { data: documentos, error: documentoError } = await supabaseAdmin
     .from("documentos_oficina")
     .select("id, nome_arquivo, caminho_arquivo, status, enviado_em")
@@ -75,6 +113,7 @@ export default async function AnaliseOficinaPage({
   const documento = documentos?.[0];
   let documentoUrl: string | null = null;
 
+  // Gera URL assinada temporária (10 minutos) para visualização segura sem expor o bucket publicamente
   if (documento) {
     const { data } = await supabaseAdmin.storage
       .from("documentos-oficinas")
@@ -225,3 +264,4 @@ export default async function AnaliseOficinaPage({
     </div>
   );
 }
+

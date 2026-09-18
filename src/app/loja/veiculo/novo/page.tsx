@@ -1,13 +1,33 @@
+/**
+ * @file page.tsx
+ * @description Página de cadastro de novos veículos da oficina mecânica.
+ * Coleta os dados de identificação do automóvel (placa, modelo, odômetro atual)
+ * e informações cadastrais do proprietário (nome, CPF, contato) para geração do passaporte digital.
+ * @module app/loja/veiculo/novo/page
+ * @recommendedPath src/app/loja/veiculo/novo/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
-import { criarVeiculo } from "@/actions/veiculos";
-import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { criarVeiculo } from "@/actions/veiculos";
+
+/**
+ * Metadados estáticos para a tela de cadastro de veículo.
+ */
 export const metadata = {
   title: "Novo Veículo • IDfeed",
   description: "Cadastre um veículo para emissão de passaporte digital e prontuário veicular.",
 };
 
+/**
+ * Componente funcional da Página de Cadastro de Veículo.
+ *
+ * @returns Interface de formulário com dados veiculares e dados do proprietário.
+ */
 export default function NovoVeiculoPage() {
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -58,10 +78,14 @@ export default function NovoVeiculoPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="veic-placa"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Placa do Veículo *
                   </label>
                   <input
+                    id="veic-placa"
                     name="placa"
                     placeholder="ABC-1D23"
                     required
@@ -71,10 +95,14 @@ export default function NovoVeiculoPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="veic-kmAtual"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Km Atual do Odômetro
                   </label>
                   <input
+                    id="veic-kmAtual"
                     name="kmAtual"
                     type="number"
                     min={0}
@@ -85,10 +113,14 @@ export default function NovoVeiculoPage() {
               </div>
 
               <div className="mt-4">
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="veic-modelo"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Marca, Modelo e Versão *
                 </label>
                 <input
+                  id="veic-modelo"
                   name="modelo"
                   placeholder="Ex: Fiat Strada 1.4 Endurance (2021)"
                   required
@@ -107,10 +139,14 @@ export default function NovoVeiculoPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="veic-proprietarioNome"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Nome Completo do Proprietário *
                   </label>
                   <input
+                    id="veic-proprietarioNome"
                     name="proprietarioNome"
                     placeholder="Nome do cliente"
                     required
@@ -120,10 +156,14 @@ export default function NovoVeiculoPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="veic-proprietarioCpf"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       CPF do Proprietário *
                     </label>
                     <input
+                      id="veic-proprietarioCpf"
                       name="proprietarioCpf"
                       placeholder="000.000.000-00"
                       inputMode="numeric"
@@ -134,10 +174,14 @@ export default function NovoVeiculoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="veic-proprietarioContato"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
                       Telefone ou WhatsApp
                     </label>
                     <input
+                      id="veic-proprietarioContato"
                       name="proprietarioContato"
                       placeholder="(21) 99999-9999"
                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
@@ -149,6 +193,7 @@ export default function NovoVeiculoPage() {
 
             <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
               <button
+                id="btn-criar-veiculo-submit"
                 type="submit"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs cursor-pointer"
               >
@@ -168,3 +213,4 @@ export default function NovoVeiculoPage() {
     </div>
   );
 }
+

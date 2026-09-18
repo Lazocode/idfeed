@@ -1,14 +1,16 @@
+/**
+ * @file page.tsx
+ * @description Página de prontuário e detalhes operacionais do veículo.
+ * Exibe o passaporte digital, quilometragem atual, histórico de ordens de serviço (manutenções),
+ * agendamento de próxima revisão programada e galeria de fotos de laudo/documentos do veículo.
+ * @module app/loja/veiculo/[id]/page
+ * @recommendedPath src/app/loja/veiculo/[id]/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
-import { formatKm, formatMoeda, formatData, formatPlaca, TIPO_SERVICO_LABEL } from "@/lib/utils";
-import { removerFoto } from "@/actions/fotos";
-import { atualizarProximaRevisao } from "@/actions/veiculos";
-import type { OrdemServicoComRelacoes } from "@/lib/types";
-import { getSignedPhotoUrl } from "@/lib/photos";
-import FotoUploadForm from "@/components/foto-upload-form";
 import {
   ArrowLeft,
   Plus,
@@ -19,13 +21,44 @@ import {
   Edit3,
 } from "lucide-react";
 
+// 2. Componentes internos
+import FotoUploadForm from "@/components/foto-upload-form";
+
+// 3. Ações de servidor (Server Actions)
+import { removerFoto } from "@/actions/fotos";
+import { atualizarProximaRevisao } from "@/actions/veiculos";
+
+// 4. Bibliotecas, serviços e utilitários internos
+import { auth } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+import { getSignedPhotoUrl } from "@/lib/photos";
+import {
+  formatKm,
+  formatMoeda,
+  formatData,
+  formatPlaca,
+  TIPO_SERVICO_LABEL,
+} from "@/lib/utils";
+
+// 5. Tipos e interfaces
+import type { OrdemServicoComRelacoes } from "@/lib/types";
+
+/**
+ * Força a renderização dinâmica no servidor para garantir dados em tempo real.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos para o prontuário veicular.
+ */
 export const metadata = {
   title: "Prontuário do Veículo • IDfeed",
   description: "Histórico completo, revisões programadas e fotos do veículo.",
 };
 
+/**
+ * Mapa de estilos visuais (Tailwind CSS) por tipo de serviço realizado.
+ */
 const TIPO_BADGE_STYLE: Record<string, string> = {
   oleo: "bg-amber-50 text-amber-800 border-amber-200",
   freios: "bg-red-50 text-red-800 border-red-200",
@@ -34,11 +67,25 @@ const TIPO_BADGE_STYLE: Record<string, string> = {
   outros: "bg-emerald-50 text-emerald-800 border-emerald-200",
 };
 
-export default async function VeiculoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+/**
+ * Interface tipada para as propriedades de rota recebidas pela página.
+ */
+interface VeiculoDetalhePageProps {
+  params: Promise<{ id: string }>;
+}
+
+/**
+ * Componente assíncrono da Página de Prontuário do Veículo.
+ *
+ * @param props - Propriedades de rota contendo a Promise com o ID do veículo (`params.id`).
+ * @returns Interface completa do prontuário veicular, manutenções e galeria de fotos.
+ */
+export default async function VeiculoDetalhePage({ params }: VeiculoDetalhePageProps) {
   const { id } = await params;
   const session = await auth();
   const lojaId = session!.user.lojaId;
 
+  // 1. Busca os dados completos do veículo com ordens de serviço e insumos aplicados
   const { data: veiculo } = await supabaseAdmin
     .from("veiculos")
     .select(`*, ordens_servico(*, mecanico:usuarios(nome), pecas:ordem_servico_materiais(quantidade, material:materiais(nome)))`)
@@ -49,6 +96,7 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
 
   if (!veiculo) notFound();
 
+  // 2. Busca o acervo de fotos e documentos associados ao veículo
   const { data: fotos } = await supabaseAdmin
     .from("fotos")
     .select("*")
@@ -56,10 +104,12 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
     .eq("entidade_id", veiculo.id)
     .order("criado_em", { ascending: false });
 
+  // 3. Gera URLs pré-assinadas temporárias e seguras para exibição das fotos no navegador
   const fotosComUrl = await Promise.all(
     (fotos ?? []).map(async (f) => ({ ...f, signedUrl: await getSignedPhotoUrl(f.url) }))
   );
 
+  // 4. Calcula a distância restante para a próxima revisão preventiva programada
   const kmToGo = veiculo.km_proxima_revisao ? veiculo.km_proxima_revisao - veiculo.km_atual : null;
   const soon = kmToGo !== null && kmToGo <= 3000;
 
@@ -191,7 +241,7 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+                    className="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     Salvar
                   </button>
@@ -239,6 +289,7 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
             Histórico de Manutenções e Ordens de Serviço
           </h2>
           <Link
+            id="btn-nova-manutencao"
             href={`/loja/veiculo/${veiculo.id}/nova-manutencao`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs"
           >
@@ -263,6 +314,7 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
             {veiculo.ordens_servico.map((os: OrdemServicoComRelacoes) => (
               <div
                 key={os.id}
+                id={`ordem-servico-${os.id}`}
                 className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 transition-all hover:border-slate-300"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
@@ -284,6 +336,7 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
                       {formatMoeda(os.custo)}
                     </span>
                     <Link
+                      id={`btn-editar-os-${os.id}`}
                       href={`/loja/veiculo/${veiculo.id}/ordem/${os.id}/editar`}
                       className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors"
                     >
@@ -327,3 +380,4 @@ export default async function VeiculoDetalhePage({ params }: { params: Promise<{
     </div>
   );
 }
+

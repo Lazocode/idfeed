@@ -1,13 +1,33 @@
+/**
+ * @file page.tsx
+ * @description Página de cadastro de novos insumos e peças de estoque da oficina.
+ * Permite registrar SKU, localização física no galpão/prateleira, quantidade inicial
+ * e estoque mínimo para acionamento de alertas de reposição.
+ * @module app/loja/material/novo/page
+ * @recommendedPath src/app/loja/material/novo/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
-import { criarMaterial } from "@/actions/materiais";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { criarMaterial } from "@/actions/materiais";
+
+/**
+ * Metadados estáticos para a página de criação de material.
+ */
 export const metadata = {
   title: "Novo Material • IDfeed",
   description: "Cadastre uma nova peça ou insumo no estoque da oficina.",
 };
 
+/**
+ * Componente funcional da Página de Cadastro de Material.
+ *
+ * @returns Interface de formulário para cadastramento de produto no estoque.
+ */
 export default function NovoMaterialPage() {
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -50,10 +70,14 @@ export default function NovoMaterialPage() {
           <form action={criarMaterial} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="mat-nome"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Nome da Peça / Insumo *
                 </label>
                 <input
+                  id="mat-nome"
                   name="nome"
                   placeholder="Ex: Pastilha de Freio Dianteira"
                   required
@@ -62,10 +86,14 @@ export default function NovoMaterialPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="mat-sku"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Código SKU / Referência *
                 </label>
                 <input
+                  id="mat-sku"
                   name="sku"
                   placeholder="Ex: PST-FRE-01"
                   required
@@ -75,10 +103,14 @@ export default function NovoMaterialPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="mat-localizacao"
+                className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
                 Localização Física no Estoque
               </label>
               <input
+                id="mat-localizacao"
                 name="localizacao"
                 placeholder="Ex: Galpão 2 · Prateleira B2"
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
@@ -87,10 +119,14 @@ export default function NovoMaterialPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="mat-quantidadeAtual"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Quantidade Inicial
                 </label>
                 <input
+                  id="mat-quantidadeAtual"
                   name="quantidadeAtual"
                   type="number"
                   min={0}
@@ -101,10 +137,14 @@ export default function NovoMaterialPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="mat-quantidadeMinima"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Estoque Mínimo (Alerta)
                 </label>
                 <input
+                  id="mat-quantidadeMinima"
                   name="quantidadeMinima"
                   type="number"
                   min={0}
@@ -117,6 +157,7 @@ export default function NovoMaterialPage() {
 
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
               <button
+                id="btn-criar-material-submit"
                 type="submit"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs cursor-pointer"
               >
@@ -136,3 +177,4 @@ export default function NovoMaterialPage() {
     </div>
   );
 }
+

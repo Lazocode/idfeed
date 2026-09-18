@@ -1,15 +1,37 @@
+/**
+ * @file foto-upload-form.tsx
+ * @description Formulário de upload de fotografias para veículos e peças/materiais de estoque.
+ * Valida o tamanho máximo permitido (10 MB) e despacha a imagem para a Server Action `enviarFoto`.
+ * @module components/foto-upload-form
+ * @recommendedPath src/components/foto-upload-form.tsx
+ */
+
 "use client";
 
-import { useState, useRef } from "react";
+// 1. Dependências e bibliotecas externas
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { enviarFoto } from "@/actions/fotos";
 import { Camera, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
+// 2. Ações de servidor (Server Actions)
+import { enviarFoto } from "@/actions/fotos";
+
+/**
+ * Propriedades do formulário de upload de fotos.
+ */
 interface FotoUploadFormProps {
+  /** Tipo da entidade que receberá a foto anexada ("veiculo" ou "material"). */
   entidadeTipo: "veiculo" | "material";
+  /** Identificador único da entidade no banco de dados (UUID). */
   entidadeId: string;
 }
 
+/**
+ * Componente cliente para captura/seleção e envio de fotos.
+ *
+ * @param props - Propriedades contendo o tipo e o ID da entidade destino.
+ * @returns Formulário estilizado com input de arquivo, botões de ação e mensagens de feedback.
+ */
 export default function FotoUploadForm({
   entidadeTipo,
   entidadeId,
@@ -21,6 +43,11 @@ export default function FotoUploadForm({
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState(false);
 
+  /**
+   * Trata o envio do arquivo selecionado após validação de tamanho.
+   *
+   * @param e - Evento de submissão do formulário.
+   */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro(null);
@@ -33,6 +60,7 @@ export default function FotoUploadForm({
     }
 
     const file = input.files[0];
+    // Validação de limite de 10 MB
     if (file.size > 10 * 1024 * 1024) {
       setErro("A foto deve ter no máximo 10 MB.");
       return;
@@ -81,6 +109,7 @@ export default function FotoUploadForm({
 
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3">
         <input
+          id={`input-foto-${entidadeId}`}
           ref={fileInputRef}
           type="file"
           name="foto"
@@ -90,6 +119,7 @@ export default function FotoUploadForm({
           className="w-full sm:w-auto flex-1 text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 disabled:opacity-60 cursor-pointer"
         />
         <button
+          id={`btn-enviar-foto-${entidadeId}`}
           type="submit"
           disabled={loading}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 disabled:opacity-60 transition-colors shadow-2xs cursor-pointer"
@@ -110,3 +140,4 @@ export default function FotoUploadForm({
     </div>
   );
 }
+

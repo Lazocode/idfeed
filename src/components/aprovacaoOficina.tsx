@@ -1,22 +1,47 @@
+/**
+ * @file aprovacaoOficina.tsx
+ * @description Componente interativo de moderação administrativa para homologação ou recusa de oficinas.
+ * Permite que o administrador aprove o credenciamento imediatamente ou informe o motivo detalhado de rejeição.
+ * @module components/aprovacaoOficina
+ * @recommendedPath src/components/aprovacaoOficina.tsx
+ */
+
 "use client";
 
-import { useState } from "react";
+// 1. Dependências e bibliotecas externas
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { aprovarOficina, rejeitarOficina } from "@/actions/aprovacao";
 import { Check, X, AlertCircle, Loader2 } from "lucide-react";
 
-export default function AprovacaoOficina({
-  lojaId,
-}: {
+// 2. Ações de servidor (Server Actions)
+import { aprovarOficina, rejeitarOficina } from "@/actions/aprovacao";
+
+/**
+ * Propriedades para o componente `AprovacaoOficina`.
+ */
+interface AprovacaoOficinaProps {
+  /** Identificador único da oficina no banco de dados (UUID). */
   lojaId: string;
-}) {
+}
+
+/**
+ * Componente cliente com ações de moderação cadastral de oficinas credenciadas.
+ *
+ * @param props - Propriedades contendo o ID da loja a ser auditada.
+ * @returns Painel de botões de aprovação e modal/área de recusa com justificativa.
+ */
+export default function AprovacaoOficina({ lojaId }: AprovacaoOficinaProps) {
   const router = useRouter();
 
+  // Estados locais do fluxo de moderação
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [modoRejeicao, setModoRejeicao] = useState(false);
   const [observacao, setObservacao] = useState("");
 
+  /**
+   * Executa a aprovação do credenciamento da oficina.
+   */
   async function handleAprovar() {
     setErro("");
     setLoading(true);
@@ -35,6 +60,9 @@ export default function AprovacaoOficina({
     }
   }
 
+  /**
+   * Executa a rejeição do credenciamento da oficina mediante justificativa obrigatória.
+   */
   async function handleRejeitar() {
     setErro("");
 
@@ -64,6 +92,7 @@ export default function AprovacaoOficina({
       {!modoRejeicao ? (
         <div className="flex flex-col sm:flex-row items-center gap-2.5">
           <button
+            id={`btn-aprovar-oficina-${lojaId}`}
             type="button"
             onClick={handleAprovar}
             disabled={loading}
@@ -78,6 +107,7 @@ export default function AprovacaoOficina({
           </button>
 
           <button
+            id={`btn-iniciar-rejeicao-${lojaId}`}
             type="button"
             onClick={() => {
               setErro("");
@@ -94,14 +124,14 @@ export default function AprovacaoOficina({
         <div className="space-y-3">
           <div>
             <label
-              htmlFor="observacao"
+              htmlFor={`observacao-${lojaId}`}
               className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
             >
               Motivo da Rejeição *
             </label>
 
             <textarea
-              id="observacao"
+              id={`observacao-${lojaId}`}
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               placeholder="Descreva o problema com a documentação para notificar o responsável..."
@@ -114,6 +144,7 @@ export default function AprovacaoOficina({
 
           <div className="flex items-center gap-2">
             <button
+              id={`btn-confirmar-rejeicao-${lojaId}`}
               type="button"
               onClick={handleRejeitar}
               disabled={loading}
@@ -128,6 +159,7 @@ export default function AprovacaoOficina({
             </button>
 
             <button
+              id={`btn-cancelar-rejeicao-${lojaId}`}
               type="button"
               onClick={() => {
                 setErro("");
@@ -152,3 +184,4 @@ export default function AprovacaoOficina({
     </div>
   );
 }
+

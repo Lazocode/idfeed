@@ -1,27 +1,55 @@
-import { requireAdmin } from "@/lib/security";
-import { supabaseAdmin } from "@/lib/supabase";
-import AprovacoesTabs from "@/components/aprovacoesTabs";
-import LogoutButton from "@/components/logout-button";
+/**
+ * @file page.tsx
+ * @description Painel administrativo de homologação e credenciamento de oficinas mecânicas.
+ * Consulta o banco de dados Supabase para listar oficinas pendentes, aprovadas e rejeitadas,
+ * organizadas em abas com auditoria de dados e verificação de privilégios via `requireAdmin`.
+ * @module app/admin/aprovacoes/page
+ * @recommendedPath src/app/admin/aprovacoes/page.tsx
+ */
+
+// 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
+// 2. Componentes internos
+import AprovacoesTabs from "@/components/aprovacoesTabs";
+import LogoutButton from "@/components/logout-button";
+
+// 3. Bibliotecas e serviços internos
+import { requireAdmin } from "@/lib/security";
+import { supabaseAdmin } from "@/lib/supabase";
+
+/**
+ * Força a renderização dinâmica para exibir em tempo real o status cadastral das oficinas.
+ */
 export const dynamic = "force-dynamic";
 
+/**
+ * Metadados estáticos da página para cabeçalho HTTP e SEO.
+ */
 export const metadata = {
   title: "Gestão de Credenciamentos • IDfeed Admin",
   description: "Homologação e análise de documentos das oficinas cadastradas.",
 };
 
+/**
+ * Componente assíncrono da Página de Gestão de Credenciamentos.
+ *
+ * @returns Interface com abas de oficinas pendentes, aprovadas e rejeitadas para auditoria técnica.
+ */
 export default async function AprovacoesPage() {
+  // Exige que o usuário autenticado seja o administrador geral do sistema
   const session = await requireAdmin();
 
+  // Consulta todas as oficinas cadastradas ordenadas pela data de criação
   const { data: oficinas, error } = await supabaseAdmin
     .from("lojas")
     .select("id, nome, cnpj, telefone, status, criado_em")
     .in("status", ["pendente", "aprovada", "rejeitada"])
     .order("criado_em", { ascending: true });
 
+  // Tratamento visual para falha de comunicação com o Supabase
   if (error) {
     console.error("ERRO AO BUSCAR OFICINAS:", error);
 
@@ -59,6 +87,7 @@ export default async function AprovacoesPage() {
     );
   }
 
+  // Segmentação das oficinas por estado de credenciamento
   const pendentes =
     oficinas?.filter((oficina) => oficina.status === "pendente") ?? [];
 
@@ -126,3 +155,4 @@ export default async function AprovacoesPage() {
     </div>
   );
 }
+
