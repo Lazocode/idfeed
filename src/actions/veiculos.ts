@@ -14,22 +14,27 @@ import { redirect } from "next/navigation";
 
 // 2. Serviços e utilitários internos
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireRole } from "@/lib/security";
+import { requireApprovedAction } from "@/lib/security";
 import { vehicleSchema } from "@/lib/validation";
 import { normPlaca } from "@/lib/utils";
 
 /**
- * Cadastra um novo veículo vinculado à oficina do usuário logado.
+ * Cadastra um novo veículo vinculado à oficina do usuário logado com validação defensiva.
+ *
+ * MITIGAÇÃO:
+ * - IDOR & Multi-tenant Authorization: Exige aprovação ativa da oficina via requireApprovedAction.
+ * - Sensitive Data Leakage: Valida a chave HMAC_SECRET sem expor detalhes internos em caso de falha.
+ * - Information Leakage: Sanitiza mensagens de erro do banco de dados (esconde schemas e constraints).
  *
  * @param formData - FormData contendo placa, modelo, nome e CPF do proprietário, contato e km atual.
- * @throws {Error} Se os dados forem inconsistentes, o CPF secret faltar ou a placa já existir.
+ * @throws {Error} Se os dados forem inconsistentes, a oficina não estiver aprovada ou a placa já existir.
  * @returns {Promise<never>} Redireciona para o prontuário do veículo criado.
  */
 export async function criarVeiculo(formData: FormData): Promise<never> {
-  // Exige perfil com acesso operacional
-  const session = await requireRole(["admin", "mecanico", "atendente"]);
+  // 1. Exige perfil com acesso operacional E loja com credenciamento aprovado
+  const session = await requireApprovedAction(["admin", "mecanico", "atendente"]);
 
-  // Validação dos dados via Zod
+  // 2. Validação estrita dos dados via Zod
   const parsed = vehicleSchema.safeParse({
     placa: formData.get("placa"),
     modelo: formData.get("modelo"),
@@ -40,7 +45,7 @@ export async function criarVeiculo(formData: FormData): Promise<never> {
   });
 
   if (!parsed.success) {
-    throw new Error("Confira os dados do veículo.");
+    throw new Error("Dados do veículo inválidos ou incompletos. Verifique os campos informados.");
   }
 
   const {
@@ -58,10 +63,11 @@ export async function criarVeiculo(formData: FormData): Promise<never> {
   const cpfSecret = process.env.CPF_HASH_SECRET;
 
   if (!cpfSecret) {
-    throw new Error("Configuração de segurança do CPF não encontrada.");
+    console.error("ERRO DE SEGURANÇA: CPF_HASH_SECRET não configurado.");
+    throw new Error("Falha na configuração de segurança da aplicação.");
   }
 
-  // Gera HMAC do CPF do proprietário para consultas seguras
+  // Gera HMAC do CPF do proprietário para proteção criptográfica em repouso
   const cpfHash = crypto
     .createHmac("sha256", cpfSecret)
     .update(proprietarioCpf)
@@ -78,7 +84,7 @@ export async function criarVeiculo(formData: FormData): Promise<never> {
     throw new Error("Já existe um veículo cadastrado com essa placa.");
   }
 
-  // Insere o veículo com token público para visualização web
+  // Insere o veículo com token público de alta entropia para visualização web
   const { data: veiculo, error } = await supabaseAdmin
     .from("veiculos")
     .insert({
@@ -98,9 +104,7 @@ export async function criarVeiculo(formData: FormData): Promise<never> {
 
   if (error || !veiculo) {
     console.error("ERRO AO CADASTRAR VEÍCULO:", error);
-    throw new Error(
-      error?.message || "Não foi possível cadastrar o veículo."
-    );
+    throw new Error("Não foi possível cadastrar o veículo no momento.");
   }
 
   redirect(`/loja/veiculo/${veiculo.id}`);
@@ -109,16 +113,20 @@ export async function criarVeiculo(formData: FormData): Promise<never> {
 /**
  * Atualiza o planejamento da próxima revisão preventiva do veículo (km estipulado e notas de serviço).
  *
+ * MITIGAÇÃO:
+ * - IDOR: Verifica se o veículo pertence efetivamente à oficina autenticada antes de autorizar mutação.
+ * - Multi-tenant: Garante isolamento estrito por `loja_id`.
+ *
  * @param veiculoId - UUID do veículo a ser configurado.
  * @param formData - FormData contendo a quilometragem prevista (`kmProximaRevisao`) e nota explicativa.
- * @throws {Error} Se a quilometragem informada for inválida ou a nota ultrapassar 500 caracteres.
+ * @throws {Error} Se a quilometragem for inválida, a nota exceder o limite ou o veículo não for encontrado.
  * @returns {Promise<never>} Redireciona de volta para a página do veículo.
  */
 export async function atualizarProximaRevisao(
   veiculoId: string,
   formData: FormData
 ): Promise<never> {
-  const session = await requireRole(["admin", "mecanico"]);
+  const session = await requireApprovedAction(["admin", "mecanico"]);
 
   const km = formData.get("kmProximaRevisao");
   const kmProximaRevisao =
@@ -130,17 +138,29 @@ export async function atualizarProximaRevisao(
       kmProximaRevisao < 0 ||
       kmProximaRevisao > 10_000_000)
   ) {
-    throw new Error("Quilometragem inválida.");
+    throw new Error("Quilometragem inválida. Informe um valor inteiro positivo.");
   }
 
   const notaProximaRevisao = String(formData.get("notaProximaRevisao") ?? "").trim();
 
   if (notaProximaRevisao.length > 500) {
-    throw new Error("Nota muito longa.");
+    throw new Error("Nota de revisão excede o limite de 500 caracteres.");
+  }
+
+  // Verifica previamente se o veículo pertence à oficina para prevenir IDOR silencioso
+  const { data: veiculoExistente } = await supabaseAdmin
+    .from("veiculos")
+    .select("id")
+    .eq("id", veiculoId)
+    .eq("loja_id", session.user.lojaId)
+    .maybeSingle();
+
+  if (!veiculoExistente) {
+    throw new Error("Veículo não localizado ou não pertence à sua oficina.");
   }
 
   // Atualiza com garantia de que o veículo pertence à oficina
-  await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from("veiculos")
     .update({
       km_proxima_revisao: kmProximaRevisao,
@@ -149,6 +169,12 @@ export async function atualizarProximaRevisao(
     .eq("id", veiculoId)
     .eq("loja_id", session.user.lojaId);
 
+  if (updateError) {
+    console.error("ERRO AO ATUALIZAR REVISÃO:", updateError);
+    throw new Error("Não foi possível atualizar o agendamento de revisão.");
+  }
+
   redirect(`/loja/veiculo/${veiculoId}`);
 }
+
 

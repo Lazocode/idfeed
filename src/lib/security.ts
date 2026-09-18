@@ -28,22 +28,73 @@ export type StatusLoja =
   | "bloqueada";
 
 /**
- * Verifica de forma rígida se o usuário autenticado corresponde ao perfil de superadministrador (Lázaro Miranda).
- *
- * @param user - Objeto do usuário autenticado contendo e-mail, nome e papel.
- * @returns `true` se for o superadministrador do sistema; caso contrário, `false`.
+ * E-mails explicitamente autorizados com privilégios irrestritos de superadministrador.
+ * MITIGAÇÃO: Privilege Escalation & Name Spoofing Attack.
+ * NUNCA utilize substrings de nomes de exibição (ex: name.includes("lazaro")), pois são mutáveis
+ * e permitem que qualquer usuário crie uma conta com esse nome e obtenha acesso superadmin.
  */
-export function isLazaroMirandaAdmin(user?: { email?: string | null; name?: string | null; papel?: string | null } | null): boolean {
+const SUPERADMIN_EMAILS: ReadonlySet<string> = new Set([
+  "lazanha931@gmail.com",
+  "mirandalazaro560@gmail.com",
+]);
+
+/**
+ * Verifica de forma rígida se o usuário autenticado corresponde ao perfil de superadministrador.
+ *
+ * MITIGAÇÃO: Bypass de Autorização Administrativa (Broken Access Control).
+ * Por que elimina a brecha: Exige estritamente o papel "admin" E verificação contra a lista branca
+ * imutável de e-mails de superadministradores, rejeitando comparações frouxas de strings no nome do usuário.
+ * COMPORTAMENTO DEFENSIVO: Retorna `false` imediatamente para qualquer usuário fora da lista autorizada.
+ *
+ * @param user - Objeto do usuário autenticado contendo e-mail e papel.
+ * @returns `true` se for o superadministrador legítimo; caso contrário, `false`.
+ */
+export function isLazaroMirandaAdmin(user?: { email?: string | null; papel?: string | null } | null): boolean {
   if (!user || user.papel !== "admin") return false;
   const email = (user.email || "").trim().toLowerCase();
-  const name = (user.name || "").trim().toLowerCase();
-  return (
-    email === "lazanha931@gmail.com" ||
-    email === "mirandalazaro560@gmail.com" ||
-    name.includes("lazaro") ||
-    name.includes("lázaro")
-  );
+  return SUPERADMIN_EMAILS.has(email);
 }
+
+/**
+ * Exige papel autorizado E status de oficina homologada para execução segura de Server Actions.
+ *
+ * MITIGAÇÃO: IDOR & Bypass de Autorização Multi-tenant em ações de mutação (Server Actions).
+ * Por que elimina a brecha: Garante que oficinas suspensas, rejeitadas, pendentes ou bloqueadas não
+ * possam injetar requisições diretas via RPC/Server Actions para criar veículos, alterar ordens de serviço
+ * ou manipular inventário sem aprovação prévia da plataforma.
+ * COMPORTAMENTO DEFENSIVO: Lança exceção tipada sem redirecionamento abrupto, permitindo tratamento defensivo na UI.
+ *
+ * @param roles - Lista de papéis autorizados para a ação.
+ * @returns Sessão validada e dados da loja autorizada.
+ * @throws {Error} Se não autenticado, sem permissão ou loja não aprovada.
+ */
+export async function requireApprovedAction(roles: Papel[]) {
+  const session = await auth();
+
+  if (!session?.user?.id || !session.user.lojaId || !session.user.papel) {
+    throw new Error("Sessão inválida ou expirada. Faça login novamente.");
+  }
+
+  if (!roles.includes(session.user.papel as Papel)) {
+    throw new Error("Acesso não autorizado para o perfil do usuário.");
+  }
+
+  // Verifica status da oficina em tempo real no banco para revogação imediata
+  const { data: loja, error } = await supabaseAdmin
+    .from("lojas")
+    .select("status")
+    .eq("id", session.user.lojaId)
+    .single();
+
+  const status = loja?.status || (session.user.lojaStatus as StatusLoja);
+
+  if (error || !status || status !== "aprovada") {
+    throw new Error("Operação bloqueada: Oficina não homologada ou com pendências cadastrais.");
+  }
+
+  return session;
+}
+
 
 /**
  * Exige que o usuário esteja autenticado e possua o papel 'admin'

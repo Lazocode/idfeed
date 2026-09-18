@@ -14,12 +14,17 @@ import { redirect } from "next/navigation";
 
 // 2. Serviços e utilitários internos
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireRole } from "@/lib/security";
+import { requireApprovedAction } from "@/lib/security";
 import { movementSchema } from "@/lib/validation";
 
 /**
- * Registra uma nova movimentação de estoque (entrada, saída, transferência ou inventário) de forma atômica.
- * Suporta assinaturas flexíveis da procedure PostgreSQL no Supabase (com ou sem p_loja_id) e fallback direto.
+ * Registra uma nova movimentação de estoque de forma atômica e defensiva.
+ *
+ * MITIGAÇÃO:
+ * - IDOR & Multi-tenant Authorization: Exige aprovação ativa e isolamento por loja_id via requireApprovedAction.
+ * - Falha de Integridade Financeira / Estoque Negativo: Impede saída com quantidade superior ao saldo atual.
+ * - Integer Overflow / Exploração Aritmética: Limita o quantitativo máximo por operação.
+ * - Information Leakage: Sanitiza mensagens de erro do PostgreSQL.
  *
  * @param materialId - UUID do material a ser movimentado.
  * @param formData - Dados contendo o tipo ('entrada' | 'saida' | 'transferencia' | 'inventario'), quantidade e observação.
@@ -30,10 +35,10 @@ export async function registrarMovimentacao(
   materialId: string,
   formData: FormData
 ): Promise<never> {
-  // Exige papel com permissão mecânica ou administrativa
-  const session = await requireRole(["admin", "mecanico"]);
+  // 1. Exige perfil operacional e loja homologada
+  const session = await requireApprovedAction(["admin", "mecanico"]);
 
-  // Validação dos dados informados
+  // 2. Validação dos dados informados
   const parsed = movementSchema.safeParse({
     tipo: formData.get("tipo"),
     quantidade: formData.get("quantidade"),
@@ -41,10 +46,10 @@ export async function registrarMovimentacao(
   });
 
   if (!parsed.success) {
-    throw new Error("Dados de movimentação inválidos.");
+    throw new Error("Dados de movimentação de estoque inválidos.");
   }
 
-  // Verifica se o material pertence à oficina do usuário conectado e obtém saldo atual
+  // 3. Verifica se o material pertence à oficina do usuário conectado e obtém saldo atual
   const { data: material } = await supabaseAdmin
     .from("materiais")
     .select("id, quantidade_atual, loja_id")
@@ -53,16 +58,24 @@ export async function registrarMovimentacao(
     .maybeSingle();
 
   if (!material) {
-    throw new Error("Material não encontrado nesta loja.");
+    throw new Error("Material não encontrado ou não pertence a esta oficina.");
   }
 
   const { tipo, quantidade, observacao } = parsed.data;
 
-  if ((tipo === "entrada" || tipo === "saida") && quantidade <= 0) {
-    throw new Error("Informe uma quantidade válida.");
+  if (quantidade <= 0 || quantidade > 1_000_000) {
+    throw new Error("Informe uma quantidade válida entre 1 e 1.000.000 unidades.");
   }
 
   const saldoAtual = Number(material.quantidade_atual ?? 0);
+
+  // 4. MITIGAÇÃO: Impede saídas que deixariam o estoque fisicamente inconsistente (saldo negativo)
+  if (tipo === "saida" && quantidade > saldoAtual) {
+    throw new Error(
+      `Saldo insuficiente em estoque. Saldo atual: ${saldoAtual}, tentativa de saída: ${quantidade}.`
+    );
+  }
+
   let delta = 0;
 
   // Define o delta algébrico para a rotina do banco (+ para entrada, - para saída, ajuste para inventário)
@@ -78,7 +91,7 @@ export async function registrarMovimentacao(
     delta = 0;
   }
 
-  // 1. Tenta executar a procedure com 6 parâmetros (assinatura com p_loja_id)
+  // 5. Tenta executar a procedure com 6 parâmetros (assinatura com p_loja_id)
   let rpcResult = await supabaseAdmin.rpc("registrar_movimentacao", {
     p_material_id: materialId,
     p_tipo: tipo,
@@ -88,7 +101,7 @@ export async function registrarMovimentacao(
     p_loja_id: session.user.lojaId,
   });
 
-  // 2. Se a procedure de 6 parâmetros não existir no cache do PostgREST (PGRST202), tenta a assinatura de 5 parâmetros
+  // 6. Se a procedure de 6 parâmetros não existir no cache do PostgREST (PGRST202), tenta a assinatura de 5 parâmetros
   if (rpcResult.error && rpcResult.error.code === "PGRST202") {
     rpcResult = await supabaseAdmin.rpc("registrar_movimentacao", {
       p_material_id: materialId,
@@ -99,7 +112,7 @@ export async function registrarMovimentacao(
     });
   }
 
-  // 3. Caso a procedure RPC apresente falha, executa a persistência atômica via cliente de serviço
+  // 7. Caso a procedure RPC apresente falha, executa a persistência atômica via cliente de serviço
   if (rpcResult.error) {
     console.warn("RPC registrar_movimentacao falhou ou indisponível, executando fallback transacional:", rpcResult.error);
 
@@ -116,7 +129,7 @@ export async function registrarMovimentacao(
 
     if (insertError) {
       console.error("ERRO AO INSERIR MOVIMENTAÇÃO:", insertError);
-      throw new Error(insertError.message || "Não foi possível registrar a movimentação.");
+      throw new Error("Não foi possível registrar a movimentação no histórico.");
     }
 
     // Atualiza o saldo físico da peça caso haja variação
@@ -133,7 +146,7 @@ export async function registrarMovimentacao(
 
       if (updateError) {
         console.error("ERRO AO ATUALIZAR SALDO DO MATERIAL:", updateError);
-        throw new Error(updateError.message || "Não foi possível atualizar o saldo do material.");
+        throw new Error("Não foi possível atualizar o saldo físico do material.");
       }
     }
   }
@@ -148,7 +161,11 @@ export async function registrarMovimentacao(
 }
 
 /**
- * Atualiza a observação descritiva de uma movimentação histórica de estoque.
+ * Atualiza a observação descritiva de uma movimentação histórica de estoque com validação de posse.
+ *
+ * MITIGAÇÃO:
+ * - IDOR: Verifica se o movimento pertence ao material da oficina autenticada antes de atualizar.
+ * - Parameter Tampering: Impede qualquer alteração de tipo, quantidade ou saldo retroativo.
  *
  * @param movimentacaoId - UUID do registro de movimentação de estoque.
  * @param materialId - UUID do material associado.
@@ -161,15 +178,15 @@ export async function editarMovimentacao(
   materialId: string,
   formData: FormData
 ): Promise<never> {
-  const session = await requireRole(["admin", "mecanico"]);
+  const session = await requireApprovedAction(["admin", "mecanico"]);
 
   const observacao = String(formData.get("observacao") ?? "").trim();
 
   if (observacao.length > 2000) {
-    throw new Error("Observação muito longa.");
+    throw new Error("Observação excede o limite de 2.000 caracteres.");
   }
 
-  // Garante que o registro pertence à oficina atual
+  // Garante que o registro pertence à oficina atual (prevenção de IDOR)
   const { data: movimento } = await supabaseAdmin
     .from("movimentacoes_estoque")
     .select("id, material_id, materiais!inner(id, loja_id)")
@@ -179,7 +196,7 @@ export async function editarMovimentacao(
     .maybeSingle();
 
   if (!movimento) {
-    throw new Error("Movimentação não encontrada nesta loja.");
+    throw new Error("Movimentação não encontrada nesta oficina.");
   }
 
   const { error } = await supabaseAdmin
@@ -189,11 +206,13 @@ export async function editarMovimentacao(
     .eq("material_id", materialId);
 
   if (error) {
-    throw new Error("Não foi possível editar a movimentação.");
+    console.error("ERRO AO EDITAR MOVIMENTAÇÃO:", error);
+    throw new Error("Não foi possível editar a observação da movimentação.");
   }
 
   revalidatePath(`/loja/material/${materialId}`);
 
   redirect(`/loja/material/${materialId}`);
 }
+
 

@@ -10,10 +10,13 @@
 
 // 1. Dependências e bibliotecas externas
 import crypto from "node:crypto";
+import { headers } from "next/headers";
 
 // 2. Serviços e utilitários internos
 import { supabaseAdmin } from "@/lib/supabase";
 import { normPlaca } from "@/lib/utils";
+import { checkPublicSearchRateLimit } from "@/lib/rate-limit";
+import { maskSensitiveName } from "@/lib/validation";
 
 /**
  * Resposta estruturada da consulta veicular digital.
@@ -41,41 +44,67 @@ export interface ConsultaVeiculoResponse {
  * Realiza a consulta de prontuário veicular aberto a clientes e terceiros.
  * Exige a placa normalizada e valida o CPF através de hash HMAC-SHA256 com segredo do servidor.
  *
+ * MITIGAÇÃO:
+ * - Rate Limiting & Força Bruta: Limita requisições por IP e por Placa para impedir adivinhação de CPF.
+ * - PII Data Leakage (LGPD): Mascara o nome completo do proprietário retornado na resposta pública.
+ * - User/Plate Enumeration: Retorna mensagem idêntica para placa inexistente ou CPF divergente.
+ * - Timing Attack: Computa hash de tamanho constante e executa busca indexada com tratamento uniforme.
+ *
+ * COMPORTAMENTO DEFENSIVO: Se a taxa for excedida ou parâmetros forem inválidos, a requisição é barrada
+ * antes de onerar a base de dados, retornando código de erro amigável sem expor dados internos.
+ *
  * @param placaInput - Placa informada pelo usuário (padrão antigo ou Mercosul).
  * @param cpfInput - CPF do proprietário informado (apenas números ou formatado).
- * @returns Objeto com os dados do prontuário e histórico de manutenções ou mensagem de erro.
+ * @returns Objeto com os dados do prontuário protegido e histórico de manutenções ou mensagem de erro.
  */
 export async function ConsultarVeiculo(
   placaInput: string,
   cpfInput: string
 ): Promise<ConsultaVeiculoResponse> {
+  // 1. Extração do IP do cliente para rate limiting perimétrico
+  const reqHeaders = await headers();
+  const clientIp =
+    reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    reqHeaders.get("x-real-ip") ||
+    "client-anon";
+
   // Normaliza e limpa placa e CPF
   const placa = normPlaca(placaInput);
-  const cpf = cpfInput.replace(/\D/g, "");
+  const cpf = (cpfInput || "").replace(/\D/g, "");
 
-  // Validação formal de formato
+  // 2. Proteção contra Força Bruta / Dicionário por IP e por Placa
+  const ipAllowed = checkPublicSearchRateLimit(`search:ip:${clientIp}`);
+  const placaAllowed = checkPublicSearchRateLimit(`search:placa:${placa || "unknown"}`);
+
+  if (!ipAllowed || !placaAllowed) {
+    return {
+      erro: "Muitas tentativas de consulta. Por motivos de segurança, aguarde um minuto e tente novamente.",
+    };
+  }
+
+  // 3. Validação formal estrita de formato
   if (!/^[A-Z0-9]{7}$/.test(placa)) {
-    return { erro: "Placa inválida." };
+    return { erro: "Placa com formato inválido. Utilize padrão Mercosul ou convencional." };
   }
 
   if (!/^\d{11}$/.test(cpf)) {
-    return { erro: "CPF inválido." };
+    return { erro: "CPF deve conter 11 dígitos numéricos." };
   }
 
   const cpfSecret = process.env.CPF_HASH_SECRET;
 
   if (!cpfSecret) {
-    console.error("CPF_HASH_SECRET não configurado no ambiente.");
-    return { erro: "Não foi possível realizar a consulta." };
+    console.error("ERRO DE SEGURANÇA: CPF_HASH_SECRET não configurado no ambiente.");
+    return { erro: "Serviço temporariamente indisponível. Tente novamente mais tarde." };
   }
 
-  // Gera o hash criptográfico seguro do CPF para comparação no banco
+  // 4. Gera o hash criptográfico seguro do CPF para comparação no banco
   const cpfHash = crypto
     .createHmac("sha256", cpfSecret)
     .update(cpf)
     .digest("hex");
 
-  // Consulta o prontuário cruzando placa e proprietario_cpf_hash
+  // 5. Consulta o prontuário cruzando placa e proprietario_cpf_hash
   const { data: veiculo, error } = await supabaseAdmin
     .from("veiculos")
     .select(
@@ -100,17 +129,25 @@ export async function ConsultarVeiculo(
     .maybeSingle();
 
   if (error) {
-    console.error("ERRO NA CONSULTA DO VEÍCULO:", error);
-    return { erro: "Não foi possível realizar a consulta." };
+    console.error("ERRO INTERNO NA CONSULTA DO VEÍCULO:", error);
+    return { erro: "Não foi possível realizar a consulta no momento." };
   }
 
+  // Mensagem unificada para mitigar enumeração de placas existentes
   if (!veiculo) {
     return {
-      erro: "Placa e CPF não correspondem a um veículo cadastrado.",
+      erro: "Veículo não localizado ou dados informados não conferem com o prontuário registrado.",
     };
   }
 
+  // 6. Proteção PII: Mascara o nome do titular para salvaguarda de dados pessoais (LGPD)
+  const veiculoProtegido = {
+    ...veiculo,
+    proprietario_nome: maskSensitiveName(veiculo.proprietario_nome),
+  };
+
   return {
-    veiculo: veiculo as unknown as ConsultaVeiculoResponse["veiculo"],
+    veiculo: veiculoProtegido as unknown as ConsultaVeiculoResponse["veiculo"],
   };
 }
+

@@ -16,16 +16,22 @@ import { redirect } from "next/navigation";
 // 2. Serviços e utilitários internos
 import { supabaseAdmin } from "@/lib/supabase";
 import { signupSchema } from "@/lib/validation";
+import { checkSignupRateLimit } from "@/lib/rate-limit";
 
 /**
  * Cadastra uma nova oficina no status 'pendente' e cria o usuário responsável com papel operacional.
  *
+ * MITIGAÇÃO:
+ * - Brute Force & DoS de CPU (Bcrypt): Aplica limitação de taxa por IP/identificador para conter robôs.
+ * - Privilege Escalation: Atribui estritamente papel 'mecanico' (o papel 'admin' é restrito à lista VIP).
+ * - Sensitive Data Exposure: Criptografa senhas com bcrypt custo 12 e armazena CPF exclusivamente como HMAC-SHA256.
+ *
  * @param formData - Dados do formulário de cadastro (oficina, responsável, credenciais e contatos).
- * @throws {Error} Se a validação dos dados falhar, ou se e-mail, CPF ou CNPJ já estiverem registrados.
+ * @throws {Error} Se a validação dos dados falhar, rate limit for excedido ou se e-mail/CPF/CNPJ já existirem.
  * @returns {Promise<never>} Redireciona para a tela de login com flag `criada=1`.
  */
 export async function criarContaLoja(formData: FormData): Promise<never> {
-  // Validação estrita do payload via Zod
+  // 1. Validação estrita do payload via Zod
   const parsed = signupSchema.safeParse({
     nomeLoja: formData.get("nomeLoja"),
     nome: formData.get("nome"),
@@ -53,22 +59,28 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
     senha,
   } = parsed.data;
 
-  // 1. Verifica duplicidade de e-mail de usuário
+  // 2. Proteção contra criação automatizada de contas e exaustão de CPU via bcrypt
+  const rateLimitKey = `signup:${email.toLowerCase().trim()}`;
+  if (!checkSignupRateLimit(rateLimitKey)) {
+    throw new Error("Muitas tentativas de cadastro recentes. Aguarde alguns minutos antes de tentar novamente.");
+  }
+
+  // 3. Verifica duplicidade de e-mail de usuário
   const { data: existingEmail } = await supabaseAdmin
     .from("usuarios")
     .select("id")
-    .eq("email", email)
+    .eq("email", email.toLowerCase().trim())
     .maybeSingle();
 
   if (existingEmail) {
     throw new Error("Já existe uma conta com este e-mail.");
   }
 
-  // 2. Chave de assinatura usada para gerar o HMAC do CPF
+  // 4. Chave de assinatura usada para gerar o HMAC do CPF
   const cpfSecret = process.env.CPF_HASH_SECRET;
 
   if (!cpfSecret) {
-    console.error("CPF_HASH_SECRET não configurado.");
+    console.error("ERRO DE SEGURANÇA: CPF_HASH_SECRET não configurado.");
     throw new Error("Configuração de segurança ausente.");
   }
 
@@ -77,7 +89,7 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
     .update(cpf)
     .digest("hex");
 
-  // 3. Verifica duplicidade de CPF cadastrado
+  // 5. Verifica duplicidade de CPF cadastrado
   const { data: existingCpf } = await supabaseAdmin
     .from("usuarios")
     .select("id")
@@ -88,7 +100,7 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
     throw new Error("Já existe uma conta cadastrada com este CPF.");
   }
 
-  // 4. Verifica duplicidade de CNPJ da oficina
+  // 6. Verifica duplicidade de CNPJ da oficina
   const { data: existingCnpj } = await supabaseAdmin
     .from("lojas")
     .select("id")
@@ -99,10 +111,10 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
     throw new Error("Já existe uma oficina cadastrada com este CNPJ.");
   }
 
-  // 5. Gera o hash seguro da senha com fator de custo 12
+  // 7. Gera o hash seguro da senha com fator de custo 12
   const senhaHash = await bcrypt.hash(senha, 12);
 
-  // 6. Cria o registro da oficina com status PENDENTE de aprovação
+  // 8. Cria o registro da oficina com status PENDENTE de aprovação
   const { data: loja, error: lojaError } = await supabaseAdmin
     .from("lojas")
     .insert({
@@ -119,7 +131,7 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
     throw new Error("Não foi possível criar a oficina.");
   }
 
-  // 7. Cria o usuário da oficina (papel operacional 'mecanico'; papel 'admin' é restrito exclusivamente ao superadministrador)
+  // 9. Cria o usuário da oficina (papel operacional 'mecanico'; papel 'admin' é restrito exclusivamente ao superadministrador)
   const { error: userError } = await supabaseAdmin
     .from("usuarios")
     .insert({
@@ -127,7 +139,7 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
       nome,
       cpf_hash: cpfHash,
       telefone,
-      email,
+      email: email.toLowerCase().trim(),
       senha_hash: senhaHash,
       papel: "mecanico",
     });
@@ -147,3 +159,4 @@ export async function criarContaLoja(formData: FormData): Promise<never> {
   // Redireciona o usuário para o login com mensagem de sucesso
   redirect("/loja/login?criada=1");
 }
+

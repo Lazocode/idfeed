@@ -13,21 +13,25 @@ import { redirect } from "next/navigation";
 
 // 2. Serviços e utilitários internos
 import { supabaseAdmin } from "@/lib/supabase";
-import { requireRole } from "@/lib/security";
+import { requireApprovedAction } from "@/lib/security";
 import { materialSchema } from "@/lib/validation";
 
 /**
- * Cadastra uma nova peça ou insumo no estoque da oficina mecânica.
+ * Cadastra uma nova peça ou insumo no estoque da oficina mecânica com validação defensiva.
+ *
+ * MITIGAÇÃO:
+ * - Multi-tenant Isolation: Exige oficina homologada (requireApprovedAction) e isola SKU por `loja_id`.
+ * - Information Disclosure: Esconde detalhes internos do banco de dados na resposta de erro.
  *
  * @param formData - Dados do material (nome, SKU, localização, quantidade atual e cota mínima).
  * @throws {Error} Se a validação dos dados falhar ou se o SKU já existir para a mesma oficina.
  * @returns {Promise<never>} Redireciona para a página de detalhes do material recém-criado.
  */
 export async function criarMaterial(formData: FormData): Promise<never> {
-  // Exige perfil operacional com permissão de manipulação de estoque
-  const session = await requireRole(["admin", "mecanico", "atendente"]);
+  // 1. Exige perfil operacional com loja homologada
+  const session = await requireApprovedAction(["admin", "mecanico", "atendente"]);
 
-  // Validação estrita via Zod
+  // 2. Validação estrita via Zod
   const parsed = materialSchema.safeParse({
     nome: formData.get("nome"),
     sku: formData.get("sku"),
@@ -37,7 +41,7 @@ export async function criarMaterial(formData: FormData): Promise<never> {
   });
 
   if (!parsed.success) {
-    throw new Error("Confira os dados do material.");
+    throw new Error("Confira os dados do material. Campos obrigatórios incompletos.");
   }
 
   const {
@@ -50,7 +54,7 @@ export async function criarMaterial(formData: FormData): Promise<never> {
 
   const normalizedSku = sku.toUpperCase();
 
-  // Verifica se já existe uma peça com o mesmo SKU nesta oficina
+  // 3. Verifica se já existe uma peça com o mesmo SKU nesta oficina (escopo multi-tenant estrito)
   const { data: existente } = await supabaseAdmin
     .from("materiais")
     .select("id")
@@ -59,10 +63,10 @@ export async function criarMaterial(formData: FormData): Promise<never> {
     .maybeSingle();
 
   if (existente) {
-    throw new Error("Já existe um material com esse SKU nesta loja.");
+    throw new Error("Já existe um material com esse SKU nesta oficina.");
   }
 
-  // Insere o novo material no banco
+  // 4. Insere o novo material no banco com isolamento por loja_id
   const { data: material, error } = await supabaseAdmin
     .from("materiais")
     .insert({
@@ -77,10 +81,12 @@ export async function criarMaterial(formData: FormData): Promise<never> {
     .single();
 
   if (error || !material) {
-    throw new Error("Não foi possível cadastrar o material.");
+    console.error("ERRO AO CADASTRAR MATERIAL:", error);
+    throw new Error("Não foi possível cadastrar o material no momento.");
   }
 
   // Redireciona para a tela do material cadastrado
   redirect(`/loja/material/${material.id}`);
 }
+
 
