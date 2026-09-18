@@ -33,7 +33,6 @@ export default auth((req) => {
   const isAuthenticated = !!req.auth?.user;
   const userPapel = req.auth?.user?.papel;
   const userEmail = req.auth?.user?.email?.toLowerCase() || "";
-  const userName = req.auth?.user?.name?.toLowerCase() || "";
 
   // 3. Regra de autorização estrita para o painel de superadministrador
   // MITIGAÇÃO: Name spoofing / Privilege Escalation. Verificação estrita contra e-mails oficiais.
