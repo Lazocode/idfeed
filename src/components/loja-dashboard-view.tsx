@@ -514,14 +514,6 @@ export default function LojaDashboardView({
 
           <button
             type="button"
-            onClick={() => setActiveTab("ordens")}
-            className="py-3.5 font-medium text-slate-500 hover:text-[#0F172A] transition-colors cursor-pointer"
-          >
-            Ordens de Serviço
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab("estoque")}
             className={`py-3.5 font-medium transition-colors cursor-pointer ${
               activeTab === "estoque"
@@ -531,23 +523,6 @@ export default function LojaDashboardView({
           >
             Estoque &amp; Insumos
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("auditorias")}
-            className="py-3.5 font-medium text-slate-500 hover:text-[#0F172A] transition-colors cursor-pointer"
-          >
-            Auditorias &amp; Vistorias
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("ajustes")}
-            className="py-3.5 font-medium text-slate-500 hover:text-[#0F172A] transition-colors cursor-pointer"
-          >
-            Ajustes
-          </button>
-
         </div>
       </nav>
 
