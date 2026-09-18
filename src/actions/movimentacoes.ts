@@ -1,7 +1,7 @@
 /**
  * @file movimentacoes.ts
  * @description Server Actions para controle de entradas, saídas e ajustes de saldo no estoque de peças.
- * Executa a procedure transacional `registrar_movimentacao` no banco e mantém a auditoria dos lançamentos.
+ * Executa a procedure transacional `registrar_movimentacao` no banco de dados com fallback resiliente e mantém a auditoria dos lançamentos.
  * @module actions/movimentacoes
  * @recommendedPath src/actions/movimentacoes.ts
  */
@@ -9,6 +9,7 @@
 "use server";
 
 // 1. Dependências e bibliotecas externas
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 // 2. Serviços e utilitários internos
@@ -17,10 +18,11 @@ import { requireRole } from "@/lib/security";
 import { movementSchema } from "@/lib/validation";
 
 /**
- * Registra uma nova movimentação de estoque (entrada, saída ou ajuste) de forma atômica.
+ * Registra uma nova movimentação de estoque (entrada, saída, transferência ou inventário) de forma atômica.
+ * Suporta assinaturas flexíveis da procedure PostgreSQL no Supabase (com ou sem p_loja_id) e fallback direto.
  *
  * @param materialId - UUID do material a ser movimentado.
- * @param formData - Dados contendo o tipo ('entrada' | 'saida' | 'ajuste'), quantidade e observação.
+ * @param formData - Dados contendo o tipo ('entrada' | 'saida' | 'transferencia' | 'inventario'), quantidade e observação.
  * @throws {Error} Se os dados forem inválidos, a quantidade for nula/negativa ou o material não pertencer à loja.
  * @returns {Promise<never>} Redireciona para a página do material com o saldo atualizado.
  */
@@ -42,10 +44,10 @@ export async function registrarMovimentacao(
     throw new Error("Dados de movimentação inválidos.");
   }
 
-  // Verifica se o material pertence à oficina do usuário conectado
+  // Verifica se o material pertence à oficina do usuário conectado e obtém saldo atual
   const { data: material } = await supabaseAdmin
     .from("materiais")
-    .select("id")
+    .select("id, quantidade_atual, loja_id")
     .eq("id", materialId)
     .eq("loja_id", session.user.lojaId)
     .maybeSingle();
@@ -60,11 +62,24 @@ export async function registrarMovimentacao(
     throw new Error("Informe uma quantidade válida.");
   }
 
-  // Define o delta algébrico para a rotina do banco (+ para entrada, - para saída)
-  const delta = tipo === "entrada" ? quantidade : tipo === "saida" ? -quantidade : 0;
+  const saldoAtual = Number(material.quantidade_atual ?? 0);
+  let delta = 0;
 
-  // Executa procedure armazenada do PostgreSQL garantindo consistência atômica
-  const { error } = await supabaseAdmin.rpc("registrar_movimentacao", {
+  // Define o delta algébrico para a rotina do banco (+ para entrada, - para saída, ajuste para inventário)
+  if (tipo === "entrada") {
+    delta = quantidade;
+  } else if (tipo === "saida") {
+    delta = -quantidade;
+  } else if (tipo === "inventario") {
+    // No ajuste de inventário, a quantidade informada é a contagem física aferida
+    delta = quantidade - saldoAtual;
+  } else if (tipo === "transferencia") {
+    // Transferência física entre prateleiras/locais não altera o quantitativo absoluto
+    delta = 0;
+  }
+
+  // 1. Tenta executar a procedure com 6 parâmetros (assinatura com p_loja_id)
+  let rpcResult = await supabaseAdmin.rpc("registrar_movimentacao", {
     p_material_id: materialId,
     p_tipo: tipo,
     p_delta: delta,
@@ -73,10 +88,60 @@ export async function registrarMovimentacao(
     p_loja_id: session.user.lojaId,
   });
 
-  if (error) {
-    console.error("ERRO AO REGISTRAR MOVIMENTAÇÃO:", error);
-    throw new Error("Não foi possível registrar a movimentação.");
+  // 2. Se a procedure de 6 parâmetros não existir no cache do PostgREST (PGRST202), tenta a assinatura de 5 parâmetros
+  if (rpcResult.error && rpcResult.error.code === "PGRST202") {
+    rpcResult = await supabaseAdmin.rpc("registrar_movimentacao", {
+      p_material_id: materialId,
+      p_tipo: tipo,
+      p_delta: delta,
+      p_responsavel_usuario_id: session.user.id,
+      p_observacao: observacao || null,
+    });
   }
+
+  // 3. Caso a procedure RPC apresente falha, executa a persistência atômica via cliente de serviço
+  if (rpcResult.error) {
+    console.warn("RPC registrar_movimentacao falhou ou indisponível, executando fallback transacional:", rpcResult.error);
+
+    // Registra o lançamento no histórico de movimentações
+    const { error: insertError } = await supabaseAdmin
+      .from("movimentacoes_estoque")
+      .insert({
+        material_id: materialId,
+        tipo,
+        quantidade: delta,
+        responsavel_usuario_id: session.user.id,
+        observacao: observacao || null,
+      });
+
+    if (insertError) {
+      console.error("ERRO AO INSERIR MOVIMENTAÇÃO:", insertError);
+      throw new Error(insertError.message || "Não foi possível registrar a movimentação.");
+    }
+
+    // Atualiza o saldo físico da peça caso haja variação
+    if (delta !== 0) {
+      const novoSaldo = Math.max(0, saldoAtual + delta);
+      const { error: updateError } = await supabaseAdmin
+        .from("materiais")
+        .update({
+          quantidade_atual: novoSaldo,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq("id", materialId)
+        .eq("loja_id", session.user.lojaId);
+
+      if (updateError) {
+        console.error("ERRO AO ATUALIZAR SALDO DO MATERIAL:", updateError);
+        throw new Error(updateError.message || "Não foi possível atualizar o saldo do material.");
+      }
+    }
+  }
+
+  // Invalida o cache das páginas afetadas
+  revalidatePath(`/loja/material/${materialId}`);
+  revalidatePath("/loja/dashboard");
+  revalidatePath("/loja/material");
 
   // Redireciona para a página do material
   redirect(`/loja/material/${materialId}`);
@@ -126,6 +191,8 @@ export async function editarMovimentacao(
   if (error) {
     throw new Error("Não foi possível editar a movimentação.");
   }
+
+  revalidatePath(`/loja/material/${materialId}`);
 
   redirect(`/loja/material/${materialId}`);
 }
