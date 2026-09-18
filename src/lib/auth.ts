@@ -115,15 +115,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         // 6. Regra de autorização estrita para privilégios de superadministrador
+        // MITIGAÇÃO: Name spoofing privilege escalation. Verificação exclusivamente por e-mails canônicos.
         const isLazaroMiranda =
           normalizedEmail === "lazanha931@gmail.com" ||
-          normalizedEmail === "mirandalazaro560@gmail.com" ||
-          (usuario.nome && usuario.nome.toLowerCase().includes("lazaro"));
+          normalizedEmail === "mirandalazaro560@gmail.com";
 
         const papelEfetivo =
           usuario.papel === "admin" && !isLazaroMiranda
             ? "mecanico"
             : usuario.papel;
+
 
         return {
           id: usuario.id,

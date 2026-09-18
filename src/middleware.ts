@@ -36,12 +36,12 @@ export default auth((req) => {
   const userName = req.auth?.user?.name?.toLowerCase() || "";
 
   // 3. Regra de autorização estrita para o painel de superadministrador
+  // MITIGAÇÃO: Name spoofing / Privilege Escalation. Verificação estrita contra e-mails oficiais.
   const isLazaroAdmin =
     userPapel === "admin" &&
     (userEmail === "lazanha931@gmail.com" ||
-      userEmail === "mirandalazaro560@gmail.com" ||
-      userName.includes("lazaro") ||
-      userName.includes("lázaro"));
+      userEmail === "mirandalazaro560@gmail.com");
+
 
   // 4. Redireciona usuários já autenticados que tentam acessar páginas de login
   if (pathname === "/loja/login" && isAuthenticated) {

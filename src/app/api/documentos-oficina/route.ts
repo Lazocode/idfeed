@@ -14,6 +14,8 @@ import crypto from "node:crypto";
 // 2. Bibliotecas e serviços internos
 import { auth } from "@/lib/auth";
 import { supabaseAdmin, ensureBucketExists } from "@/lib/supabase";
+import { validateDocumentMagicBytes, sanitizeFileName } from "@/lib/validation";
+import { checkUploadRateLimit } from "@/lib/rate-limit";
 
 /**
  * Define o runtime do Node.js para suporte a operações de Buffer e criptografia nativa.
@@ -36,7 +38,14 @@ const ALLOWED_TYPES = new Set([
 ]);
 
 /**
- * Processa a requisição POST para envio de documento da oficina mecânica.
+ * Processa a requisição POST para envio de documento da oficina mecânica com validação defensiva.
+ *
+ * MITIGAÇÃO:
+ * - Upload Bypass & Web Shell: Valida assinatura binária (Magic Bytes) de PDFs e imagens.
+ * - Stored XSS & Path Traversal: Sanitiza o nome original vindo de headers (x-file-name).
+ * - Storage Exhaustion DoS: Limita a frequência de uploads por oficina.
+ * - Multi-tenant Isolation: Força o armazenamento em pasta exclusiva do tenant (`${lojaId}/`).
+ * - Information Leakage: Omite detalhes de erro de storage ou infraestrutura na resposta HTTP.
  *
  * @param request - Objeto `Request` nativo contendo os headers `content-type`, `x-file-name` e o buffer binário no corpo.
  * @returns Resposta JSON com status de sucesso ou mensagem de erro formatada.
@@ -48,35 +57,49 @@ export async function POST(request: Request): Promise<NextResponse> {
     // 1. Validação de autenticação da sessão e posse do tenant (loja)
     if (!session?.user?.id || !session.user.lojaId) {
       return NextResponse.json(
-        { error: "Não autenticado." },
+        { error: "Sessão inválida ou não autenticada." },
         { status: 401 }
       );
     }
 
     const lojaId = session.user.lojaId;
 
-    // 2. Validação do formato MIME do arquivo
+    // 2. Limitação de taxa de uploads por oficina
+    if (!checkUploadRateLimit(`upload:documento:${lojaId}`)) {
+      return NextResponse.json(
+        { error: "Limite de envios atingido. Aguarde alguns minutos antes de tentar novamente." },
+        { status: 429 }
+      );
+    }
+
+    // 3. Validação do formato MIME do arquivo declarado
     const contentType = request.headers.get("content-type");
 
     if (!contentType || !ALLOWED_TYPES.has(contentType)) {
       return NextResponse.json(
-        { error: "Formato de documento não permitido." },
+        { error: "Formato de documento não suportado. Aceitos: PDF, JPEG, PNG ou WEBP." },
         { status: 400 }
       );
     }
 
-    // 3. Captura e sanitização do nome original do arquivo
-    const encodedFileName = request.headers.get("x-file-name");
-    const nomeOriginal = encodedFileName
-      ? decodeURIComponent(encodedFileName).slice(0, 255)
-      : "documento";
+    // 4. Captura e sanitização estrita do nome original do arquivo
+    const rawFileName = request.headers.get("x-file-name");
+    let decodedName = "documento";
+    if (rawFileName) {
+      try {
+        decodedName = decodeURIComponent(rawFileName);
+      } catch {
+        decodedName = rawFileName;
+      }
+    }
+    const nomeOriginal = sanitizeFileName(decodedName);
 
-    // 4. Leitura do arrayBuffer e conversão em Buffer binário
+    // 5. Leitura do arrayBuffer e conversão em Buffer binário
     const buffer = Buffer.from(await request.arrayBuffer());
 
     if (buffer.length <= 0) {
       return NextResponse.json(
-        { error: "O documento está vazio." },
+        { error: "O documento enviado está vazio." },
         { status: 400 }
       );
     }
@@ -88,7 +111,28 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // 5. Confirma se a oficina existe e se ainda necessita de análise cadastral
+    // 6. MITIGAÇÃO CRÍTICA: Inspeção de Magic Bytes do cabeçalho binário
+    const formatoDetectado = validateDocumentMagicBytes(buffer);
+
+    if (!formatoDetectado) {
+      return NextResponse.json(
+        { error: "O arquivo enviado não possui assinatura binária válida para PDF ou imagem." },
+        { status: 400 }
+      );
+    }
+
+    // Garante coerência entre formato detectado e tipo declarado
+    if (
+      (formatoDetectado === "pdf" && contentType !== "application/pdf") ||
+      (formatoDetectado !== "pdf" && contentType === "application/pdf")
+    ) {
+      return NextResponse.json(
+        { error: "Inconsistência entre a extensão declarada e o conteúdo real do arquivo." },
+        { status: 400 }
+      );
+    }
+
+    // 7. Confirma se a oficina existe e se ainda necessita de análise cadastral
     const { data: loja, error: lojaError } = await supabaseAdmin
       .from("lojas")
       .select("id, status")
@@ -97,19 +141,19 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (lojaError || !loja) {
       return NextResponse.json(
-        { error: "Oficina não encontrada." },
+        { error: "Oficina não encontrada no cadastro." },
         { status: 404 }
       );
     }
 
     if (loja.status === "aprovada") {
       return NextResponse.json(
-        { error: "Esta oficina já está aprovada." },
+        { error: "Esta oficina já se encontra homologada na plataforma." },
         { status: 400 }
       );
     }
 
-    // 6. Impede duplicidade de documentos com status pendente para a mesma oficina
+    // 8. Impede duplicidade de documentos com status pendente para a mesma oficina
     const { data: documentoExistente } = await supabaseAdmin
       .from("documentos_oficina")
       .select("id")
@@ -119,28 +163,19 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (documentoExistente) {
       return NextResponse.json(
-        { error: "Já existe um documento aguardando análise." },
+        { error: "Já existe um documento comprobatório aguardando homologação." },
         { status: 409 }
       );
     }
 
-    // 7. Determina a extensão normalizada do arquivo
-    const extensao =
-      contentType === "application/pdf"
-        ? "pdf"
-        : contentType === "image/png"
-          ? "png"
-          : contentType === "image/webp"
-            ? "webp"
-            : "jpg";
-
-    const nomeArquivo = `${crypto.randomUUID()}.${extensao}`;
+    // 9. Nome de arquivo randômico não previsível
+    const nomeArquivo = `${crypto.randomUUID()}.${formatoDetectado}`;
     const caminhoArquivo = `${lojaId}/${nomeArquivo}`;
 
-    // 8. Garante que o bucket privado de documentos exista no Supabase Storage
+    // 10. Garante que o bucket privado de documentos exista no Supabase Storage
     await ensureBucketExists("documentos-oficinas", false);
 
-    // 9. Envio do arquivo para o bucket de armazenamento
+    // 11. Envio do arquivo para o bucket de armazenamento
     let { error: uploadError } = await supabaseAdmin.storage
       .from("documentos-oficinas")
       .upload(caminhoArquivo, buffer, {
@@ -176,15 +211,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     if (uploadError) {
-      console.error("ERRO NO UPLOAD:", uploadError);
+      console.error("ERRO NO UPLOAD DO DOCUMENTO:", uploadError);
 
       return NextResponse.json(
-        { error: `Não foi possível enviar o documento: ${uploadError.message || "Erro no armazenamento."}` },
+        { error: "Falha no armazenamento do documento. Tente novamente." },
         { status: 500 }
       );
     }
 
-    // 10. Persistência do registro do documento na tabela `documentos_oficina`
+    // 12. Persistência do registro do documento na tabela `documentos_oficina`
     const { error: documentoError } = await supabaseAdmin
       .from("documentos_oficina")
       .insert({
@@ -195,10 +230,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       });
 
     if (documentoError) {
-      console.error(
-        "ERRO AO REGISTRAR DOCUMENTO:",
-        documentoError
-      );
+      console.error("ERRO AO REGISTRAR DOCUMENTO:", documentoError);
 
       // Rollback do arquivo no Storage em caso de erro no banco
       await supabaseAdmin.storage
@@ -206,12 +238,12 @@ export async function POST(request: Request): Promise<NextResponse> {
         .remove([caminhoArquivo]);
 
       return NextResponse.json(
-        { error: "Não foi possível registrar o documento." },
+        { error: "Não foi possível salvar o registro do documento." },
         { status: 500 }
       );
     }
 
-    // 11. Se a loja havia sido rejeitada anteriormente, seu status volta para 'pendente'
+    // 13. Se a loja havia sido rejeitada anteriormente, seu status volta para 'pendente'
     if (loja.status === "rejeitada") {
       const { error: atualizarLojaError } = await supabaseAdmin
         .from("lojas")
@@ -221,10 +253,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         .eq("id", lojaId);
 
       if (atualizarLojaError) {
-        console.error(
-          "ERRO AO ATUALIZAR STATUS DA OFICINA:",
-          atualizarLojaError
-        );
+        console.error("ERRO AO ATUALIZAR STATUS DA OFICINA:", atualizarLojaError);
 
         // Desfaz inserções
         await supabaseAdmin
@@ -238,7 +267,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           .remove([caminhoArquivo]);
 
         return NextResponse.json(
-          { error: "Não foi possível reenviar o documento." },
+          { error: "Não foi possível atualizar o status da oficina." },
           { status: 500 }
         );
       }
@@ -251,8 +280,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     console.error("ERRO NO ENVIO DO DOCUMENTO:", error);
 
     return NextResponse.json(
-      { error: "Erro inesperado ao enviar o documento." },
+      { error: "Erro interno no processamento do documento." },
       { status: 500 }
     );
   }
 }
+
