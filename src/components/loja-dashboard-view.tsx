@@ -31,11 +31,19 @@ import {
   RotateCcw,
   X,
   Search,
+  Wrench,
+  Camera,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 // 2. Utilitários e formatadores internos
-import { formatPlaca, formatKm } from "@/lib/utils";
+import {
+  formatPlaca,
+  formatKm,
+  formatMoeda,
+  formatData,
+  TIPO_SERVICO_LABEL,
+} from "@/lib/utils";
 
 /**
  * Opções permitidas para o filtro de estado de conformidade veicular.
@@ -105,6 +113,13 @@ export interface VeiculoDashboard {
     mecanico?: { nome: string } | null;
     pecas?: { quantidade: number; material?: { nome: string } | null }[];
   }[];
+  /** Fotos e documentos visuais associados ao veículo. */
+  fotos?: {
+    id: string;
+    legenda?: string | null;
+    criado_em: string;
+    url?: string | null;
+  }[];
 }
 
 /**
@@ -150,18 +165,6 @@ interface LojaDashboardViewProps {
   query: string;
 }
 
-/**
- * Conjunto de registros homologados de demonstração conforme a especificação visual do design,
- * garantindo fidelidade gráfica completa quando a base contiver poucos registros ou para visualização.
- */
-const VEICULOS_HOMOLOGADOS_MOCK: VeiculoDashboard[] = [];
-
-/**
- * Componente funcional de visualização técnica do dashboard (Split View com tema claro).
- *
- * @param props - Propriedades contendo dados de oficina, sessão, veículos, estoque e filtros.
- * @returns Interface de alta densidade dividida em tabela operacional e inspetor de dossiê.
- */
 export default function LojaDashboardView({
   loja,
   user,
@@ -177,18 +180,14 @@ export default function LojaDashboardView({
   // Estado para feedback visual da cópia do token LGPD
   const [tokenCopiado, setTokenCopiado] = useState(false);
 
-  // Combinação dos dados reais da oficina com os dados de demonstração da interface quando necessário
+  // Lista estrita de veículos reais cadastrados na oficina (sem dados fictícios de exemplo)
   const listaVeiculos = useMemo(() => {
-    if (veiculos && veiculos.length > 0) {
-      return veiculos;
-    }
-    // Quando não houver veículos cadastrados ainda, exibe a frota de referência homologada do design
-    return VEICULOS_HOMOLOGADOS_MOCK;
+    return veiculos || [];
   }, [veiculos]);
 
   // ID do veículo selecionado para o dossiê detalhado (Split View)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(
-    listaVeiculos[0]?.id || "mock-v-1"
+    veiculos?.[0]?.id || ""
   );
 
   // Termo da barra de pesquisa com sincronização instantânea
@@ -404,39 +403,50 @@ export default function LojaDashboardView({
     return encontrado || veiculosFiltrados[0];
   }, [veiculosFiltrados, selectedVehicleId]);
 
-  // 1. Cálculos de métricas e KPIs operacionais da frota
-  const totalVeiculos = veiculos.length > 0 ? veiculos.length : 148;
+  // 1. Cálculos de métricas e KPIs operacionais da frota (100% dados reais)
+  const totalVeiculos = veiculos.length;
 
   const emDia = useMemo(() => {
-    if (veiculos.length > 0) {
-      return veiculos.filter(
-        (v) => !v.km_proxima_revisao || v.km_proxima_revisao - v.km_atual > 3000
-      ).length;
-    }
-    return 131;
+    return veiculos.filter(
+      (v) => !v.km_proxima_revisao || v.km_proxima_revisao - v.km_atual > 3000
+    ).length;
   }, [veiculos]);
 
   const revisaoProxima = useMemo(() => {
-    if (veiculos.length > 0) {
-      return veiculos.filter(
-        (v) => v.km_proxima_revisao && v.km_proxima_revisao - v.km_atual <= 3000
-      ).length;
-    }
-    return 14;
+    return veiculos.filter(
+      (v) =>
+        v.km_proxima_revisao &&
+        v.km_proxima_revisao - v.km_atual <= 3000 &&
+        v.km_proxima_revisao - v.km_atual >= 0
+    ).length;
+  }, [veiculos]);
+
+  const revisoesVencidas = useMemo(() => {
+    return veiculos.filter(
+      (v) => v.km_proxima_revisao && v.km_proxima_revisao - v.km_atual < 0
+    ).length;
+  }, [veiculos]);
+
+  const veiculosEsteMes = useMemo(() => {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = agora.getMonth();
+    return veiculos.filter((v) => {
+      if (!v.criado_em) return false;
+      const d = new Date(v.criado_em);
+      return d.getFullYear() === ano && d.getMonth() === mes;
+    }).length;
   }, [veiculos]);
 
   const estoqueBaixo = useMemo(() => {
-    if (materiais.length > 0) {
-      return materiais.filter((m) => m.quantidade_atual < m.quantidade_minima).length;
-    }
-    return 3;
+    return materiais.filter((m) => m.quantidade_atual < m.quantidade_minima).length;
   }, [materiais]);
 
   const percentEmDia = useMemo(() => {
     if (totalVeiculos > 0) {
       return ((emDia / totalVeiculos) * 100).toFixed(1);
     }
-    return "88.5";
+    return "100.0";
   }, [emDia, totalVeiculos]);
 
   /**
@@ -566,7 +576,9 @@ export default function LojaDashboardView({
   // Formatação do nome de usuário do cabeçalho
   const displayUserName = user?.nome
     ? user.nome.split(" ").slice(0, 2).join(" ")
-    : "Diego A.";
+    : user?.email
+    ? user.email.split("@")[0]
+    : "Operador";
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans antialiased flex flex-col selection:bg-blue-100 selection:text-blue-900">
@@ -766,7 +778,7 @@ export default function LojaDashboardView({
             </div>
             <div className="flex items-center text-xs text-slate-500 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F172A] inline-block mr-1.5" />
-              <span>+6 este mês</span>
+              <span>{veiculosEsteMes > 0 ? `+${veiculosEsteMes} este mês` : "Base cadastrada"}</span>
             </div>
           </div>
 
@@ -797,8 +809,16 @@ export default function LojaDashboardView({
               </span>
             </div>
             <div className="flex items-center text-xs text-slate-500 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] inline-block mr-1.5" />
-              <span>3 com janela expirada</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 ${
+                  revisoesVencidas > 0 ? "bg-[#EF4444]" : "bg-[#10B981]"
+                }`}
+              />
+              <span>
+                {revisoesVencidas > 0
+                  ? `${revisoesVencidas} com janela expirada`
+                  : "Nenhuma com janela expirada"}
+              </span>
             </div>
           </div>
 
@@ -813,8 +833,16 @@ export default function LojaDashboardView({
               </span>
             </div>
             <div className="flex items-center text-xs text-slate-500 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] inline-block mr-1.5" />
-              <span>Abaixo do limite de segurança</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 ${
+                  estoqueBaixo > 0 ? "bg-[#EF4444]" : "bg-[#10B981]"
+                }`}
+              />
+              <span>
+                {estoqueBaixo > 0
+                  ? "Abaixo do limite de segurança"
+                  : "Estoque em conformidade"}
+              </span>
             </div>
           </div>
 
@@ -1412,103 +1440,105 @@ export default function LojaDashboardView({
 
                     {/* Seção: Histórico Recente de Serviços */}
                     <div className="mt-6">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-3">
-                        Histórico Recente de Serviços
-                      </span>
-
-                      <div className="space-y-4 text-xs">
-                        {/* Item 1 da Linha do Tempo */}
-                        <div className="flex items-start gap-2.5">
-                          <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0 mt-1.5" />
-                          <div className="flex-1">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <span className="font-bold text-[#0F172A]">
-                                Revisão Preventiva ({formatKm(veiculoSelecionado.km_atual)})
-                              </span>
-                              <span className="font-mono font-bold text-[#0F172A]">
-                                R$ 510,00
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                              Realizado em 12 Ago 2026 por Diego Alves
-                            </p>
-                            <p className="text-[11px] text-slate-600 mt-0.5">
-                              Peças: Óleo 5W30, Filtro Óleo, Filtro Ar
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Item 2 da Linha do Tempo */}
-                        <div className="flex items-start gap-2.5">
-                          <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5" />
-                          <div className="flex-1">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <span className="font-bold text-[#0F172A]">
-                                Sistema de Travões (46.800 km)
-                              </span>
-                              <span className="font-mono font-bold text-[#0F172A]">
-                                R$ 380,00
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                              Realizado em 20 Mar 2026 por Diego Alves
-                            </p>
-                            <p className="text-[11px] text-slate-600 mt-0.5">
-                              Peças: Pastilhas Dianteiras, Fluido DOT4
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Item 3 da Linha do Tempo */}
-                        <div className="flex items-start gap-2.5">
-                          <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5" />
-                          <div className="flex-1">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <span className="font-bold text-[#0F172A]">
-                                Substituição Bateria (38.500 km)
-                              </span>
-                              <span className="font-mono font-bold text-[#0F172A]">
-                                R$ 590,00
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                              Realizado em 14 Nov 2025 por Diego Alves
-                            </p>
-                            <p className="text-[11px] text-slate-600 mt-0.5">
-                              Peças: Bateria Moura 60Ah Selada
-                            </p>
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                          Histórico Recente de Serviços (
+                          {veiculoSelecionado.ordens_servico?.length || 0})
+                        </span>
+                        <Link
+                          href={`/loja/veiculo/${veiculoSelecionado.id}/nova-manutencao`}
+                          className="text-[11px] font-semibold text-[#2563EB] hover:underline inline-flex items-center gap-1"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Nova OS</span>
+                        </Link>
                       </div>
+
+                      {veiculoSelecionado.ordens_servico &&
+                      veiculoSelecionado.ordens_servico.length > 0 ? (
+                        <div className="space-y-3 text-xs">
+                          {veiculoSelecionado.ordens_servico.slice(0, 5).map((os, idx) => (
+                            <div key={os.id || idx} className="flex items-start gap-2.5">
+                              <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0 mt-1.5" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <span className="font-bold text-[#0F172A] truncate">
+                                    {TIPO_SERVICO_LABEL[os.tipo_servico] || os.tipo_servico} (
+                                    {formatKm(os.km_no_servico)})
+                                  </span>
+                                  {os.custo !== null && os.custo !== undefined && (
+                                    <span className="font-mono font-bold text-[#0F172A] shrink-0">
+                                      {formatMoeda(Number(os.custo))}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                  Realizado em {formatData(os.criado_em)}
+                                  {os.mecanico?.nome ? ` por ${os.mecanico.nome}` : ""}
+                                </p>
+                                {os.pecas && os.pecas.length > 0 && (
+                                  <p className="text-[11px] text-slate-600 mt-0.5 truncate">
+                                    Peças:{" "}
+                                    {os.pecas
+                                      .map((p) => `${p.quantidade}x ${p.material?.nome || "Peça"}`)
+                                      .join(", ")}
+                                  </p>
+                                )}
+                                {os.observacao && (
+                                  <p className="text-[11px] text-slate-500 mt-0.5 italic line-clamp-2">
+                                    &ldquo;{os.observacao}&rdquo;
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-6 px-4 rounded-xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] text-center">
+                          <Wrench className="w-5 h-5 text-slate-300 mx-auto mb-1.5" />
+                          <p className="text-xs font-semibold text-slate-700">
+                            Nenhum serviço registrado
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Este veículo ainda não possui manutenções ou revisões cadastradas.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Seção: Comprovação Visual Aferida (Fotos) */}
                     <div className="mt-6">
                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-3">
-                        Comprovação Visual Aferida (Fotos)
+                        Comprovação Visual Aferida ({veiculoSelecionado.fotos?.length || 0})
                       </span>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        {/* Mini-Card 1: Odômetro */}
-                        <div className="p-3 rounded-lg border border-[#E2E8F0] bg-white">
-                          <span className="text-xs font-bold text-[#0F172A] block">
-                            [Odômetro {formatKm(veiculoSelecionado.km_atual).replace(" km", "")}]
-                          </span>
-                          <span className="text-[10px] text-slate-400 block mt-0.5">
-                            12/08/2026 • Painel
-                          </span>
+                      {veiculoSelecionado.fotos && veiculoSelecionado.fotos.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3">
+                          {veiculoSelecionado.fotos.slice(0, 4).map((f) => (
+                            <div
+                              key={f.id}
+                              className="p-3 rounded-lg border border-[#E2E8F0] bg-white overflow-hidden"
+                            >
+                              <span className="text-xs font-bold text-[#0F172A] block truncate">
+                                [{f.legenda || "Registro Fotográfico"}]
+                              </span>
+                              <span className="text-[10px] text-slate-400 block mt-0.5">
+                                {formatData(f.criado_em)}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-
-                        {/* Mini-Card 2: NF & Peças */}
-                        <div className="p-3 rounded-lg border border-[#E2E8F0] bg-white">
-                          <span className="text-xs font-bold text-[#0F172A] block">
-                            [NF &amp; Peças]
-                          </span>
-                          <span className="text-[10px] text-slate-400 block mt-0.5">
-                            12/08/2026 • Comprovativo
-                          </span>
+                      ) : (
+                        <div className="py-5 px-3 rounded-xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] text-center">
+                          <Camera className="w-5 h-5 text-slate-300 mx-auto mb-1" />
+                          <p className="text-xs font-medium text-slate-600">
+                            Nenhuma foto cadastrada
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Comprovantes e fotos podem ser anexados no prontuário completo.
+                          </p>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 

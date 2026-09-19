@@ -60,10 +60,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     .eq("id", lojaId)
     .single();
 
-  // 2. Consulta veículos vinculados à oficina com filtro opcional por placa, modelo ou titular
+  // 2. Consulta veículos vinculados à oficina com ordens de serviço reais
   let veiculosQuery = supabaseAdmin
     .from("veiculos")
-    .select("*")
+    .select(
+      `*, ordens_servico(*, mecanico:usuarios(nome), pecas:ordem_servico_materiais(quantidade, material:materiais(nome)))`
+    )
     .eq("loja_id", lojaId)
     .order("criado_em", { ascending: false });
 
@@ -72,7 +74,41 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       `placa.ilike.%${query}%,modelo.ilike.%${query}%,proprietario_nome.ilike.%${query}%`
     );
   }
-  const { data: veiculos } = await veiculosQuery;
+  const { data: veiculosBrutos } = await veiculosQuery;
+
+  // 2.1 Busca fotos reais dos veículos cadastrados
+  const veiculosIds = (veiculosBrutos || []).map((v) => v.id);
+  let fotosPorVeiculo: Record<
+    string,
+    { id: string; legenda?: string | null; criado_em: string; url?: string | null }[]
+  > = {};
+
+  if (veiculosIds.length > 0) {
+    const { data: fotos } = await supabaseAdmin
+      .from("fotos")
+      .select("id, entidade_id, legenda, criado_em, url")
+      .eq("entidade_tipo", "veiculo")
+      .in("entidade_id", veiculosIds)
+      .order("criado_em", { ascending: false });
+
+    if (fotos) {
+      fotosPorVeiculo = fotos.reduce((acc, f) => {
+        if (!acc[f.entidade_id]) acc[f.entidade_id] = [];
+        acc[f.entidade_id].push({
+          id: f.id,
+          legenda: f.legenda,
+          criado_em: f.criado_em,
+          url: f.url,
+        });
+        return acc;
+      }, {} as typeof fotosPorVeiculo);
+    }
+  }
+
+  const veiculos = (veiculosBrutos || []).map((v) => ({
+    ...v,
+    fotos: fotosPorVeiculo[v.id] || [],
+  }));
 
   // 3. Consulta materiais em estoque com filtro opcional por nome ou código SKU
   let materiaisQuery = supabaseAdmin
