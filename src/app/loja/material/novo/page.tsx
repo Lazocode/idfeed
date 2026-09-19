@@ -15,6 +15,9 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 // 2. Ações de servidor (Server Actions)
 import { criarMaterial } from "@/actions/materiais";
 
+// 3. Hooks, utilitários, libs e serviços
+import { requireApprovedRole } from "@/lib/security";
+
 /**
  * Metadados estáticos para a página de criação de material.
  */
@@ -28,7 +31,10 @@ export const metadata = {
  *
  * @returns Interface de formulário para cadastramento de produto no estoque.
  */
-export default function NovoMaterialPage() {
+export default async function NovoMaterialPage() {
+  // Exige perfil autorizado e oficina devidamente aprovada
+  await requireApprovedRole(["admin", "mecanico", "atendente"]);
+
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Topbar */}

@@ -12,6 +12,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Info } from "lucide-react";
 
+// 2. Hooks, utilitários, libs e serviços
+import { requireApprovedRole } from "@/lib/security";
+
 /**
  * Metadados estáticos para a página de seleção de novo cadastro.
  */
@@ -25,7 +28,10 @@ export const metadata = {
  *
  * @returns Interface de escolha entre criação de veículo ou peça/material.
  */
-export default function NovoRegistroPage() {
+export default async function NovoRegistroPage() {
+  // Exige perfil autorizado e oficina homologada
+  await requireApprovedRole(["admin", "mecanico", "atendente"]);
+
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-900 flex flex-col font-sans">
       {/* Topbar */}

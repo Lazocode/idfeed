@@ -17,7 +17,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { criarOrdemServico } from "@/actions/ordensServico";
 
 // 3. Bibliotecas, serviços e utilitários internos
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatPlaca } from "@/lib/utils";
 
@@ -49,8 +49,8 @@ interface NovaManutencaoPageProps {
  */
 export default async function NovaManutencaoPage({ params }: NovaManutencaoPageProps) {
   const { id } = await params;
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole(["admin", "mecanico", "atendente"]);
+  const lojaId = session.user.lojaId;
 
   // 1. Busca os dados do veículo garantindo pertencimento à oficina logada
   const { data: veiculo } = await supabaseAdmin

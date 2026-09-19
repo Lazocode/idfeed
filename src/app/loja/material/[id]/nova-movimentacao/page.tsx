@@ -17,7 +17,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { registrarMovimentacao } from "@/actions/movimentacoes";
 
 // 3. Bibliotecas e serviços internos
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 
 /**
@@ -48,8 +48,8 @@ interface NovaMovimentacaoPageProps {
  */
 export default async function NovaMovimentacaoPage({ params }: NovaMovimentacaoPageProps) {
   const { id } = await params;
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole(["admin", "mecanico", "atendente"]);
+  const lojaId = session.user.lojaId;
 
   // Busca o material assegurando o isolamento multi-tenant pela loja do usuário
   const { data: material } = await supabaseAdmin

@@ -17,7 +17,7 @@ import { ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { editarOrdemServico } from "@/actions/ordensServico";
 
 // 3. Bibliotecas, serviços e utilitários internos
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TIPO_SERVICO_LABEL, formatPlaca } from "@/lib/utils";
 
@@ -49,8 +49,8 @@ interface EditarOrdemServicoPageProps {
  */
 export default async function EditarOrdemServicoPage({ params }: EditarOrdemServicoPageProps) {
   const { id, osId } = await params;
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole(["admin", "mecanico", "atendente"]);
+  const lojaId = session.user.lojaId;
 
   // 1. Busca os dados do veículo garantindo isolamento por loja
   const { data: veiculo } = await supabaseAdmin

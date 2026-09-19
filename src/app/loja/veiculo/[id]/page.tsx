@@ -29,7 +29,7 @@ import { removerFoto } from "@/actions/fotos";
 import { atualizarProximaRevisao } from "@/actions/veiculos";
 
 // 4. Bibliotecas, serviços e utilitários internos
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getSignedPhotoUrl } from "@/lib/photos";
 import {
@@ -82,8 +82,8 @@ interface VeiculoDetalhePageProps {
  */
 export default async function VeiculoDetalhePage({ params }: VeiculoDetalhePageProps) {
   const { id } = await params;
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole(["admin", "mecanico", "atendente"]);
+  const lojaId = session.user.lojaId;
 
   // 1. Busca os dados completos do veículo com ordens de serviço e insumos aplicados
   const { data: veiculo } = await supabaseAdmin

@@ -17,7 +17,7 @@ import { ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { editarMovimentacao } from "@/actions/movimentacoes";
 
 // 3. Bibliotecas, serviços e utilitários internos
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
 
@@ -49,8 +49,8 @@ interface EditarMovimentacaoPageProps {
  */
 export default async function EditarMovimentacaoPage({ params }: EditarMovimentacaoPageProps) {
   const { id, movId } = await params;
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole(["admin", "mecanico", "atendente"]);
+  const lojaId = session.user.lojaId;
 
   // 1. Localiza o material assegurando a posse pela loja
   const { data: material } = await supabaseAdmin

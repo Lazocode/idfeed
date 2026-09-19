@@ -28,7 +28,7 @@ import FotoUploadForm from "@/components/foto-upload-form";
 import { removerFoto } from "@/actions/fotos";
 
 // 4. Bibliotecas, serviços e utilitários internos
-import { auth } from "@/lib/auth";
+import { requireApprovedRole } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getSignedPhotoUrl } from "@/lib/photos";
 import { formatData, TIPO_MOVIMENTACAO_LABEL } from "@/lib/utils";
@@ -74,8 +74,8 @@ interface MaterialDetalhePageProps {
  */
 export default async function MaterialDetalhePage({ params }: MaterialDetalhePageProps) {
   const { id } = await params;
-  const session = await auth();
-  const lojaId = session!.user.lojaId;
+  const session = await requireApprovedRole(["admin", "mecanico", "atendente"]);
+  const lojaId = session.user.lojaId;
 
   // Busca o material com suas movimentações de estoque e responsáveis associados
   const { data: material } = await supabaseAdmin
