@@ -588,123 +588,60 @@ export default function LojaDashboardView({
       <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0]">
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 md:py-0 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">
           
-          {/* Linha Superior no Mobile / Lado Esquerdo no Desktop */}
-          <div className="flex items-center justify-between md:justify-start gap-2 sm:gap-3 w-full md:w-auto shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link
-                href="/loja/dashboard"
-                className="flex items-center gap-2 group focus:outline-none"
-                title="IDfeed - Identidade Digital Veicular"
-              >
-                {/* Logo estilizado IDfeed */}
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs">
-                    ID
-                  </div>
-                  <span className="text-base font-bold text-[#0F172A] tracking-tight">
-                    IDfeed
-                  </span>
+          {/* Lado Esquerdo: Logo + Seleção da Oficina */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/loja/dashboard"
+              className="flex items-center gap-2 group focus:outline-none"
+              title="IDfeed - Identidade Digital Veicular"
+            >
+              {/* Logo estilizado IDfeed */}
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs">
+                  ID
                 </div>
-              </Link>
-
-              <div className="h-4 w-px bg-[#E2E8F0] mx-0.5 sm:mx-1" aria-hidden="true" />
-
-              {/* Dropdown de Seleção da Oficina Mecânica */}
-              <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-[#0F172A] hover:bg-slate-50 rounded-md cursor-pointer transition-colors">
-                <span className="truncate max-w-[130px] sm:max-w-[200px]">
-                  {loja?.nome || "Oficina Bom Motor"}
+                <span className="text-base font-bold text-[#0F172A] tracking-tight">
+                  IDfeed
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               </div>
-            </div>
+            </Link>
 
-            {/* Ações compactas no Mobile: Registrar e Sair */}
-            <div className="flex md:hidden items-center gap-2">
-              <Link
-                id="btn-cadastrar-novo-mobile"
-                href="/loja/novo"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 transition-colors shadow-2xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Registrar</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => signOut({ callbackUrl: "/loja/login" })}
-                title="Encerrar Sessão"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+            <div className="h-4 w-px bg-[#E2E8F0] mx-0.5 sm:mx-1" aria-hidden="true" />
+
+            {/* Dropdown de Seleção da Oficina Mecânica */}
+            <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-[#0F172A] hover:bg-slate-50 rounded-md cursor-pointer transition-colors">
+              <span className="truncate max-w-[130px] sm:max-w-[200px]">
+                {loja?.nome || "Oficina Bom Motor"}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             </div>
           </div>
 
-          {/* Centro: Barra de Pesquisa Rápida com Atalho ⌘K / Ctrl+K (100% no mobile, flex-1 no desktop) */}
-          <div className="w-full md:flex-1 md:max-w-xl md:mx-2">
-            <div className="relative flex items-center w-full">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
-              <input
-                ref={inputBuscaRef}
-                id="input-busca-dashboard"
-                name="q"
-                type="text"
-                value={termoBusca}
-                onChange={(e) => setTermoBusca(e.target.value)}
-                placeholder="Buscar por matrícula, proprietário ou ordem de serviço..."
-                className="w-full bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-lg pl-9 pr-14 py-2 text-xs text-[#0F172A] placeholder:text-slate-400 transition-colors focus:outline-none"
-              />
-              <div className="absolute right-2.5 flex items-center gap-1.5">
-                {termoBusca.length > 0 ? (
-                  <button
-                    id="btn-limpar-busca-input"
-                    type="button"
-                    onClick={handleLimparBusca}
-                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-md transition-colors cursor-pointer"
-                    title="Limpar pesquisa (Esc)"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <kbd
-                    onClick={() => {
-                      inputBuscaRef.current?.focus();
-                    }}
-                    className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-[#E2E8F0] rounded shadow-2xs cursor-pointer select-none"
-                    title={`Pressione ${atalhoTeclado} para pesquisar`}
-                  >
-                    {atalhoTeclado}
-                  </kbd>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Lado Direito Desktop: Ação + Registrar e Perfil do Usuário */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
+          {/* Lado Direito: Ações (Registrar, Perfil, Sair) */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               id="btn-cadastrar-novo"
               href="/loja/novo"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 transition-colors shadow-xs"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Registrar</span>
             </Link>
 
             {/* Pílula de Perfil do Usuário com Ponto de Estado */}
-            <div className="flex items-center gap-2 pl-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-xs font-medium text-[#0F172A] shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                <span className="truncate max-w-[110px]">{displayUserName}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => signOut({ callbackUrl: "/loja/login" })}
-                title="Encerrar Sessão"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-xs font-medium text-[#0F172A] shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+              <span className="truncate max-w-[120px]">{displayUserName}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/loja/login" })}
+              title="Encerrar Sessão"
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
 
         </div>
@@ -945,322 +882,376 @@ export default function LojaDashboardView({
             </div>
           </section>
         ) : (
-          /* Split View Padrão: Tabela Densa à Esquerda + Inspetor à Direita */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          /* Split View Padrão: Barra de Filtros Externa + (Tabela Densa à Esquerda + Inspetor à Direita) */
+          <div className="space-y-4">
+            
+            {/* ════════════ BARRA DE PESQUISA E FILTROS OPERACIONAIS (EXTERNA À TABELA) ════════════ */}
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 sm:p-4 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              {/* Campo de Pesquisa Rápida */}
+              <div className="relative flex-1 min-w-[260px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={inputBuscaRef}
+                  id="input-busca-dashboard"
+                  name="q"
+                  type="text"
+                  value={termoBusca}
+                  onChange={(e) => setTermoBusca(e.target.value)}
+                  placeholder="Buscar por matrícula, proprietário, modelo..."
+                  className="w-full bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-lg pl-10 pr-20 py-2.5 text-xs text-[#0F172A] placeholder:text-slate-400 transition-colors focus:outline-none"
+                />
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                  {termoBusca.length > 0 ? (
+                    <button
+                      id="btn-limpar-busca-input"
+                      type="button"
+                      onClick={handleLimparBusca}
+                      className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-md transition-colors cursor-pointer"
+                      title="Limpar pesquisa (Esc)"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <kbd
+                      onClick={() => {
+                        inputBuscaRef.current?.focus();
+                      }}
+                      className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-[#E2E8F0] rounded shadow-2xs cursor-pointer select-none"
+                      title={`Pressione ${atalhoTeclado} para pesquisar`}
+                    >
+                      {atalhoTeclado}
+                    </kbd>
+                  )}
+                </div>
+              </div>
+
+              {/* Ações de Filtragem e Visualização */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {/* Dropdown: Filtros */}
+                <div className="relative" ref={filtrosRef}>
+                  <button
+                    id="btn-tabela-filtros"
+                    type="button"
+                    onClick={() => {
+                      setIsFiltrosOpen((prev) => !prev);
+                      setIsColunasOpen(false);
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      filtroEstado !== "todos"
+                        ? "bg-blue-50 text-blue-700 border-blue-200 font-semibold"
+                        : "text-slate-700 bg-white border-[#E2E8F0] hover:bg-slate-50"
+                    }`}
+                    title="Filtrar por estado de conformidade"
+                  >
+                    <span>Filtros</span>
+                    {filtroEstado !== "todos" && (
+                      <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
+                    )}
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                        isFiltrosOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Popover Menu: Filtros */}
+                  {isFiltrosOpen && (
+                    <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-1.5 w-60 max-w-[calc(100vw-2.5rem)] bg-white border border-[#E2E8F0] rounded-xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
+                        <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                          Estado da Revisão
+                        </span>
+                        {filtroEstado !== "todos" && (
+                          <button
+                            type="button"
+                            onClick={() => setFiltroEstado("todos")}
+                            className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                          >
+                            Limpar
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFiltroEstado("todos");
+                            setIsFiltrosOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                            filtroEstado === "todos"
+                              ? "bg-slate-100 text-[#0F172A] font-bold"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span>Todos</span>
+                          <span className="text-[11px] text-slate-400 font-mono font-normal">
+                            {listaVeiculos.length}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFiltroEstado("conforme");
+                            setIsFiltrosOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                            filtroEstado === "conforme"
+                              ? "bg-emerald-50 text-emerald-800 font-bold"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                            <span>Conforme</span>
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono font-normal">
+                            {contagemEstados.conforme}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFiltroEstado("proxima");
+                            setIsFiltrosOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                            filtroEstado === "proxima"
+                              ? "bg-amber-50 text-amber-800 font-bold"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                            <span>Próxima revisão</span>
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono font-normal">
+                            {contagemEstados.proxima}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFiltroEstado("vencida");
+                            setIsFiltrosOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                            filtroEstado === "vencida"
+                              ? "bg-rose-50 text-rose-800 font-bold"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+                            <span>Vencida</span>
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono font-normal">
+                            {contagemEstados.vencida}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Dropdown: Configurar colunas */}
+                <div className="relative" ref={colunasRef}>
+                  <button
+                    id="btn-tabela-configurar-colunas"
+                    type="button"
+                    onClick={() => {
+                      setIsColunasOpen((prev) => !prev);
+                      setIsFiltrosOpen(false);
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      isColunasOpen
+                        ? "bg-slate-50 text-slate-900 border-slate-300 font-semibold"
+                        : "text-slate-700 bg-white border-[#E2E8F0] hover:bg-slate-50"
+                    }`}
+                    title="Configurar visibilidade das colunas"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Colunas</span>
+                  </button>
+
+                  {/* Popover Menu: Configurar Colunas */}
+                  {isColunasOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-64 max-w-[calc(100vw-2.5rem)] bg-white border border-[#E2E8F0] rounded-xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
+                        <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                          Colunas Visíveis
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleRestaurarColunas}
+                          className="text-[11px] text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 cursor-pointer"
+                          title="Exibir todas as colunas padrão"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" />
+                          <span>Padrão</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-1 text-xs">
+                        <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={colunasVisiveis.placa}
+                            onChange={() => handleToggleColuna("placa")}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                          />
+                          <span className="text-slate-700">Matrícula / Placa</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={colunasVisiveis.modelo}
+                            onChange={() => handleToggleColuna("modelo")}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                          />
+                          <span className="text-slate-700">Veículo &amp; Versão</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={colunasVisiveis.proprietario}
+                            onChange={() => handleToggleColuna("proprietario")}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                          />
+                          <span className="text-slate-700">Proprietário</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={colunasVisiveis.km_atual}
+                            onChange={() => handleToggleColuna("km_atual")}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                          />
+                          <span className="text-slate-700">Odômetro Atual</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={colunasVisiveis.km_proxima_revisao}
+                            onChange={() => handleToggleColuna("km_proxima_revisao")}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                          />
+                          <span className="text-slate-700">Próxima Revisão</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={colunasVisiveis.estado}
+                            onChange={() => handleToggleColuna("estado")}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                          />
+                          <span className="text-slate-700">Estado</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botão: Exportar CSV */}
+                <button
+                  id="btn-tabela-exportar"
+                  type="button"
+                  onClick={handleExportarCsv}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
+                  title="Exportar registros filtrados em arquivo CSV (Excel)"
+                >
+                  {exportando ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-semibold">Exportado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Exportar</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Indicador de Filtro Ativo com Botão Limpar */}
+                {filtroEstado !== "todos" && (
+                  <button
+                    type="button"
+                    onClick={() => setFiltroEstado("todos")}
+                    className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200"
+                    title="Limpar filtro ativo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Limpar filtro</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Split View: Tabela Densa à Esquerda + Inspetor à Direita */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             
             {/* ════════════ LADO ESQUERDO: TABELA DENSA DE VIATURAS ════════════ */}
             <section
               aria-label="Prontuários Veiculares Ativos"
               className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl shadow-2xs overflow-hidden"
             >
-              {/* Header da Tabela com Título e Ações Secundárias */}
-              <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Header da Tabela com Título e Quantidade */}
+              <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#E2E8F0] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h1 className="text-sm font-bold text-[#0F172A]">
                     Prontuários Veiculares Ativos
                   </h1>
                   <span className="text-xs text-slate-400 font-normal">
-                    {veiculosFiltrados.length}{" "}
+                    • {veiculosFiltrados.length}{" "}
                     {veiculosFiltrados.length === 1
                       ? "registro cadastrado"
-                      : "registros cadastrados"}{" "}
-                    na base homologada
+                      : "registros cadastrados"}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Dropdown: Filtros */}
-                  <div className="relative" ref={filtrosRef}>
-                    <button
-                      id="btn-tabela-filtros"
-                      type="button"
-                      onClick={() => {
-                        setIsFiltrosOpen((prev) => !prev);
-                        setIsColunasOpen(false);
-                      }}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
-                        filtroEstado !== "todos"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : "text-slate-700 bg-white border-[#E2E8F0] hover:bg-slate-50"
-                      }`}
-                      title="Filtrar por estado de conformidade"
-                    >
-                      <span>Filtros</span>
-                      {filtroEstado !== "todos" && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-                      )}
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                          isFiltrosOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Popover Menu: Filtros */}
-                    {isFiltrosOpen && (
-                      <div className="absolute left-0 top-full mt-1.5 w-60 max-w-[calc(100vw-2.5rem)] bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
-                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
-                          <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
-                            Estado da Revisão
-                          </span>
-                          {filtroEstado !== "todos" && (
-                            <button
-                              type="button"
-                              onClick={() => setFiltroEstado("todos")}
-                              className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
-                            >
-                              Limpar
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="space-y-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFiltroEstado("todos");
-                              setIsFiltrosOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                              filtroEstado === "todos"
-                                ? "bg-slate-100 text-[#0F172A] font-bold"
-                                : "text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span>Todos</span>
-                            <span className="text-[11px] text-slate-400 font-mono font-normal">
-                              {listaVeiculos.length}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFiltroEstado("conforme");
-                              setIsFiltrosOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                              filtroEstado === "conforme"
-                                ? "bg-emerald-50 text-emerald-800 font-bold"
-                                : "text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                              <span>Conforme</span>
-                            </span>
-                            <span className="text-[11px] text-slate-400 font-mono font-normal">
-                              {contagemEstados.conforme}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFiltroEstado("proxima");
-                              setIsFiltrosOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                              filtroEstado === "proxima"
-                                ? "bg-amber-50 text-amber-800 font-bold"
-                                : "text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-                              <span>Próxima revisão</span>
-                            </span>
-                            <span className="text-[11px] text-slate-400 font-mono font-normal">
-                              {contagemEstados.proxima}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFiltroEstado("vencida");
-                              setIsFiltrosOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                              filtroEstado === "vencida"
-                                ? "bg-rose-50 text-rose-800 font-bold"
-                                : "text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
-                              <span>Vencida</span>
-                            </span>
-                            <span className="text-[11px] text-slate-400 font-mono font-normal">
-                              {contagemEstados.vencida}
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Botão: Exportar CSV */}
-                  <button
-                    id="btn-tabela-exportar"
-                    type="button"
-                    onClick={handleExportarCsv}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
-                    title="Exportar registros filtrados em arquivo CSV (Excel)"
-                  >
-                    {exportando ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600" />
-                        <span className="text-emerald-700 font-semibold">Exportado!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-3 h-3 text-slate-400" />
-                        <span>Exportar</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Dropdown: Configurar colunas */}
-                  <div className="relative" ref={colunasRef}>
-                    <button
-                      id="btn-tabela-configurar-colunas"
-                      type="button"
-                      onClick={() => {
-                        setIsColunasOpen((prev) => !prev);
-                        setIsFiltrosOpen(false);
-                      }}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
-                        isColunasOpen
-                          ? "bg-slate-50 text-slate-900 border-slate-300"
-                          : "text-slate-700 bg-white border-[#E2E8F0] hover:bg-slate-50"
-                      }`}
-                      title="Configurar visibilidade das colunas"
-                    >
-                      <SlidersHorizontal className="w-3 h-3 text-slate-400" />
-                      <span>Configurar colunas</span>
-                    </button>
-
-                    {/* Popover Menu: Configurar Colunas */}
-                    {isColunasOpen && (
-                      <div className="absolute right-0 top-full mt-1.5 w-64 max-w-[calc(100vw-2.5rem)] bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
-                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
-                          <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
-                            Colunas Visíveis
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleRestaurarColunas}
-                            className="text-[11px] text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 cursor-pointer"
-                            title="Exibir todas as colunas padrão"
-                          >
-                            <RotateCcw className="w-2.5 h-2.5" />
-                            <span>Padrão</span>
-                          </button>
-                        </div>
-
-                        <div className="space-y-1 text-xs">
-                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={colunasVisiveis.placa}
-                              onChange={() => handleToggleColuna("placa")}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                            />
-                            <span className="text-slate-700">Matrícula / Placa</span>
-                          </label>
-
-                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={colunasVisiveis.modelo}
-                              onChange={() => handleToggleColuna("modelo")}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                            />
-                            <span className="text-slate-700">Veículo &amp; Versão</span>
-                          </label>
-
-                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={colunasVisiveis.proprietario}
-                              onChange={() => handleToggleColuna("proprietario")}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                            />
-                            <span className="text-slate-700">Proprietário</span>
-                          </label>
-
-                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={colunasVisiveis.km_atual}
-                              onChange={() => handleToggleColuna("km_atual")}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                            />
-                            <span className="text-slate-700">Odômetro Atual</span>
-                          </label>
-
-                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={colunasVisiveis.km_proxima_revisao}
-                              onChange={() => handleToggleColuna("km_proxima_revisao")}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                            />
-                            <span className="text-slate-700">Próxima Revisão</span>
-                          </label>
-
-                          <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={colunasVisiveis.estado}
-                              onChange={() => handleToggleColuna("estado")}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                            />
-                            <span className="text-slate-700">Estado</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Indicador de Filtro Ativo com Botão Limpar */}
-                  {filtroEstado !== "todos" && (
-                    <button
-                      type="button"
-                      onClick={() => setFiltroEstado("todos")}
-                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                      title="Limpar filtro ativo"
-                    >
-                      <X className="w-3 h-3" />
-                      <span>Limpar</span>
-                    </button>
+                <div className="text-xs text-slate-400">
+                  {filtroEstado !== "todos" ? (
+                    <span className="font-semibold text-blue-600">
+                      Filtrado: {filtroEstado}
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline">Base homologada</span>
                   )}
                 </div>
               </div>
 
-              {/* Tabela Densa de Veículos */}
+              {/* Tabela Densa de Veículos com Rolagem Horizontal Suave */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+                <table className="w-full text-left border-collapse text-xs min-w-[680px]">
                   <thead>
                     <tr className="border-b border-[#E2E8F0] bg-[#FFFFFF] text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                       {colunasVisiveis.placa && (
-                        <th className="py-3 px-4">Matrícula / Placa</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Matrícula / Placa</th>
                       )}
                       {colunasVisiveis.modelo && (
-                        <th className="py-3 px-4">Veículo &amp; Versão</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Veículo &amp; Versão</th>
                       )}
                       {colunasVisiveis.proprietario && (
-                        <th className="py-3 px-4">Proprietário</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Proprietário</th>
                       )}
                       {colunasVisiveis.km_atual && (
-                        <th className="py-3 px-4">Odômetro Atual</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Odômetro Atual</th>
                       )}
                       {colunasVisiveis.km_proxima_revisao && (
-                        <th className="py-3 px-4">Próxima Revisão</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Próxima Revisão</th>
                       )}
                       {colunasVisiveis.estado && (
-                        <th className="py-3 px-4">Estado</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Estado</th>
                       )}
                     </tr>
                   </thead>
@@ -1320,7 +1311,7 @@ export default function LojaDashboardView({
 
                             {/* Coluna 2: Veículo & Versão */}
                             {colunasVisiveis.modelo && (
-                              <td className="py-3 px-4">
+                              <td className="py-3 px-4 whitespace-nowrap">
                                 <span
                                   className={`text-xs ${
                                     isSelected
@@ -1335,7 +1326,7 @@ export default function LojaDashboardView({
 
                             {/* Coluna 3: Proprietário */}
                             {colunasVisiveis.proprietario && (
-                              <td className="py-3 px-4 text-slate-600 text-xs">
+                              <td className="py-3 px-4 text-slate-600 text-xs whitespace-nowrap">
                                 {v.proprietario_nome || "—"}
                               </td>
                             )}
@@ -1580,6 +1571,7 @@ export default function LojaDashboardView({
               )}
             </aside>
 
+            </div>
           </div>
         )}
 
