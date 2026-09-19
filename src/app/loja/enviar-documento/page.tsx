@@ -10,7 +10,8 @@
 // 1. Dependências e bibliotecas externas
 import Link from "next/link";
 import Image from "next/image";
-import { AlertTriangle, Clock } from "lucide-react";
+import { redirect } from "next/navigation";
+import { AlertTriangle, Clock, FileCheck, RefreshCw } from "lucide-react";
 
 // 2. Componentes internos
 import EnviarDocumentoForm from "@/components/enviar-documento-form";
@@ -41,17 +42,30 @@ export const metadata = {
 export default async function EnviarDocumentoPage() {
   // Exige que o usuário possua uma sessão ativa no sistema
   const session = await requireSession();
-  const isAdmin = session.user.papel === "admin";
+  const lojaId = session.user.lojaId;
 
-  // Busca o último documento submetido pela oficina para verificação de status (ex: rejeitado)
+  // 1. Verifica o status cadastral atual da oficina
+  const { data: loja } = await supabaseAdmin
+    .from("lojas")
+    .select("status, nome")
+    .eq("id", lojaId)
+    .single();
+
+  // Se a oficina já se encontra homologada e ativa, redireciona ao painel operacional
+  if (loja?.status === "aprovada") {
+    redirect("/loja/dashboard");
+  }
+
+  // 2. Busca o último documento submetido pela oficina para verificação de status
   const { data: documento } = await supabaseAdmin
     .from("documentos_oficina")
-    .select("status, observacao, enviado_em")
-    .eq("loja_id", session.user.lojaId)
+    .select("status, observacao, enviado_em, nome_arquivo")
+    .eq("loja_id", lojaId)
     .order("enviado_em", { ascending: false })
     .limit(1)
     .maybeSingle();
 
+  const documentoPendente = documento?.status === "pendente";
   const documentoRejeitado = documento?.status === "rejeitado";
 
   return (
@@ -82,49 +96,117 @@ export default async function EnviarDocumentoPage() {
       <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
         <div className="w-full max-w-lg">
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-9 text-left">
+            {/* Header do Card de Acordo com o Estado do Documento */}
             <div className="mb-6">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-1">
-                {documentoRejeitado ? "Documento Rejeitado" : "Credenciamento da Oficina"}
+              <span
+                className={`inline-block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                  documentoRejeitado
+                    ? "text-rose-600"
+                    : documentoPendente
+                      ? "text-amber-600"
+                      : "text-blue-600"
+                }`}
+              >
+                {documentoRejeitado
+                  ? "Documentação Recusada"
+                  : documentoPendente
+                    ? "Documentação em Auditoria"
+                    : "Credenciamento da Oficina"}
               </span>
+
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {documentoRejeitado ? "Corrija e envie novamente" : "Envio de Documentação"}
+                {documentoRejeitado
+                  ? "Corrija e Envie Novamente"
+                  : documentoPendente
+                    ? "Documento em Verificação"
+                    : "Envio de Documentação"}
               </h1>
+
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-1">
-                Para liberar a emissão do prontuário digital e ordens de serviço, envie a identificação oficial da oficina.
+                {documentoPendente
+                  ? "Sua documentação foi enviada e está sob análise técnica da administração."
+                  : "Para liberar a emissão do prontuário digital e ordens de serviço, envie a identificação oficial da oficina."}
               </p>
             </div>
 
-            {isAdmin ? (
+            {/* Cenário 1: Documento já enviado e aguardando aprovação administrativa */}
+            {documentoPendente ? (
+              <div className="space-y-5">
+                <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-amber-800">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    <span>Aguardando homologação da administração</span>
+                  </div>
+                  <p className="leading-relaxed text-amber-900/90 pl-6">
+                    Seu arquivo foi protocolado com sucesso e está na fila de aprovação do administrador.
+                    Assim que a verificação for concluída, você terá acesso total ao painel.
+                  </p>
+                </div>
+
+                {/* Detalhes do arquivo protocolado */}
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                  <FileCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1 text-xs">
+                    <p className="font-semibold text-slate-800 truncate">
+                      {documento.nome_arquivo || "Documento comprobatório"}
+                    </p>
+                    <p className="text-slate-400 mt-0.5">
+                      Enviado em{" "}
+                      {documento.enviado_em
+                        ? new Date(documento.enviado_em).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "recente"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Área para substituição de documento, caso tenha enviado arquivo incorreto */}
+                <div className="pt-2 border-t border-slate-100">
+                  <details className="group">
+                    <summary className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer list-none inline-flex items-center gap-1.5 transition-colors">
+                      <RefreshCw className="w-3.5 h-3.5 group-open:rotate-180 transition-transform duration-200" />
+                      <span>Enviou o documento errado? Clique aqui para reenviar</span>
+                    </summary>
+                    <div className="pt-4 mt-3 border-t border-slate-100">
+                      <p className="text-xs text-slate-500 mb-3">
+                        Selecione um novo documento para substituir o arquivo anterior em análise:
+                      </p>
+                      <EnviarDocumentoForm />
+                    </div>
+                  </details>
+                </div>
+              </div>
+            ) : (
+              /* Cenário 2: Primeiro envio ou reenvio após rejeição */
               <div className="space-y-5">
                 {documentoRejeitado && (
                   <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">
                     <div className="flex items-center gap-1.5 font-bold mb-1">
                       <AlertTriangle className="w-4 h-4 text-rose-600" />
-                      <span>Motivo apontado pela análise:</span>
+                      <span>Motivo apontado pelo administrador:</span>
                     </div>
                     <p className="text-slate-700 leading-relaxed pl-5.5">
-                      {documento?.observacao || "Documento ilegível ou inválido. Por favor, reenvie um arquivo com boa resolução."}
+                      {documento?.observacao ||
+                        "Documento ilegível ou inválido. Por favor, reenvie um arquivo com boa resolução."}
                     </p>
                   </div>
                 )}
 
                 <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/70 text-xs text-slate-600">
-                  Envie o contrato social, cartão CNPJ ou documento de identificação com foto do responsável técnico.
+                  Envie o contrato social, cartão CNPJ ou documento de identificação com foto (RG/CNH) do responsável técnico.
                 </div>
 
                 <EnviarDocumentoForm />
 
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-2">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>A análise é realizada pela equipe técnica em até 24 horas úteis.</span>
+                  <span>A análise é realizada pela equipe administrativa em até 24 horas úteis.</span>
                 </div>
-              </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
-                <p className="font-semibold mb-1">Acesso Restrito ao Administrador</p>
-                <p className="leading-relaxed">
-                  Apenas o usuário administrador da sua oficina tem permissão para enviar ou atualizar os documentos de credenciamento.
-                </p>
               </div>
             )}
           </div>

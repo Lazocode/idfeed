@@ -254,7 +254,7 @@ export default async function AnaliseOficinaPage({ params }: AnaliseOficinaPageP
                 )}
 
                 <div className="pt-2 border-t border-slate-100">
-                  <AprovacaoOficina lojaId={lojaId} />
+                  <AprovacaoOficina lojaId={lojaId} status={loja.status} />
                 </div>
               </div>
             )}
