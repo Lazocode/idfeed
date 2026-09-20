@@ -10,7 +10,7 @@
 
 // 1. Dependências e bibliotecas externas
 import React, { useState, useTransition } from "react";
-import { Star, Send, CheckCircle2, AlertCircle, RotateCcw, User, Mail, HelpCircle } from "lucide-react";
+import { Star, Send, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 
 // 2. Componentes e serviços internos
 import { enviarFeedback } from "@/actions/feedback";
@@ -267,7 +267,6 @@ export default function FeedbackForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <div>
           <label htmlFor="input-feedback-nome" className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-            <User className="w-3 h-3 text-slate-400" />
             <span>Seu nome (opcional)</span>
           </label>
           <input
@@ -282,7 +281,6 @@ export default function FeedbackForm({
 
         <div>
           <label htmlFor="input-feedback-contato" className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-            <Mail className="w-3 h-3 text-slate-400" />
             <span>Contato (WhatsApp / E-mail, opcional)</span>
           </label>
           <input
@@ -307,7 +305,6 @@ export default function FeedbackForm({
       {/* ─── 6. Botão de Envio ─── */}
       <div className="pt-2 flex items-center justify-between gap-3">
         <p className="text-[11px] text-slate-400 flex items-center gap-1">
-          <HelpCircle className="w-3 h-3" />
           <span>Fase de testes beta do IDfeed</span>
         </p>
 
