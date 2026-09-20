@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 
 // 2. Componentes internos
 import Providers from "@/components/providers";
+import FeedbackWidget from "@/components/feedback-widget";
 
 // 3. Estilos globais
 import "./globals.css";
@@ -41,6 +42,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* Provedor unificado de contexto NextAuth e sessões globais */}
         <Providers>{children}</Providers>
+        {/* Widget global de feedback para clientes e testadores em ambiente de teste/deploy */}
+        <FeedbackWidget />
       </body>
     </html>
   );

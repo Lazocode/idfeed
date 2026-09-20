@@ -24,7 +24,6 @@ import {
   Car,
   FileCheck2,
   Clock,
-  Sparkles,
   Zap,
 } from "lucide-react";
 
@@ -198,23 +197,23 @@ export default function ConsultaVeiculo() {
     <div className="w-full">
       {/* ─── FORMULÁRIO DE CONSULTA ─── */}
       {!veiculo && (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 text-left transition-all">
-          <div className="pb-5 mb-6 border-b border-slate-100">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-left">
+          <div className="pb-4 mb-5 border-b border-slate-100">
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
               Identificação do Veículo
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Validação criptográfica cruzada entre proprietário e histórico veicular.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Informe a placa do veículo e o CPF do proprietário registrado.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Campo da Placa */}
               <div>
                 <label
                   htmlFor="placa"
-                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
                 >
                   Placa do Veículo
                 </label>
@@ -228,14 +227,14 @@ export default function ConsultaVeiculo() {
                     maxLength={7}
                     autoComplete="off"
                     required
-                    className="w-full bg-slate-50/60 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200 focus:border-blue-600 rounded-xl px-3.5 py-3 text-base font-mono font-semibold tracking-wider transition-all duration-150 outline-none focus:ring-3 focus:ring-blue-500/10"
+                    className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-base font-mono font-semibold tracking-wider outline-none transition-colors"
                   />
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <Car className="w-5 h-5" />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <Car className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Mercosul ou padrão cinza (7 caracteres)
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Padrão Mercosul ou anterior (7 caracteres)
                 </p>
               </div>
 
@@ -243,9 +242,9 @@ export default function ConsultaVeiculo() {
               <div>
                 <label
                   htmlFor="cpf"
-                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
                 >
-                  CPF do Proprietário
+                  CPF do Titular
                 </label>
                 <div className="relative">
                   <input
@@ -258,14 +257,14 @@ export default function ConsultaVeiculo() {
                     inputMode="numeric"
                     autoComplete="off"
                     required
-                    className="w-full bg-slate-50/60 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200 focus:border-blue-600 rounded-xl px-3.5 py-3 text-base font-mono font-medium tracking-wide transition-all duration-150 outline-none focus:ring-3 focus:ring-blue-500/10"
+                    className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-base font-mono font-medium tracking-wide outline-none transition-colors"
                   />
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <Lock className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Somente números cadastrados na oficina
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Apenas dígitos cadastrados na oficina
                 </p>
               </div>
             </div>
@@ -274,11 +273,11 @@ export default function ConsultaVeiculo() {
             {erro && (
               <div
                 id="consulta-error"
-                className="flex items-start gap-3 p-3.5 rounded-xl bg-red-50/90 border border-red-200/80 text-red-800 text-sm animate-in fade-in"
+                className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm"
               >
-                <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-red-900">Não foi possível localizar o prontuário</p>
+                  <p className="font-semibold text-red-900 text-xs">Registro não encontrado</p>
                   <p className="text-xs text-red-700 leading-relaxed">{erro}</p>
                 </div>
               </div>
@@ -289,29 +288,29 @@ export default function ConsultaVeiculo() {
               id="btn-consultar-veiculo"
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-sm sm:text-base py-3.5 px-6 rounded-xl shadow-xs hover:shadow-md transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-sm py-3 px-5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Consultando base da rede homologada...
+                  Buscando prontuário...
                 </>
               ) : (
                 <>
                   <Search className="w-4 h-4 text-slate-300" />
-                  Consultar Histórico Completo
+                  Consultar Prontuário
                 </>
               )}
             </button>
           </form>
 
           {/* Garantias de Segurança */}
-          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-xs">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <p>Proteção criptográfica ponta a ponta (HMAC-SHA256)</p>
+          <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-500 text-xs">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <p>Acesso restrito ao proprietário legal</p>
             </div>
-            <p>Em conformidade com a LGPD</p>
+            <p>Conforme Lei Geral de Proteção de Dados (LGPD)</p>
           </div>
         </div>
       )}
@@ -320,20 +319,20 @@ export default function ConsultaVeiculo() {
       {veiculo && (
         <div id="prontuario-veiculo" className="space-y-6 text-left animate-in fade-in duration-200">
           {/* Barra de Ações Superior */}
-          <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-slate-200">
             <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0" />
               <div>
                 <div className="flex items-center gap-2">
                   <strong className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Dossiê Veicular Ativo
+                    Prontuário Veicular Oficial
                   </strong>
-                  <div className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Homologado
-                  </div>
+                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    Registro Ativo
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  Prontuário emitido em {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  Emitido em {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
             </div>
@@ -363,13 +362,13 @@ export default function ConsultaVeiculo() {
           </div>
 
           {/* Cartão de Identidade do Veículo */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
-                  Veículo Homologado na Rede IDfeed
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                  Dados Cadastrais
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                   {veiculo.modelo}
                 </h2>
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs sm:text-sm text-slate-600 pt-1">
@@ -388,11 +387,11 @@ export default function ConsultaVeiculo() {
 
               {/* Tag Limpa e Tipográfica da Placa */}
               <div className="self-start md:self-center shrink-0">
-                <div className="bg-slate-100 border border-slate-200 rounded-xl px-4 py-2 text-center min-w-32">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="bg-slate-100 border border-slate-300 rounded-lg px-4 py-2 text-center min-w-32">
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                     Placa
                   </p>
-                  <p className="font-mono text-xl sm:text-2xl font-black text-slate-900 tracking-wider">
+                  <p className="font-mono text-xl sm:text-2xl font-bold text-slate-900 tracking-wider">
                     {veiculo.placa}
                   </p>
                 </div>
@@ -402,58 +401,58 @@ export default function ConsultaVeiculo() {
             {/* Grid de Indicadores Principais */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
               {/* Odômetro Atual */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                  <p>Odômetro Registrado</p>
-                  <Gauge className="w-4 h-4 text-blue-600" />
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-2">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                  <p>Último Odômetro</p>
+                  <Gauge className="w-4 h-4 text-slate-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-slate-900 tracking-tight">
+                  <div className="text-2xl font-bold text-slate-900 tracking-tight">
                     {formatKm(veiculo.km_atual)}
                   </div>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Aferido na última passagem pela oficina
+                    Registrado na última ordem de serviço
                   </p>
                 </div>
               </div>
 
               {/* Próxima Revisão */}
-              <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/70 flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-amber-900 text-xs font-semibold uppercase tracking-wider">
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-2">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
                   <p>Próxima Manutenção</p>
-                  <Calendar className="w-4 h-4 text-amber-700" />
+                  <Calendar className="w-4 h-4 text-slate-600" />
                 </div>
                 <div>
                   {veiculo.km_proxima_revisao ? (
                     <>
-                      <div className="text-2xl font-black text-amber-950 tracking-tight">
+                      <div className="text-2xl font-bold text-slate-900 tracking-tight">
                         {formatKm(veiculo.km_proxima_revisao)}
                       </div>
-                      <p className="text-[11px] text-amber-800 font-medium truncate mt-0.5">
+                      <p className="text-[11px] text-slate-600 truncate mt-0.5">
                         {veiculo.nota_proxima_revisao || "Revisão preventiva programada"}
                       </p>
                     </>
                   ) : (
                     <>
-                      <div className="text-lg font-bold text-amber-900">Em dia</div>
-                      <p className="text-[11px] text-amber-700 mt-0.5">Sem agendamentos futuros pendentes</p>
+                      <div className="text-lg font-semibold text-slate-800">Não agendada</div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Sem pendências futuras cadastradas</p>
                     </>
                   )}
                 </div>
               </div>
 
               {/* Autenticidade & Auditoria */}
-              <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200/70 flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-emerald-900 text-xs font-semibold uppercase tracking-wider">
-                  <p>Status do Prontuário</p>
-                  <ShieldCheck className="w-4 h-4 text-emerald-700" />
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-2">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                  <p>Histórico de Ordens</p>
+                  <ShieldCheck className="w-4 h-4 text-slate-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-emerald-950 tracking-tight">
-                    Auditado
+                  <div className="text-2xl font-bold text-slate-900 tracking-tight">
+                    {veiculo.ordens_servico.length} {veiculo.ordens_servico.length === 1 ? "registro" : "registros"}
                   </div>
-                  <p className="text-[11px] text-emerald-800 font-medium mt-0.5">
-                    {veiculo.ordens_servico.length} {veiculo.ordens_servico.length === 1 ? "registro cadastrado" : "registros cadastrados"}
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Lançamentos efetuados por oficinas credenciadas
                   </p>
                 </div>
               </div>
@@ -461,31 +460,31 @@ export default function ConsultaVeiculo() {
           </div>
 
           {/* Histórico Cronológico de Manutenções */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
-            <div className="flex items-center justify-between pb-5 mb-5 border-b border-slate-100">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-slate-700" />
-                  Histórico Oficial de Manutenções
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-slate-700" />
+                  Histórico de Serviços Realizados
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Registros cronológicos efetuados pelas oficinas no encerramento de cada ordem de serviço.
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Registros cronológicos discriminados no encerramento de cada ordem de serviço.
                 </p>
               </div>
 
-              <div className="px-2.5 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700">
-                {veiculo.ordens_servico.length} {veiculo.ordens_servico.length === 1 ? "ordem" : "ordens"}
-              </div>
+              <span className="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 border border-slate-200">
+                {veiculo.ordens_servico.length} {veiculo.ordens_servico.length === 1 ? "item" : "itens"}
+              </span>
             </div>
 
             {veiculo.ordens_servico.length === 0 ? (
-              <div className="py-10 text-center rounded-xl bg-slate-50/70 border border-dashed border-slate-200">
-                <FileCheck2 className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">
-                  Nenhuma ordem de serviço registrada anteriormente
+              <div className="py-8 text-center rounded-lg bg-slate-50 border border-slate-200">
+                <FileCheck2 className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm font-medium text-slate-700">
+                  Nenhuma ordem de serviço registrada
                 </p>
-                <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                  Este veículo está registrado no sistema IDfeed. Conforme manutenções forem concluídas na oficina, elas serão listadas aqui de forma transparente e imutável.
+                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                  Este veículo está registrado na base. À medida que intervenções mecânicas forem finalizadas na oficina, o histórico será atualizado.
                 </p>
               </div>
             ) : (
@@ -497,14 +496,14 @@ export default function ConsultaVeiculo() {
                   return (
                     <div
                       key={`${os.criado_em}-${index}`}
-                      className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 p-2 rounded-xl transition-colors"
+                      className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 mt-0.5 text-slate-600">
                           {getServiceIcon(os.tipo_servico)}
                         </div>
                         <div>
-                          <p className="text-sm sm:text-base font-bold text-slate-900">
+                          <p className="text-sm font-semibold text-slate-900">
                             {labelServico}
                           </p>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-0.5">
@@ -512,19 +511,19 @@ export default function ConsultaVeiculo() {
                               <Calendar className="w-3.5 h-3.5 text-slate-400" />
                               {formatData(os.criado_em)}
                             </div>
-                            <div className="flex items-center gap-1 font-medium text-slate-700">
+                            <div className="flex items-center gap-1 text-slate-700">
                               <Gauge className="w-3.5 h-3.5 text-slate-400" />
-                              Odômetro no serviço: {formatKm(os.km_no_servico)}
+                              Km aferida: {formatKm(os.km_no_servico)}
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="sm:text-right shrink-0">
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Concluído & Aprovado
-                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
+                          Finalizado
+                        </span>
                       </div>
                     </div>
                   );
@@ -532,19 +531,19 @@ export default function ConsultaVeiculo() {
               </div>
             )}
 
-            {/* Certificação / Rodapé de Veracidade */}
-            <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-xs">
+            {/* Rodapé do Prontuário */}
+            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-blue-600" />
-                <p>Autenticidade garantida pela rede de oficinas credenciadas IDfeed</p>
+                <ShieldCheck className="w-4 h-4 text-slate-500" />
+                <p>Prontuário mantido e auditado pelo sistema IDfeed</p>
               </div>
               <button
                 id="btn-outra-consulta-rodape"
                 type="button"
                 onClick={handleReset}
-                className="no-print text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                className="no-print text-slate-700 hover:text-slate-900 font-medium cursor-pointer"
               >
-                Fazer outra consulta →
+                Nova consulta →
               </button>
             </div>
           </div>

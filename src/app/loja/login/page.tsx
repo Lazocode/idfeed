@@ -57,13 +57,13 @@ export default function LoginPage() {
       {/* Conteúdo Central */}
       <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-8 text-center">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">
                 Acesso da Oficina
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                Informe suas credenciais para gerenciar prontuários e vistorias.
+                Informe suas credenciais para gerenciar prontuários e ordens de serviço.
               </p>
             </div>
 
@@ -74,7 +74,7 @@ export default function LoginPage() {
             <div className="space-y-2.5">
               <Link
                 href="/loja/criar-conta"
-                className="block text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="block text-xs font-semibold text-slate-700 hover:text-slate-950 transition-colors"
               >
                 Ainda não tem conta? Cadastrar oficina credenciada
               </Link>

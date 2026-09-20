@@ -55,3 +55,43 @@ export type MovimentacaoComRelacoes = {
   } | null;
 };
 
+/**
+ * Categorias permitidas de feedback de clientes e testadores.
+ */
+export type FeedbackCategoria = "sugestao" | "elogio" | "problema" | "opiniao";
+
+/**
+ * Tipos de perfil de usuário que submeteram o feedback.
+ */
+export type FeedbackTipoUsuario = "cliente" | "oficina" | "testador";
+
+/**
+ * Estrutura de entrada para cadastro de um novo feedback.
+ */
+export interface FeedbackInput {
+  /** Nome ou identificação voluntária do usuário. */
+  nome?: string;
+  /** Contato (e-mail ou WhatsApp) voluntário para retorno. */
+  contato?: string;
+  /** Tipo de usuário que está enviando (cliente, oficina ou testador). */
+  tipo_usuario: FeedbackTipoUsuario;
+  /** Categoria da manifestação. */
+  categoria: FeedbackCategoria;
+  /** Avaliação em escala de 1 a 5 estrelas (opcional). */
+  avaliacao?: number;
+  /** Texto da opinião, sugestão ou relato do problema. */
+  mensagem: string;
+  /** Rota ou contexto da tela de onde o feedback foi enviado. */
+  pagina_origem?: string;
+}
+
+/**
+ * Registro completo de feedback persistido no banco de dados.
+ */
+export interface FeedbackItem extends FeedbackInput {
+  /** Identificador único do registro (UUID). */
+  id: string;
+  /** Timestamp ISO de criação do feedback. */
+  criado_em: string;
+}
+

@@ -42,12 +42,12 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * @param veiculoId - UUID do veículo em manutenção.
  * @param formData - FormData com dados do serviço (tipo, km, custo, observação e insumos).
  * @throws {Error} Se os dados forem inconsistentes, a oficina não estiver aprovada ou o odômetro for menor que o atual.
- * @returns {Promise<void>}
+ * @returns {Promise<never>} Redireciona para a página do prontuário do veículo após cadastro com sucesso.
  */
 export async function criarOrdemServico(
   veiculoId: string,
   formData: FormData
-): Promise<void> {
+): Promise<never> {
   // 1. Autorização estrita e conferência de oficina homologada
   const session = await requireApprovedAction(["admin", "mecanico"]);
 
@@ -137,6 +137,8 @@ export async function criarOrdemServico(
     console.error("ERRO AO REGISTRAR ORDEM DE SERVIÇO VIA RPC:", error);
     throw new Error("Não foi possível registrar a manutenção no momento. Tente novamente.");
   }
+
+  redirect(`/loja/veiculo/${veiculoId}`);
 }
 
 /**

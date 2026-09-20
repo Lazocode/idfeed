@@ -54,17 +54,18 @@ export default function Home() {
           {/* Navegação e Acesso Oficina */}
           <nav className="flex items-center gap-2 sm:gap-3">
             <Link
+              id="link-nav-login-oficina"
               href="/loja/login"
-              className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 rounded-lg transition-colors"
+              className="px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
               Área da Oficina
             </Link>
 
             <Link
               href="/loja/criar-conta"
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg shadow-xs hover:shadow-sm transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg transition-colors"
             >
-              Cadastrar Loja
+              Cadastrar Oficina
               <ArrowRight className="w-3.5 h-3.5 hidden sm:inline-block text-slate-300" />
             </Link>
           </nav>
@@ -76,19 +77,23 @@ export default function Home() {
         <section className="py-10 sm:py-16 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
 
-            {/* Headline com Tipografia Refinada */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] mb-4">
-              Consulte o histórico do veículo
+            {/* Indicador Sóbre de Homologação */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium mb-6">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              <span>Plataforma Nacional de Histórico e Manutenção Veicular</span>
+            </div>
+
+            {/* Headline Direta e Funcional */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.15] mb-4">
+              Consulta de Histórico e Prontuário Veicular
             </h1>
 
-            {/* Subheading Explicativo */}
+            {/* Subheading Objetivo */}
             <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8 sm:mb-10">
-              Acesse o prontuário eletrônico unificado com quilometragem auditada,
-              trocas de peças e revisões preventivas atestadas por oficinas
-              mecânicas credenciadas.
+              Verifique o histórico oficial de manutenções, quilometragem registrada em ordens de serviço e revisões preventivas emitidas por oficinas credenciadas.
             </p>
 
-            {/* Componente de Consulta Interativa com Validação HMAC */}
+            {/* Componente de Consulta Interativa */}
             <div className="w-full max-w-2xl mx-auto">
               <ConsultaVeiculo />
             </div>
@@ -96,49 +101,45 @@ export default function Home() {
         </section>
 
         {/* ─── PILARES DE CONFIANÇA E BENEFÍCIOS ─── */}
-        <section className="no-print py-14 px-4 sm:px-6 border-t border-slate-200/80 bg-white">
+        <section className="no-print py-14 px-4 sm:px-6 border-t border-slate-200 bg-white">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">
-                Garantia & Procedência
-              </p>
+            <div className="mb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                Por que o prontuário IDfeed valoriza o seu veículo?
+                Como funciona o prontuário digital IDfeed
               </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Informações técnicas lançadas diretamente por oficinas durante a execução dos serviços.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1: Auditoria de odômetro */}
-              <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-colors">
-                <h3 className="text-base font-bold text-slate-900 mb-2">
-                  Proteção Contra Fraude de Odômetro
+              <div className="p-6 rounded-xl bg-slate-50 border border-slate-200">
+                <h3 className="text-sm font-bold text-slate-900 mb-2">
+                  Registro Cronológico de Km
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  A quilometragem é aferida fisicamente pela oficina em cada
-                  visita e gravada no histórico imutável, impedindo
-                  adulterações na revenda.
+                  A quilometragem é inserida na abertura e encerramento de cada ordem de serviço, gerando uma linha do tempo auditável de uso do veículo.
                 </p>
               </div>
 
               {/* Card 2: Dossiê completo */}
-              <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-colors">
-                <h3 className="text-base font-bold text-slate-900 mb-2">
-                  Dossiê Completo de Serviços
+              <div className="p-6 rounded-xl bg-slate-50 border border-slate-200">
+                <h3 className="text-sm font-bold text-slate-900 mb-2">
+                  Comprovação de Manutenção
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Comprove o cuidado com seu carro apresentando datas, tipos de
-                  serviço e notas de manutenção para compradores e seguradoras.
+                  Discriminação de serviços executados, datas de realização e oficina responsável, facilitando vistorias e negociações de compra e venda.
                 </p>
               </div>
 
               {/* Card 3: LGPD e Segurança */}
-              <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-colors">
-                <h3 className="text-base font-bold text-slate-900 mb-2">
-                  Sigilo e Conformidade LGPD
+              <div className="p-6 rounded-xl bg-slate-50 border border-slate-200">
+                <h3 className="text-sm font-bold text-slate-900 mb-2">
+                  Privacidade dos Dados (LGPD)
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Consulta protegida com validação criptográfica HMAC SHA-256 do
-                  CPF do titular, impedindo acessos curiosos sem autorização.
+                  A consulta detalhada exige confirmação conjunta de placa e CPF do proprietário registrado, resguardando informações pessoais.
                 </p>
               </div>
             </div>
@@ -147,31 +148,29 @@ export default function Home() {
 
         {/* ─── BANNER PARA OFICINAS MECÂNICAS ─── */}
         <section className="no-print py-12 px-4 sm:px-6">
-          <div className="max-w-5xl mx-auto rounded-3xl bg-slate-900 text-white p-8 sm:p-12 relative overflow-hidden shadow-md">
-            <div className="relative z-10 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-slate-200 border border-white/10 mb-4">
-                Para Oficinas Mecânicas & Centros Automotivos
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
-                Modernize o atendimento e fidelize seus clientes com o IDfeed
+          <div className="max-w-5xl mx-auto rounded-2xl bg-slate-900 text-white p-8 sm:p-10 border border-slate-800">
+            <div className="max-w-2xl">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Para Oficinas Mecânicas &amp; Centros Automotivos
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-3">
+                Emita prontuários digitais e organize suas ordens de serviço
               </h2>
-              <p className="text-slate-300 text-xs sm:text-sm md:text-base leading-relaxed mb-6">
-                Substitua papéis e carimbos pelo prontuário digital. Controle
-                estoque de peças, ordens de serviço e emita passaportes digitais
-                com a marca da sua oficina.
+              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
+                Cadastre sua oficina para emitir ordens de serviço digitais, registrar quilometragem conferida e fornecer ao cliente acesso transparente ao histórico do carro.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href="/loja/criar-conta"
-                  className="px-5 py-3 rounded-xl bg-white text-slate-950 font-bold text-xs sm:text-sm hover:bg-slate-100 transition-colors shadow-sm"
+                  className="px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold text-xs sm:text-sm hover:bg-slate-100 transition-colors"
                 >
-                  Cadastrar Minha Oficina
+                  Cadastrar Oficina
                 </Link>
                 <Link
                   href="/loja/login"
-                  className="px-5 py-3 rounded-xl bg-slate-800/90 text-white font-semibold text-xs sm:text-sm hover:bg-slate-800 border border-slate-700 transition-colors"
+                  className="px-4 py-2.5 rounded-lg bg-slate-800 text-white font-medium text-xs sm:text-sm hover:bg-slate-700 border border-slate-700 transition-colors"
                 >
-                  Acessar Minha Conta
+                  Acessar Painel da Oficina
                 </Link>
               </div>
             </div>
@@ -197,6 +196,13 @@ export default function Home() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+            <Link
+              id="link-footer-feedback"
+              href="/feedback"
+              className="hover:text-slate-900 transition-colors"
+            >
+              Canal de Opinião &amp; Suporte
+            </Link>
             <Link href="/loja/login" className="hover:text-slate-900 transition-colors">
               Acesso Oficina
             </Link>
