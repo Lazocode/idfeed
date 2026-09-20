@@ -76,13 +76,6 @@ export default function Home() {
       <main className="flex-1">
         <section className="py-10 sm:py-16 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
-
-            {/* Indicador Sóbre de Homologação */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium mb-6">
-              <span className="w-2 h-2 rounded-full bg-slate-400" />
-              <span>Plataforma Nacional de Histórico e Manutenção Veicular</span>
-            </div>
-
             {/* Headline Direta e Funcional */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.15] mb-4">
               Consulta de Histórico e Prontuário Veicular
