@@ -10,6 +10,7 @@
 
 // 1. Dependências e bibliotecas externas
 import React, { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Star, Send, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 
 // 2. Componentes e serviços internos
@@ -41,6 +42,7 @@ export default function FeedbackForm({
   aoConcluir,
   compacto = false,
 }: FeedbackFormProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   // Estados dos campos do formulário
@@ -96,6 +98,7 @@ export default function FeedbackForm({
           setEnviadoSucesso(true);
           setMensagemRetorno(resultado.message);
           setMensagem("");
+          router.refresh();
           if (aoConcluir) {
             setTimeout(() => {
               aoConcluir();
