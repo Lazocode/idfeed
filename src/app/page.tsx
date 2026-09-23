@@ -31,14 +31,14 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* ─── CABEÇALHO MODERNO ─── */}
       <header className="no-print sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo e Identidade da Marca */}
           <Link
             href="/"
-            className="flex items-center gap-3 group focus:outline-none"
+            className="flex items-center gap-3 group focus:outline-none shrink-0"
             aria-label="IDfeed - Início"
           >
-            <div className="relative h-9 w-36 sm:w-44 flex items-center">
+            <div className="relative h-7 sm:h-9 w-28 sm:w-44 flex items-center">
               <Image
                 src="/IDfeed-logo.jpg"
                 alt="IDfeed - Identidade Digital Veicular"
@@ -46,26 +46,27 @@ export default function Home() {
                 height={56}
                 priority
                 referrerPolicy="no-referrer"
-                className="h-9 w-auto object-contain"
+                className="h-7 sm:h-9 w-auto object-contain"
               />
             </div>
           </Link>
 
           {/* Navegação e Acesso Oficina */}
-          <nav className="flex items-center gap-2 sm:gap-3">
+          <nav className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               id="link-nav-login-oficina"
               href="/loja/login"
-              className="px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors whitespace-nowrap"
             >
-              Área da Oficina
+              <span className="hidden sm:inline">Área da </span>Oficina
             </Link>
 
             <Link
               href="/loja/criar-conta"
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg transition-colors"
+              className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg transition-colors whitespace-nowrap"
             >
-              Cadastrar Oficina
+              <span className="hidden sm:inline">Cadastrar Oficina</span>
+              <span className="sm:hidden">Cadastrar</span>
               <ArrowRight className="w-3.5 h-3.5 hidden sm:inline-block text-slate-300" />
             </Link>
           </nav>

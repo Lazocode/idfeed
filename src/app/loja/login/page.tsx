@@ -32,8 +32,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Cabeçalho */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+          <Link href="/" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
               alt="IDfeed - Identidade Digital Veicular"
@@ -41,23 +41,23 @@ export default function LoginPage() {
               height={48}
               priority
               referrerPolicy="no-referrer"
-              className="h-8 w-auto object-contain"
+              className="h-7 sm:h-8 w-auto object-contain"
             />
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Consultar Veículo</span>
+            <span><span className="hidden sm:inline">Consultar </span>Veículo</span>
           </Link>
         </div>
       </header>
 
       {/* Conteúdo Central */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
+      <main className="flex-1 flex items-center justify-center px-3 sm:px-4 py-8 sm:py-16">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8 text-center">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">
                 Acesso da Oficina

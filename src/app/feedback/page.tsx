@@ -43,10 +43,10 @@ export default async function FeedbackPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* ─── CABEÇALHO DA PÁGINA ─── */}
       <header className="no-print sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
           <Link
             href="/"
-            className="flex items-center gap-2 group focus:outline-none"
+            className="flex items-center gap-2 group focus:outline-none shrink-0"
             title="Voltar ao início do IDfeed"
           >
             <div className="flex items-center gap-2">
@@ -61,18 +61,18 @@ export default async function FeedbackPage() {
 
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Voltar ao Sistema</span>
+            <span><span className="hidden sm:inline">Voltar ao </span>Sistema</span>
           </Link>
         </div>
       </header>
 
       {/* ─── CONTEÚDO PRINCIPAL ─── */}
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-3 sm:px-6 py-6 sm:py-12">
         {/* Banner de Boas-Vindas aos Testadores */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-xs mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-8 shadow-xs mb-6 sm:mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="max-w-2xl">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
@@ -103,7 +103,7 @@ export default async function FeedbackPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Coluna Esquerda: Formulário de Feedback */}
-          <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-xs">
+          <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-4 sm:p-8 shadow-xs">
             <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-slate-100">
               <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
                 <MessageSquareHeart className="w-4 h-4" />

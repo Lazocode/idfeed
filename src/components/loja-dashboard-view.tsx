@@ -688,17 +688,17 @@ export default function LojaDashboardView({
           1. BARRA SUPERIOR (HEADER PRINCIPAL COM BUSCA E REGISTRO)
       ───────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 md:py-0 md:h-18 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">
+        <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Lado Esquerdo: Logo + Seleção da Oficina */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <Link
               href="/loja/dashboard"
-              className="flex items-center gap-2 group focus:outline-none"
+              className="flex items-center gap-2 group focus:outline-none shrink-0"
               title="IDfeed - Identidade Digital Veicular"
               aria-label="IDfeed - Início"
             >
-              <div className="relative h-8 w-32 sm:w-36 flex items-center">
+              <div className="relative h-7 w-28 sm:h-8 sm:w-36 flex items-center">
                 <Image
                   src="/IDfeed-logo.jpg"
                   alt="IDfeed - Identidade Digital Veicular"
@@ -706,16 +706,16 @@ export default function LojaDashboardView({
                   height={48}
                   priority
                   referrerPolicy="no-referrer"
-                  className="h-8 w-auto object-contain"
+                  className="h-7 sm:h-8 w-auto object-contain"
                 />
               </div>
             </Link>
 
-            <div className="h-4 w-px bg-slate-200 mx-0.5 sm:mx-1" aria-hidden="true" />
+            <div className="h-4 w-px bg-slate-200 mx-0.5 sm:mx-1 shrink-0" aria-hidden="true" />
 
             {/* Dropdown de Seleção da Oficina Mecânica */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors">
-              <span className="truncate max-w-[130px] sm:max-w-[200px]">
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors min-w-0">
+              <span className="truncate max-w-[100px] xs:max-w-[140px] sm:max-w-[200px]">
                 {loja?.nome || "Oficina Bom Motor"}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -723,11 +723,11 @@ export default function LojaDashboardView({
           </div>
 
           {/* Lado Direito: Ações (Feedback, Registrar, Perfil, Sair) */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               id="btn-header-feedback"
               href="/feedback"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
               title="Deixar opinião ou avaliação durante esta fase de testes"
             >
               <MessageSquarePlus className="w-3.5 h-3.5 text-slate-500" />
@@ -737,14 +737,14 @@ export default function LojaDashboardView({
             <Link
               id="btn-cadastrar-novo"
               href="/loja/novo"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors shadow-xs"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors shadow-xs"
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300" />
-              <span>Registrar</span>
+              <span className="hidden xs:inline sm:inline">Registrar</span>
             </Link>
 
             {/* Pílula de Perfil do Usuário com Ponto de Estado */}
-            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-2xs">
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-[#10B981]" />
               <span className="truncate max-w-[120px]">{displayUserName}</span>
             </div>
@@ -753,7 +753,7 @@ export default function LojaDashboardView({
               type="button"
               onClick={() => signOut({ callbackUrl: "/loja/login" })}
               title="Encerrar Sessão"
-              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -820,86 +820,86 @@ export default function LojaDashboardView({
       ───────────────────────────────────────────────────────────── */}
       <section
         aria-label="Indicadores Chave de Desempenho (KPIs)"
-        className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 pt-6 pb-2"
+        className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-2"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           
           {/* Card 1: Veículos Cadastrados */}
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-2xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 tracking-wider uppercase">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 sm:p-5 shadow-2xs flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 tracking-wider uppercase truncate">
               Veículos Cadastrados
             </span>
-            <div className="mt-2 mb-1">
-              <span className="text-3xl font-bold text-[#0F172A] tracking-tight">
+            <div className="mt-1.5 sm:mt-2 mb-1">
+              <span className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
                 {totalVeiculos}
               </span>
             </div>
-            <div className="flex items-center text-xs text-slate-500 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F172A] inline-block mr-1.5" />
-              <span>{veiculosEsteMes > 0 ? `+${veiculosEsteMes} este mês` : "Base cadastrada"}</span>
+            <div className="flex items-center text-[11px] sm:text-xs text-slate-500 font-medium truncate">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0F172A] inline-block mr-1.5 shrink-0" />
+              <span className="truncate">{veiculosEsteMes > 0 ? `+${veiculosEsteMes} este mês` : "Base cadastrada"}</span>
             </div>
           </div>
 
           {/* Card 2: Odômetro Auditado / Em Dia */}
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-2xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 tracking-wider uppercase">
-              Odômetro Auditado / Em Dia
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 sm:p-5 shadow-2xs flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 tracking-wider uppercase truncate">
+              Odômetro Em Dia
             </span>
-            <div className="mt-2 mb-1">
-              <span className="text-3xl font-bold text-[#0F172A] tracking-tight">
+            <div className="mt-1.5 sm:mt-2 mb-1">
+              <span className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
                 {emDia}
               </span>
             </div>
-            <div className="flex items-center text-xs text-slate-500 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block mr-1.5" />
-              <span>{percentEmDia}% conformidade</span>
+            <div className="flex items-center text-[11px] sm:text-xs text-slate-500 font-medium truncate">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block mr-1.5 shrink-0" />
+              <span className="truncate">{percentEmDia}% conformidade</span>
             </div>
           </div>
 
           {/* Card 3: Revisões Programadas (<3.000 km) */}
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-2xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 tracking-wider uppercase">
-              Revisões Programadas (&lt;3.000 km)
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 sm:p-5 shadow-2xs flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 tracking-wider uppercase truncate">
+              Revisões Próximas
             </span>
-            <div className="mt-2 mb-1">
-              <span className="text-3xl font-bold text-[#0F172A] tracking-tight">
+            <div className="mt-1.5 sm:mt-2 mb-1">
+              <span className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
                 {revisaoProxima}
               </span>
             </div>
-            <div className="flex items-center text-xs text-slate-500 font-medium">
+            <div className="flex items-center text-[11px] sm:text-xs text-slate-500 font-medium truncate">
               <span
-                className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 ${
+                className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 shrink-0 ${
                   revisoesVencidas > 0 ? "bg-[#EF4444]" : "bg-[#10B981]"
                 }`}
               />
-              <span>
+              <span className="truncate">
                 {revisoesVencidas > 0
-                  ? `${revisoesVencidas} com janela expirada`
-                  : "Nenhuma com janela expirada"}
+                  ? `${revisoesVencidas} expiradas`
+                  : "Nenhuma expirada"}
               </span>
             </div>
           </div>
 
           {/* Card 4: Alertas de Estoque */}
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-2xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 tracking-wider uppercase">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 sm:p-5 shadow-2xs flex flex-col justify-between">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 tracking-wider uppercase truncate">
               Alertas de Estoque
             </span>
-            <div className="mt-2 mb-1">
-              <span className="text-3xl font-bold text-[#0F172A] tracking-tight">
+            <div className="mt-1.5 sm:mt-2 mb-1">
+              <span className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
                 {String(estoqueBaixo).padStart(2, "0")}
               </span>
             </div>
-            <div className="flex items-center text-xs text-slate-500 font-medium">
+            <div className="flex items-center text-[11px] sm:text-xs text-slate-500 font-medium truncate">
               <span
-                className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 ${
+                className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 shrink-0 ${
                   estoqueBaixo > 0 ? "bg-[#EF4444]" : "bg-[#10B981]"
                 }`}
               />
-              <span>
+              <span className="truncate">
                 {estoqueBaixo > 0
-                  ? "Abaixo do limite de segurança"
-                  : "Estoque em conformidade"}
+                  ? "Abaixo do limite"
+                  : "Em conformidade"}
               </span>
             </div>
           </div>
@@ -918,7 +918,7 @@ export default function LojaDashboardView({
             aria-label="Tabela de Materiais e Peças de Estoque"
             className="bg-white border border-[#E2E8F0] rounded-xl shadow-2xs overflow-hidden"
           >
-            <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-bold text-[#0F172A]">
                   Inventário Físico da Oficina
@@ -929,15 +929,19 @@ export default function LojaDashboardView({
               </div>
               <Link
                 href="/loja/material/novo"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Novo Material</span>
               </Link>
             </div>
 
+            <div className="block sm:hidden text-[10px] text-slate-400 px-4 py-1.5 bg-slate-50 border-b border-[#E2E8F0] text-center">
+              ⟵ Arraste para os lados para visualizar os dados ⟶
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full text-left border-collapse text-xs min-w-[620px]">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     <th className="py-3 px-4">Código SKU</th>
@@ -1352,6 +1356,9 @@ export default function LojaDashboardView({
               </div>
 
               {/* Tabela Densa de Veículos com Rolagem Horizontal Suave */}
+              <div className="block sm:hidden text-[10px] text-slate-400 px-4 py-1.5 bg-slate-50 border-b border-[#E2E8F0] text-center">
+                ⟵ Arraste para os lados para visualizar os dados ⟶
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs min-w-[680px]">
                   <thead>

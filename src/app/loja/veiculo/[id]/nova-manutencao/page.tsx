@@ -76,8 +76,8 @@ export default async function NovaManutencaoPage({ params }: NovaManutencaoPageP
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Topbar Institucional */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
-          <Link href="/loja/dashboard" className="flex items-center gap-3">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+          <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
               alt="IDfeed - Identidade Digital Veicular"
@@ -85,27 +85,27 @@ export default async function NovaManutencaoPage({ params }: NovaManutencaoPageP
               height={48}
               priority
               referrerPolicy="no-referrer"
-              className="h-8 w-auto object-contain"
+              className="h-7 sm:h-8 w-auto object-contain"
             />
           </Link>
           <Link
             href={`/loja/veiculo/${veiculo.id}`}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Voltar ao Prontuário</span>
+            <span><span className="hidden sm:inline">Voltar ao </span>Prontuário</span>
           </Link>
         </div>
       </header>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14 text-left">
-        <div className="mb-8">
+      <main className="flex-1 max-w-3xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-14 text-left">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-mono text-sm font-bold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">
               {formatPlaca(veiculo.placa)}
             </span>
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-slate-500 font-medium truncate">
               {veiculo.modelo}
             </span>
           </div>
@@ -117,9 +117,9 @@ export default async function NovaManutencaoPage({ params }: NovaManutencaoPageP
           </p>
         </div>
 
-        <form action={acao} className="space-y-6">
+        <form action={acao} className="space-y-5 sm:space-y-6">
           {/* Card: Dados do Serviço */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-8 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-8 space-y-4">
             <div className="pb-2 border-b border-slate-100">
               <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
                 Informações do Serviço

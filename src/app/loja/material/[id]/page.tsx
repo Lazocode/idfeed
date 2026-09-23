@@ -108,8 +108,8 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Topbar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
-          <Link href="/loja/dashboard" className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+          <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
               alt="IDfeed - Identidade Digital Veicular"
@@ -117,27 +117,27 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
               height={48}
               priority
               referrerPolicy="no-referrer"
-              className="h-8 w-auto object-contain"
+              className="h-7 sm:h-8 w-auto object-contain"
             />
           </Link>
           <Link
             href="/loja/dashboard"
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Voltar ao Painel</span>
+            <span><span className="hidden sm:inline">Voltar ao </span>Painel</span>
           </Link>
         </div>
       </header>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 text-left">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-12 space-y-5 sm:space-y-6 text-left">
         
         {/* Header do Material */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 sm:p-8">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
                   SKU: {material.sku}
                 </span>
@@ -148,24 +148,24 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
                 )}
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight break-words">
                 {material.nome}
               </h1>
             </div>
 
             {/* Saldos */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className={`p-4 rounded-xl border text-left min-w-[120px] ${
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto">
+              <div className={`p-3.5 sm:p-4 rounded-xl border text-left min-w-0 sm:min-w-[120px] ${
                 baixo ? "bg-rose-50/70 border-rose-200" : "bg-slate-50 border-slate-200/80"
               }`}>
                 <span className="block text-[11px] font-medium text-slate-500">Saldo Atual</span>
-                <span className={`text-2xl font-bold tracking-tight ${baixo ? "text-rose-600" : "text-slate-900"}`}>
+                <span className={`text-xl sm:text-2xl font-bold tracking-tight ${baixo ? "text-rose-600" : "text-slate-900"}`}>
                   {material.quantidade_atual}
                 </span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left min-w-[120px]">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left min-w-0 sm:min-w-[120px]">
                 <span className="block text-[11px] font-medium text-slate-500">Mínimo (Alerta)</span>
-                <span className="text-2xl font-bold text-slate-500 tracking-tight">
+                <span className="text-xl sm:text-2xl font-bold text-slate-500 tracking-tight">
                   {material.quantidade_minima}
                 </span>
               </div>
@@ -181,7 +181,7 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
         </div>
 
         {/* Fotos da Peça */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-2">
               <Camera className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
 
           <div className="flex flex-wrap gap-3 mb-4">
             {fotosComUrl.map((f) => (
-              <div key={f.id} className="relative group rounded-xl overflow-hidden border border-slate-200 w-24 h-24 bg-slate-100">
+              <div key={f.id} className="relative group rounded-xl overflow-hidden border border-slate-200 w-20 sm:w-24 h-20 sm:h-24 bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={f.signedUrl} alt="" className="w-full h-full object-cover" />
                 <form
@@ -213,13 +213,13 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
         </div>
 
         {/* Movimentações de Estoque */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
             Histórico de Movimentações
           </h2>
           <Link
             href={`/loja/material/${material.id}/nova-movimentacao`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-all shadow-xs w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Registrar Movimentação</span>

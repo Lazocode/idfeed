@@ -191,7 +191,7 @@ export default function FeedbackForm({
         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
           Você está testando como:
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
             { id: "cliente", label: "Cliente / Condutor" },
             { id: "oficina", label: "Oficina Mecânica" },
@@ -306,8 +306,8 @@ export default function FeedbackForm({
       )}
 
       {/* ─── 6. Botão de Envio ─── */}
-      <div className="pt-2 flex items-center justify-between gap-3">
-        <p className="text-[11px] text-slate-400 flex items-center gap-1">
+      <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-[11px] text-slate-400 flex items-center gap-1 order-2 sm:order-1 text-center sm:text-left">
           <span>Fase de testes beta do IDfeed</span>
         </p>
 
@@ -315,7 +315,7 @@ export default function FeedbackForm({
           id="btn-submeter-feedback"
           type="submit"
           disabled={isPending || !mensagem.trim()}
-          className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs cursor-pointer"
+          className="order-1 sm:order-2 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs cursor-pointer"
         >
           {isPending ? (
             <>
