@@ -1,6 +1,8 @@
 /**
  * @file consultaVeiculos.tsx
- * @description Componente público para consulta de prontuário veicular digital com autenticação cruzada (Placa e CPF).
+ * @description Componente público para consulta de prontuário veicular digital com duas opções:
+ * 1. Autenticação cruzada por Placa e CPF do Titular.
+ * 2. Validação e auditoria pública por Código Hash / Token Criptográfico do Passaporte.
  * Apresenta odômetro oficial, próxima revisão preventiva, certificação de autenticidade e histórico de ordens de serviço.
  * @module components/consultaVeiculos
  * @recommendedPath src/components/consultaVeiculos.tsx
@@ -25,10 +27,13 @@ import {
   FileCheck2,
   Clock,
   Zap,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react";
 
 // 2. Ações de servidor (Server Actions)
-import { ConsultarVeiculo } from "@/actions/consultaVeiculo";
+import { ConsultarVeiculo, ConsultarVeiculoPorHash } from "@/actions/consultaVeiculo";
 
 // 3. Utilitários e formatadores internos
 import {
@@ -47,7 +52,7 @@ interface OrdemServicoConsulta {
 }
 
 /**
- * Prontuário digital veicular completo retornado para o proprietário.
+ * Prontuário digital veicular completo retornado para o proprietário ou terceiro auditante.
  */
 interface VeiculoConsulta {
   id: string;
@@ -57,8 +62,18 @@ interface VeiculoConsulta {
   km_atual: number;
   km_proxima_revisao: number | null;
   nota_proxima_revisao: string | null;
+  public_token?: string;
   loja: { nome: string } | { nome: string }[] | null;
   ordens_servico: OrdemServicoConsulta[];
+}
+
+/**
+ * Propriedades opcionais aceitas pelo componente de consulta veicular.
+ */
+interface ConsultaVeiculoProps {
+  initialPlaca?: string;
+  initialHash?: string;
+  initialVeiculo?: VeiculoConsulta | null;
 }
 
 /**
@@ -99,15 +114,61 @@ function getServiceIcon(tipo: string): React.JSX.Element {
 
 /**
  * Componente cliente para consulta e emissão do prontuário digital veicular.
+ * Suporta consulta por Placa + CPF ou validação direta por Hash Criptográfico.
  *
+ * @param props - Propriedades contendo parâmetros iniciais opcionais (initialPlaca, initialHash, initialVeiculo).
  * @returns Formulário de consulta e visualização completa do histórico veicular certificado.
  */
-export default function ConsultaVeiculo() {
-  const [placa, setPlaca] = useState("");
+export default function ConsultaVeiculo({
+  initialPlaca = "",
+  initialHash = "",
+  initialVeiculo = null,
+}: ConsultaVeiculoProps) {
+  const [tipoConsulta, setTipoConsulta] = useState<"placa" | "hash">(
+    initialHash ? "hash" : "placa"
+  );
+  const [placa, setPlaca] = useState(
+    initialPlaca ? initialPlaca.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7) : ""
+  );
   const [cpf, setCpf] = useState("");
+  const [hashInput, setHashInput] = useState(initialHash);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
-  const [veiculo, setVeiculo] = useState<VeiculoConsulta | null>(null);
+  const [veiculo, setVeiculo] = useState<VeiculoConsulta | null>(initialVeiculo);
+  const [copiedHash, setCopiedHash] = useState(false);
+
+  /**
+   * Executa a busca pública através do código hash criptográfico.
+   */
+  async function executarBuscaPorHash(codigo: string) {
+    const clean = codigo.trim().toLowerCase();
+    if (!clean) {
+      setErro("Informe o código hash do passaporte digital.");
+      return;
+    }
+
+    setErro("");
+    setLoading(true);
+    setVeiculo(null);
+
+    try {
+      const resultado = await ConsultarVeiculoPorHash(clean);
+
+      if (resultado.erro || !resultado.veiculo) {
+        setErro(
+          resultado.erro ||
+            "Prontuário veicular não encontrado para o código hash informado."
+        );
+      } else {
+        setVeiculo(resultado.veiculo as unknown as VeiculoConsulta);
+      }
+    } catch (error) {
+      console.error(error);
+      setErro("Falha temporária de conexão com o banco de dados. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   /**
    * Normaliza a placa para caracteres alfanuméricos em caixa alta (máximo 7 caracteres).
@@ -132,6 +193,7 @@ export default function ConsultaVeiculo() {
     setErro("");
     setPlaca("");
     setCpf("");
+    setHashInput("");
   }
 
   /**
@@ -144,10 +206,15 @@ export default function ConsultaVeiculo() {
   }
 
   /**
-   * Processa a busca do prontuário enviando placa e CPF validados para a Server Action.
+   * Processa o envio do formulário direcionando para o método adequado (Placa+CPF ou Hash).
    */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (tipoConsulta === "hash") {
+      await executarBuscaPorHash(hashInput);
+      return;
+    }
 
     setErro("");
     setVeiculo(null);
@@ -197,77 +264,142 @@ export default function ConsultaVeiculo() {
     <div className="w-full">
       {/* ─── FORMULÁRIO DE CONSULTA ─── */}
       {!veiculo && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-left">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8 text-left">
           <div className="pb-4 mb-5 border-b border-slate-100">
             <h2 className="text-lg font-bold text-slate-900 tracking-tight">
               Identificação do Veículo
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Informe a placa do veículo e o CPF do proprietário registrado.
+              Escolha a forma de consulta: por placa com CPF do titular ou por código hash do passaporte.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Campo da Placa */}
-              <div>
-                <label
-                  htmlFor="placa"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  Placa do Veículo
-                </label>
-                <div className="relative">
-                  <input
-                    id="placa"
-                    type="text"
-                    placeholder="Ex: ABC1D23"
-                    value={placa}
-                    onChange={handlePlacaChange}
-                    maxLength={7}
-                    autoComplete="off"
-                    required
-                    className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-base font-mono font-semibold tracking-wider outline-none transition-colors"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <Car className="w-4 h-4" />
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Padrão Mercosul ou anterior (7 caracteres)
-                </p>
-              </div>
+          {/* Seletor de Abas de Consulta */}
+          <div className="flex p-1 bg-slate-100 rounded-xl mb-5 border border-slate-200">
+            <button
+              id="tab-consulta-placa"
+              type="button"
+              onClick={() => {
+                setTipoConsulta("placa");
+                setErro("");
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                tipoConsulta === "placa"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Car className="w-4 h-4 text-slate-600" />
+              <span>Placa e CPF</span>
+            </button>
+            <button
+              id="tab-consulta-hash"
+              type="button"
+              onClick={() => {
+                setTipoConsulta("hash");
+                setErro("");
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                tipoConsulta === "hash"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <KeyRound className="w-4 h-4 text-slate-600" />
+              <span>Código Hash</span>
+            </button>
+          </div>
 
-              {/* Campo do CPF */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {tipoConsulta === "placa" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Campo da Placa */}
+                <div>
+                  <label
+                    htmlFor="placa"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Placa do Veículo
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="placa"
+                      type="text"
+                      placeholder="Ex: ABC1D23"
+                      value={placa}
+                      onChange={handlePlacaChange}
+                      maxLength={7}
+                      autoComplete="off"
+                      required
+                      className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-base font-mono font-semibold tracking-wider outline-none transition-colors"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Car className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Padrão Mercosul ou anterior (7 caracteres)
+                  </p>
+                </div>
+
+                {/* Campo do CPF */}
+                <div>
+                  <label
+                    htmlFor="cpf"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    CPF do Titular
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="cpf"
+                      type="text"
+                      placeholder="000.000.000-00"
+                      value={cpf}
+                      onChange={handleCpfChange}
+                      maxLength={14}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      required
+                      className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-base font-mono font-medium tracking-wide outline-none transition-colors"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Apenas dígitos cadastrados na oficina
+                  </p>
+                </div>
+              </div>
+            ) : (
               <div>
                 <label
-                  htmlFor="cpf"
+                  htmlFor="hash-input"
                   className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
                 >
-                  CPF do Titular
+                  Código Hash / Token do Passaporte
                 </label>
                 <div className="relative">
                   <input
-                    id="cpf"
+                    id="hash-input"
                     type="text"
-                    placeholder="000.000.000-00"
-                    value={cpf}
-                    onChange={handleCpfChange}
-                    maxLength={14}
-                    inputMode="numeric"
+                    placeholder="Cole o código hash (ex: b9c17372b1f0ae99...)"
+                    value={hashInput}
+                    onChange={(e) => setHashInput(e.target.value)}
                     autoComplete="off"
                     required
-                    className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-base font-mono font-medium tracking-wide outline-none transition-colors"
+                    className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 focus:border-blue-600 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm font-mono tracking-wide outline-none transition-colors"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <Lock className="w-4 h-4" />
+                    <KeyRound className="w-4 h-4" />
                   </div>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Apenas dígitos cadastrados na oficina
+                  Código de autenticidade emitido no passaporte digital do veículo para validação pública sem necessidade de CPF.
                 </p>
               </div>
-            </div>
+            )}
 
             {/* Mensagem de Erro */}
             {erro && (
@@ -298,7 +430,7 @@ export default function ConsultaVeiculo() {
               ) : (
                 <>
                   <Search className="w-4 h-4 text-slate-300" />
-                  Consultar Prontuário
+                  {tipoConsulta === "hash" ? "Validar Prontuário por Hash" : "Consultar Prontuário"}
                 </>
               )}
             </button>
@@ -308,9 +440,17 @@ export default function ConsultaVeiculo() {
           <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-500 text-xs">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-              <p>Acesso restrito ao proprietário legal</p>
+              <p>
+                {tipoConsulta === "hash"
+                  ? "Auditoria pública por token criptográfico"
+                  : "Acesso restrito ao proprietário legal"}
+              </p>
             </div>
-            <p>Conforme Lei Geral de Proteção de Dados (LGPD)</p>
+            <p>
+              {tipoConsulta === "hash"
+                ? "Validação de procedência IDfeed"
+                : "Conforme Lei Geral de Proteção de Dados (LGPD)"}
+            </p>
           </div>
         </div>
       )}
@@ -383,6 +523,40 @@ export default function ConsultaVeiculo() {
                     </div>
                   )}
                 </div>
+
+                {/* Código Hash de Autenticidade */}
+                {veiculo.public_token && (
+                  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100 text-xs">
+                    <span className="text-slate-400 font-medium">Hash de Autenticidade:</span>
+                    <code className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px] break-all select-all">
+                      {veiculo.public_token}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof navigator !== "undefined" && veiculo.public_token) {
+                          navigator.clipboard.writeText(veiculo.public_token);
+                          setCopiedHash(true);
+                          setTimeout(() => setCopiedHash(false), 2000);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-medium ml-1 cursor-pointer"
+                      title="Copiar código hash do passaporte"
+                    >
+                      {copiedHash ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600">Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Tag Limpa e Tipográfica da Placa */}
@@ -552,4 +726,5 @@ export default function ConsultaVeiculo() {
     </div>
   );
 }
+
 

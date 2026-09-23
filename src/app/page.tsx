@@ -15,18 +15,42 @@ import { ArrowRight } from "lucide-react";
 // 2. Componentes internos
 import ConsultaVeiculo from "@/components/consultaVeiculos";
 
+// 3. Ações e serviços internos
+import { ConsultarVeiculoPorHash } from "@/actions/consultaVeiculo";
+
 /**
  * Força a renderização dinâmica para garantir que dados recentes sejam obtidos na consulta.
  */
 export const dynamic = "force-dynamic";
 
+interface HomePageProps {
+  searchParams: Promise<{
+    placa?: string;
+    hash?: string;
+    token?: string;
+  }>;
+}
+
 /**
  * Componente funcional da Página Inicial (Home).
  *
+ * @param props - Propriedades contendo a Promise com parâmetros opcionais (placa, hash, token).
  * @returns Interface completa da página inicial pública com cabeçalho, hero de consulta,
  * pilares de transparência/procedência e chamada para oficinas mecânicas.
  */
-export default function Home() {
+export default async function Home({ searchParams }: HomePageProps) {
+  const { placa, hash, token } = await searchParams;
+  const hashParam = hash || token;
+
+  // Pré-carrega o prontuário no servidor caso um hash ou token de consulta seja fornecido
+  let initialVeiculo = null;
+  if (hashParam && hashParam.trim().length >= 8) {
+    const res = await ConsultarVeiculoPorHash(hashParam.trim());
+    if (res.veiculo) {
+      initialVeiculo = res.veiculo;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* ─── CABEÇALHO MODERNO ─── */}
@@ -89,7 +113,11 @@ export default function Home() {
 
             {/* Componente de Consulta Interativa */}
             <div className="w-full max-w-2xl mx-auto">
-              <ConsultaVeiculo />
+              <ConsultaVeiculo
+                initialPlaca={placa}
+                initialHash={hashParam}
+                initialVeiculo={initialVeiculo}
+              />
             </div>
           </div>
         </section>

@@ -169,12 +169,12 @@ export default async function VeiculoDetalhePage({ params }: VeiculoDetalhePageP
               </div>
 
               <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400">
-                <span>Consulta pública:</span>
-                <code className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px] break-all">
+                <span>Hash público:</span>
+                <code className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px] break-all select-all">
                   {veiculo.public_token}
                 </code>
                 <Link
-                  href={`/?placa=${veiculo.placa}`}
+                  href={`/?hash=${veiculo.public_token}`}
                   target="_blank"
                   className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium ml-1"
                 >
