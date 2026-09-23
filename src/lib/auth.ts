@@ -12,6 +12,16 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
+// Higienização defensiva de variáveis com aspas literais
+if (process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL.replace(/^["']|["']$/g, "").trim();
+}
+if (process.env.AUTH_URL) {
+  process.env.AUTH_URL = process.env.AUTH_URL.replace(/^["']|["']$/g, "").trim();
+} else if (process.env.NEXTAUTH_URL) {
+  process.env.AUTH_URL = process.env.NEXTAUTH_URL;
+}
+
 // 2. Bibliotecas e serviços internos
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkLoginRateLimit, clearLoginRateLimit } from "@/lib/rate-limit";

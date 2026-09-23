@@ -60,14 +60,32 @@ function formatarPlacaInput(valor: string): string {
 }
 
 /**
- * Aplica máscara telefônica dinâmica para números de celular ou fixo com DDD.
+ * Aplica máscara telefônica dinâmica para números de celular ou fixo com DDD,
+ * oferecendo suporte nativo e transparente caso o usuário digite ou cole com o prefixo internacional +55.
  *
- * @param valor - String crua digitada pelo usuário.
+ * @param valor - String crua digitada ou colada pelo usuário.
  * @returns Telefone formatado no padrão (00) 00000-0000 ou (00) 0000-0000.
  */
 function formatarTelefoneInput(valor: string): string {
-  const apenasNumeros = valor.replace(/\D/g, "").slice(0, 11);
-  if (apenasNumeros.length <= 2) return apenasNumeros.length ? `(${apenasNumeros}` : "";
+  if (!valor) return "";
+
+  const trimmed = valor.trim();
+  // Permite início de digitação do prefixo +55
+  if (trimmed === "+" || trimmed === "+5" || trimmed === "+55") {
+    return trimmed === "+55" ? "+55 " : trimmed;
+  }
+
+  let digitos = valor.replace(/\D/g, "");
+
+  // Se o usuário informou o DDI 55 do Brasil (ex: +55 21 99999-9999):
+  if (digitos.startsWith("55") && (digitos.length > 11 || (valor.includes("+") && digitos.length > 2))) {
+    digitos = digitos.slice(2);
+  }
+
+  // Limita aos 11 dígitos nacionais (DDD + até 9 dígitos)
+  const apenasNumeros = digitos.slice(0, 11);
+  if (apenasNumeros.length === 0) return "";
+  if (apenasNumeros.length <= 2) return `(${apenasNumeros}`;
   if (apenasNumeros.length <= 6) return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2)}`;
   if (apenasNumeros.length <= 10) {
     return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 6)}-${apenasNumeros.slice(6)}`;
@@ -361,7 +379,7 @@ export default function CadastrarVeiculoForm() {
                 onChange={handleContatoChange}
                 placeholder="(21) 99999-9999"
                 inputMode="tel"
-                maxLength={15}
+                maxLength={25}
                 disabled={loading || sucesso}
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all disabled:opacity-60 disabled:cursor-not-allowed font-mono text-xs sm:text-sm"
               />

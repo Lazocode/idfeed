@@ -7,6 +7,16 @@
  * @recommendedPath src/middleware.ts
  */
 
+// Higienização defensiva de variáveis de ambiente com aspas literais
+if (process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL.replace(/^["']|["']$/g, "").trim();
+}
+if (process.env.AUTH_URL) {
+  process.env.AUTH_URL = process.env.AUTH_URL.replace(/^["']|["']$/g, "").trim();
+} else if (process.env.NEXTAUTH_URL) {
+  process.env.AUTH_URL = process.env.NEXTAUTH_URL;
+}
+
 // 1. Dependências e bibliotecas externas
 import { NextResponse } from "next/server";
 

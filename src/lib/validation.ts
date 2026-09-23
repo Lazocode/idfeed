@@ -10,6 +10,38 @@
 import { z } from "zod";
 
 /**
+ * Normaliza números de telefone brasileiros, tratando prefixos internacionais como +55 ou 55,
+ * espaços, parênteses e hifens.
+ *
+ * Regra de negócio:
+ * - Remove todos os caracteres não-dígitos.
+ * - Se contiver 12 ou 13 dígitos iniciando com o DDI '55' do Brasil:
+ *   Remove o '55' inicial, extraindo o DDD de 2 dígitos + número local (8 ou 9 dígitos).
+ *   Ex: "+55 (21) 98765-4321" -> dígitos "5521987654321" -> normalizado "21987654321" (11 dígitos).
+ *   Ex: "+55 (21) 3333-4444" -> dígitos "552133334444" -> normalizado "2133334444" (10 dígitos).
+ * - Se o usuário digitou explicitamente "+55" seguido de dígitos, remove o 55 inicial.
+ * - Preserva DDDs nacionais (inclusive o DDD 55 do RS quando o número tiver 10 ou 11 dígitos no total).
+ *
+ * @param valor - String crua informada pelo usuário.
+ * @returns Dígitos limpos e normalizados (10 ou 11 dígitos numéricos).
+ */
+export function normalizarTelefone(valor?: string | null): string {
+  if (!valor) return "";
+  const limpo = valor.trim();
+  let digitos = limpo.replace(/\D/g, "");
+
+  // Se tiver 12 ou 13 dígitos e começar com o DDI 55 do Brasil:
+  if (digitos.startsWith("55") && (digitos.length === 12 || digitos.length === 13)) {
+    digitos = digitos.slice(2);
+  } else if (limpo.startsWith("+55") && digitos.startsWith("55") && digitos.length > 2) {
+    // Se o usuário digitou explicitamente "+55" seguido de outros números
+    digitos = digitos.slice(2);
+  }
+
+  return digitos;
+}
+
+/**
  * Esquema de validação do cadastro de usuário e oficina mecânica (Signup).
  * Exige dados cadastrais completos, formato válido de CPF/CNPJ e confirmação de senha idêntica.
  */
@@ -29,8 +61,11 @@ export const signupSchema = z.object({
   telefone: z
     .string()
     .trim()
-    .max(20)
-    .transform((v) => v.replace(/\D/g, "")),
+    .max(35, "Telefone deve conter no máximo 35 caracteres.")
+    .transform((v) => normalizarTelefone(v))
+    .refine((v) => v.length >= 10 && v.length <= 11, {
+      message: "Informe um telefone do responsável válido com DDD (10 ou 11 dígitos).",
+    }),
 
   email: z
     .string()
@@ -50,8 +85,11 @@ export const signupSchema = z.object({
   telefoneLoja: z
     .string()
     .trim()
-    .max(20)
-    .transform((v) => v.replace(/\D/g, "")),
+    .max(35, "Telefone da oficina deve conter no máximo 35 caracteres.")
+    .transform((v) => normalizarTelefone(v))
+    .refine((v) => v.length >= 10 && v.length <= 11, {
+      message: "Informe um telefone da oficina válido com DDD (10 ou 11 dígitos).",
+    }),
 
   senha: z.string().min(10, "Senha deve ter pelo menos 10 caracteres").max(128),
 
@@ -116,7 +154,25 @@ export const vehicleSchema = z.object({
       }
     ),
 
-  proprietarioContato: z.string().trim().max(40),
+  proprietarioContato: z
+    .string()
+    .trim()
+    .max(50, "Contato deve conter no máximo 50 caracteres.")
+    .transform((v) => {
+      // Se não informado, retorna vazio
+      if (!v) return "";
+      // Se for telefone (contém números e não é e-mail)
+      if (!v.includes("@") && /\d/.test(v)) {
+        const norm = normalizarTelefone(v);
+        if (norm.length === 11) {
+          return `(${norm.slice(0, 2)}) ${norm.slice(2, 7)}-${norm.slice(7)}`;
+        }
+        if (norm.length === 10) {
+          return `(${norm.slice(0, 2)}) ${norm.slice(2, 6)}-${norm.slice(6)}`;
+        }
+      }
+      return v;
+    }),
 
   kmAtual: z.coerce.number().int().min(0).max(10_000_000),
 });
