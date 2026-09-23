@@ -1,6 +1,6 @@
 /**
  * @file admin-login-form.tsx
- * @description Formulário de autenticação de administradores do IDfeed.
+ * @description Formulário de autenticação de administradores do IDfleet.
  * Realiza autenticação via credenciais NextAuth e valida se o usuário possui
  * os privilégios exclusivos de superadministrador (Lázaro Miranda).
  * @module app/admin/login/admin-login-form

@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a tela de edição de manutenção.
  */
 export const metadata = {
-  title: "Editar Manutenção • IDfeed",
+  title: "Editar Manutenção • IDfleet",
   description: "Atualize os detalhes da ordem de serviço.",
 };
 
@@ -83,7 +83,7 @@ export default async function EditarOrdemServicoPage({ params }: EditarOrdemServ
           <Link href="/loja/dashboard" className="flex items-center gap-3">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

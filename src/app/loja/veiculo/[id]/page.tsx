@@ -52,7 +52,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para o prontuário veicular.
  */
 export const metadata = {
-  title: "Prontuário do Veículo • IDfeed",
+  title: "Prontuário do Veículo • IDfleet",
   description: "Histórico completo, revisões programadas e fotos do veículo.",
 };
 
@@ -121,7 +121,7 @@ export default async function VeiculoDetalhePage({ params }: VeiculoDetalhePageP
           <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

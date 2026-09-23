@@ -448,7 +448,7 @@ export default function ConsultaVeiculo({
             </div>
             <p>
               {tipoConsulta === "hash"
-                ? "Validação de procedência IDfeed"
+                ? "Validação de procedência IDfleet"
                 : "Conforme Lei Geral de Proteção de Dados (LGPD)"}
             </p>
           </div>
@@ -708,7 +708,7 @@ export default function ConsultaVeiculo({
             <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-slate-500" />
-                <p>Prontuário mantido e auditado pelo sistema IDfeed</p>
+                <p>Prontuário mantido e auditado pelo sistema IDfleet</p>
               </div>
               <button
                 id="btn-outra-consulta-rodape"

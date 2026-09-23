@@ -1,7 +1,7 @@
 /**
  * @file loja-dashboard-view.tsx
  * @path src/components/loja-dashboard-view.tsx
- * @description Visão técnica e analítica do painel operacional da oficina mecânica (IDfeed).
+ * @description Visão técnica e analítica do painel operacional da oficina mecânica (IDfleet).
  * Implementa arquitetura Split View com tabela homologada de alta densidade à esquerda
  * e painel inspetor com dossiê técnico da viatura selecionada à direita, em tema claro.
  * 
@@ -455,7 +455,7 @@ export default function LojaDashboardView({
 
   /**
    * Exporta a listagem atual de veículos filtrados em formato PDF estruturado.
-   * Gera um documento formatado com cabeçalho institucional do IDfeed, metadados da oficina,
+   * Gera um documento formatado com cabeçalho institucional do IDfleet, metadados da oficina,
    * data/hora da emissão, tabela analítica tipografada com as colunas visíveis e paginação no rodapé.
    *
    * @returns void
@@ -485,11 +485,11 @@ export default function LojaDashboardView({
       });
       const dataArquivo = dataHoje.toISOString().slice(0, 10);
 
-      // 1. Cabeçalho Institucional do IDfeed
+      // 1. Cabeçalho Institucional do IDfleet
       doc.setFont("helvetica", "bold");
       doc.setFontSize(15);
       doc.setTextColor(15, 23, 42); // slate-900
-      doc.text("IDfeed • Identidade Digital Veicular", 40, 36);
+      doc.text("IDfleet • Identidade Digital Veicular", 40, 36);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9.5);
@@ -590,7 +590,7 @@ export default function LojaDashboardView({
         doc.setFontSize(7.5);
         doc.setTextColor(148, 163, 184); // slate-400
         doc.text(
-          "IDfeed • Sistema de Prontuário e Identidade Digital Veicular Auditada",
+          "IDfleet • Sistema de Prontuário e Identidade Digital Veicular Auditada",
           40,
           575
         );
@@ -695,13 +695,13 @@ export default function LojaDashboardView({
             <Link
               href="/loja/dashboard"
               className="flex items-center gap-2 group focus:outline-none shrink-0"
-              title="IDfeed - Identidade Digital Veicular"
-              aria-label="IDfeed - Início"
+              title="IDfleet - Identidade Digital Veicular"
+              aria-label="IDfleet - Início"
             >
               <div className="relative h-7 w-28 sm:h-8 sm:w-36 flex items-center">
                 <Image
                   src="/IDfeed-logo.jpg"
-                  alt="IDfeed - Identidade Digital Veicular"
+                  alt="IDfleet - Identidade Digital Veicular"
                   width={180}
                   height={48}
                   priority

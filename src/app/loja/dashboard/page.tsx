@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a página do painel da oficina.
  */
 export const metadata = {
-  title: "Painel da Oficina • IDfeed",
+  title: "Painel da Oficina • IDfleet",
   description: "Gerenciamento de veículos, estoque de peças e ordens de serviço da oficina.",
 };
 

@@ -47,14 +47,14 @@ export default async function FeedbackPage() {
           <Link
             href="/"
             className="flex items-center gap-2 group focus:outline-none shrink-0"
-            title="Voltar ao início do IDfeed"
+            title="Voltar ao início do IDfleet"
           >
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs">
                 ID
               </div>
               <span className="text-base font-bold text-[#0F172A] tracking-tight">
-                IDfeed
+                IDfleet
               </span>
             </div>
           </Link>
@@ -82,7 +82,7 @@ export default async function FeedbackPage() {
                 Envio de Opiniões e Sugestões
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Utilize este canal para relatar problemas técnicos, enviar sugestões de melhoria ou registrar sua avaliação sobre a consulta e uso do prontuário digital IDfeed.
+                Utilize este canal para relatar problemas técnicos, enviar sugestões de melhoria ou registrar sua avaliação sobre a consulta e uso do prontuário digital IDfleet.
               </p>
             </div>
 
@@ -218,7 +218,7 @@ export default async function FeedbackPage() {
 
       {/* ─── RODAPÉ SIMPLES ─── */}
       <footer className="no-print bg-white border-t border-slate-200 py-6 px-4 text-center text-xs text-slate-400">
-        IDfeed • Ambiente de testes e validação com clientes
+        IDfleet • Ambiente de testes e validação com clientes
       </footer>
     </div>
   );

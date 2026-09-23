@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a tela de registro de manutenção.
  */
 export const metadata = {
-  title: "Registrar Manutenção • IDfeed",
+  title: "Registrar Manutenção • IDfleet",
   description: "Registre uma ordem de serviço no prontuário digital do veículo.",
 };
 
@@ -80,7 +80,7 @@ export default async function NovaManutencaoPage({ params }: NovaManutencaoPageP
           <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

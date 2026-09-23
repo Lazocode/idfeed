@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos da página para cabeçalho HTTP e SEO.
  */
 export const metadata = {
-  title: "Gestão de Credenciamentos • IDfeed Admin",
+  title: "Gestão de Credenciamentos • IDfleet Admin",
   description: "Homologação e análise de documentos das oficinas cadastradas.",
 };
 
@@ -60,7 +60,7 @@ export default async function AprovacoesPage() {
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/IDfeed-logo.jpg"
-                alt="IDfeed - Identidade Digital Veicular"
+                alt="IDfleet - Identidade Digital Veicular"
                 width={180}
                 height={48}
                 priority
@@ -106,7 +106,7 @@ export default async function AprovacoesPage() {
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/IDfeed-logo.jpg"
-                alt="IDfeed - Identidade Digital Veicular"
+                alt="IDfleet - Identidade Digital Veicular"
                 width={180}
                 height={48}
                 priority
@@ -142,7 +142,7 @@ export default async function AprovacoesPage() {
             Homologação de Oficinas
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Auditoria técnica de novos cadastros e documentos societários para credenciamento na rede IDfeed.
+            Auditoria técnica de novos cadastros e documentos societários para credenciamento na rede IDfleet.
           </p>
         </div>
 

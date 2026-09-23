@@ -22,7 +22,7 @@ import { requireApprovedRole } from "@/lib/security";
  * Metadados estáticos para a tela de cadastro de veículo.
  */
 export const metadata = {
-  title: "Novo Veículo • IDfeed",
+  title: "Novo Veículo • IDfleet",
   description: "Cadastre um veículo para emissão de passaporte digital e prontuário veicular.",
 };
 
@@ -44,7 +44,7 @@ export default async function NovoVeiculoPage() {
           <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

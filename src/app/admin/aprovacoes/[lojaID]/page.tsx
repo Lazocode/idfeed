@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a página de análise cadastral.
  */
 export const metadata = {
-  title: "Análise Cadastral de Oficina • IDfeed Admin",
+  title: "Análise Cadastral de Oficina • IDfleet Admin",
   description: "Auditoria documental da oficina credenciada.",
 };
 
@@ -72,7 +72,7 @@ export default async function AnaliseOficinaPage({ params }: AnaliseOficinaPageP
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/IDfeed-logo.jpg"
-                alt="IDfeed - Identidade Digital Veicular"
+                alt="IDfleet - Identidade Digital Veicular"
                 width={180}
                 height={48}
                 priority
@@ -131,7 +131,7 @@ export default async function AnaliseOficinaPage({ params }: AnaliseOficinaPageP
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/IDfeed-logo.jpg"
-                alt="IDfeed - Identidade Digital Veicular"
+                alt="IDfleet - Identidade Digital Veicular"
                 width={180}
                 height={48}
                 priority

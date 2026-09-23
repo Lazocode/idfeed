@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a tela de nova movimentação.
  */
 export const metadata = {
-  title: "Registrar Movimentação • IDfeed",
+  title: "Registrar Movimentação • IDfleet",
   description: "Entrada, saída ou ajuste de inventário no estoque da oficina.",
 };
 
@@ -72,7 +72,7 @@ export default async function NovaMovimentacaoPage({ params }: NovaMovimentacaoP
           <Link href="/loja/dashboard" className="flex items-center gap-3">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

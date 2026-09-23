@@ -22,7 +22,7 @@ import { requireApprovedRole } from "@/lib/security";
  * Metadados estáticos para a página de criação de material.
  */
 export const metadata = {
-  title: "Novo Material • IDfeed",
+  title: "Novo Material • IDfleet",
   description: "Cadastre uma nova peça ou insumo no estoque da oficina.",
 };
 
@@ -43,7 +43,7 @@ export default async function NovoMaterialPage() {
           <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

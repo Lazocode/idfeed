@@ -19,7 +19,7 @@ import { requireApprovedRole } from "@/lib/security";
  * Metadados estáticos para a página de seleção de novo cadastro.
  */
 export const metadata = {
-  title: "Novo Registro • IDfeed",
+  title: "Novo Registro • IDfleet",
   description: "Selecione o tipo de cadastro a ser realizado na oficina: veículo ou material.",
 };
 
@@ -41,7 +41,7 @@ export default async function NovoRegistroPage() {
             <div className="relative h-7 sm:h-8 w-28 sm:w-36 flex items-center">
               <Image
                 src="/IDfeed-logo.jpg"
-                alt="IDfeed - Identidade Digital Veicular"
+                alt="IDfleet - Identidade Digital Veicular"
                 width={180}
                 height={48}
                 priority

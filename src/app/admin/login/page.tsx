@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description Página de autenticação administrativa do IDfeed.
+ * @description Página de autenticação administrativa do IDfleet.
  * Apresenta a interface de login restrita para administradores gerais do sistema,
  * com redirecionamento automático se já autenticado com privilégios de auditoria.
  * @module app/admin/login/page
@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos da página para cabeçalho HTTP e SEO.
  */
 export const metadata = {
-  title: "Login Administrativo • IDfeed",
+  title: "Login Administrativo • IDfleet",
   description: "Acesso restrito para administradores do sistema de aprovações.",
 };
 
@@ -54,7 +54,7 @@ export default async function AdminLoginPage() {
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

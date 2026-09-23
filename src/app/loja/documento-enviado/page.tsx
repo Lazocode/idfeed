@@ -16,7 +16,7 @@ import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
  * Metadados estáticos para a tela de confirmação de envio.
  */
 export const metadata = {
-  title: "Documento Enviado • IDfeed",
+  title: "Documento Enviado • IDfleet",
   description: "Confirmação de recebimento da documentação para análise.",
 };
 
@@ -34,7 +34,7 @@ export default function DocumentoEnviadoPage() {
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

@@ -45,7 +45,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a página de detalhes de material.
  */
 export const metadata = {
-  title: "Detalhe do Material • IDfeed",
+  title: "Detalhe do Material • IDfleet",
   description: "Controle de saldo em estoque e histórico de movimentações da peça.",
 };
 
@@ -112,7 +112,7 @@ export default async function MaterialDetalhePage({ params }: MaterialDetalhePag
           <Link href="/loja/dashboard" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

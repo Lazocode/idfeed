@@ -308,7 +308,7 @@ export default function FeedbackForm({
       {/* ─── 6. Botão de Envio ─── */}
       <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-[11px] text-slate-400 flex items-center gap-1 order-2 sm:order-1 text-center sm:text-left">
-          <span>Fase de testes beta do IDfeed</span>
+          <span>Fase de testes beta do IDfleet</span>
         </p>
 
         <button

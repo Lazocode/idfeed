@@ -16,7 +16,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/security";
 
 /**
- * Homologa e aprova o credenciamento de uma oficina na plataforma IDfeed.
+ * Homologa e aprova o credenciamento de uma oficina na plataforma IDfleet.
  * Valida os privilégios de superadministrador, confere o status pendente e atualiza
  * tanto o cadastro da loja quanto o último documento anexado para "aprovado".
  *

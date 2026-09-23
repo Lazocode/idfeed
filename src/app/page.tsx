@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description Página inicial pública (Landing Page) da plataforma IDfeed.
+ * @description Página inicial pública (Landing Page) da plataforma IDfleet.
  * Contém a interface de consulta pública de veículos com verificação HMAC/CPF,
  * apresentação dos pilares de segurança e acessos rápidos para oficinas e administradores.
  * @module app/page
@@ -60,12 +60,12 @@ export default async function Home({ searchParams }: HomePageProps) {
           <Link
             href="/"
             className="flex items-center gap-3 group focus:outline-none shrink-0"
-            aria-label="IDfeed - Início"
+            aria-label="IDfleet - Início"
           >
             <div className="relative h-7 sm:h-9 w-28 sm:w-44 flex items-center">
               <Image
                 src="/IDfeed-logo.jpg"
-                alt="IDfeed - Identidade Digital Veicular"
+                alt="IDfleet - Identidade Digital Veicular"
                 width={200}
                 height={56}
                 priority
@@ -127,7 +127,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           <div className="max-w-5xl mx-auto">
             <div className="mb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                Como funciona o prontuário digital IDfeed
+                Como funciona o prontuário digital IDfleet
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Informações técnicas lançadas diretamente por oficinas durante a execução dos serviços.
@@ -206,14 +206,14 @@ export default async function Home({ searchParams }: HomePageProps) {
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed"
+              alt="IDfleet"
               width={120}
               height={34}
               referrerPolicy="no-referrer"
               className="h-7 w-auto object-contain opacity-90"
             />
             <p className="text-xs text-slate-400">
-              © {new Date().getFullYear()} IDfeed. A identidade digital e histórico do seu veículo.
+              © {new Date().getFullYear()} IDfleet. A identidade digital e histórico do seu veículo.
             </p>
           </div>
 

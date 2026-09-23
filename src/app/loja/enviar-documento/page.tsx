@@ -2,7 +2,7 @@
  * @file page.tsx
  * @description Página de envio de documentos comprobatórios da oficina mecânica.
  * Permite ao responsável legal fazer upload do contrato social ou documento com foto
- * para análise e homologação cadastral no IDfeed.
+ * para análise e homologação cadastral no IDfleet.
  * @module app/loja/enviar-documento/page
  * @recommendedPath src/app/loja/enviar-documento/page.tsx
  */
@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
  * Metadados estáticos para a página de envio de documentos.
  */
 export const metadata = {
-  title: "Envio de Documentos • IDfeed",
+  title: "Envio de Documentos • IDfleet",
   description: "Envio de documentação comprobatória da oficina para análise e liberação cadastral.",
 };
 
@@ -76,7 +76,7 @@ export default async function EnviarDocumentoPage() {
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

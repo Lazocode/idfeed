@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description Página de autenticação das oficinas credenciadas no IDfeed.
+ * @description Página de autenticação das oficinas credenciadas no IDfleet.
  * Apresenta a interface de login da loja e links de apoio para cadastro e acesso administrativo.
  * @module app/loja/login/page
  * @recommendedPath src/app/loja/login/page.tsx
@@ -18,7 +18,7 @@ import LoginForm from "./login-form";
  * Metadados estáticos da página para cabeçalho HTTP e SEO.
  */
 export const metadata = {
-  title: "Acesso da Oficina • IDfeed",
+  title: "Acesso da Oficina • IDfleet",
   description: "Faça login para gerenciar prontuários, revisões e estoque da oficina credenciada.",
 };
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority

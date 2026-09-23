@@ -90,7 +90,7 @@ export default function FeedbackModal({
                 Espaço de Opinião &amp; Feedback
               </h2>
               <p className="text-[11px] text-slate-500">
-                Ajude-nos a aprimorar o IDfeed durante estes testes
+                Ajude-nos a aprimorar o IDfleet durante estes testes
               </p>
             </div>
           </div>

@@ -20,7 +20,7 @@ import "./globals.css";
  * Metadados estáticos globais da plataforma para indexação e compartilhamento.
  */
 export const metadata: Metadata = {
-  title: "IDfeed — Identidade Digital e Prontuário Veicular",
+  title: "IDfleet — Identidade Digital e Prontuário Veicular",
   description:
     "Consulta de histórico de veículo por placa e CPF, e painel de gestão de frotas, materiais e ordens de serviço para oficinas.",
 };

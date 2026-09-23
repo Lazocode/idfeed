@@ -2,7 +2,7 @@
  * @file page.tsx
  * @description Página de autocadastro e credenciamento de oficinas mecânicas.
  * Coleta os dados do responsável legal, informações societárias da oficina (CNPJ, nome fantasia)
- * e credenciais de segurança para ingresso no ecossistema IDfeed.
+ * e credenciais de segurança para ingresso no ecossistema IDfleet.
  * @module app/loja/criar-conta/page
  * @recommendedPath src/app/loja/criar-conta/page.tsx
  */
@@ -19,7 +19,7 @@ import CriarContaForm from "@/components/criar-conta-form";
  * Metadados estáticos da página para cabeçalho HTTP e SEO.
  */
 export const metadata = {
-  title: "Cadastrar Oficina • IDfeed",
+  title: "Cadastrar Oficina • IDfleet",
   description: "Credencie sua oficina mecânica e comece a emitir prontuários veiculares auditados.",
 };
 
@@ -37,7 +37,7 @@ export default function CriarContaPage() {
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <Image
               src="/IDfeed-logo.jpg"
-              alt="IDfeed - Identidade Digital Veicular"
+              alt="IDfleet - Identidade Digital Veicular"
               width={180}
               height={48}
               priority
