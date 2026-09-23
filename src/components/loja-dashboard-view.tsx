@@ -37,6 +37,8 @@ import {
   MessageSquarePlus,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // 2. Utilitários e formatadores internos
 import {
@@ -220,7 +222,7 @@ export default function LojaDashboardView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Estados de controle para Filtros, Exportação CSV e Configuração de Colunas
+  // Estados de controle para Filtros, Exportação PDF e Configuração de Colunas
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoVeiculo>("todos");
   const [isFiltrosOpen, setIsFiltrosOpen] = useState(false);
   const [isColunasOpen, setIsColunasOpen] = useState(false);
@@ -452,63 +454,161 @@ export default function LojaDashboardView({
   }, [emDia, totalVeiculos]);
 
   /**
-   * Exporta a listagem atual de veículos filtrados em formato CSV estruturado.
-   * Aplica a marca de ordem de byte UTF-8 (\uFEFF) para visualização correta de acentos no Excel.
-   * Exporta estritamente as colunas configuradas como visíveis pelo operador.
+   * Exporta a listagem atual de veículos filtrados em formato PDF estruturado.
+   * Gera um documento formatado com cabeçalho institucional do IDfeed, metadados da oficina,
+   * data/hora da emissão, tabela analítica tipografada com as colunas visíveis e paginação no rodapé.
+   *
+   * @returns void
    */
-  const handleExportarCsv = () => {
+  const handleExportarPdf = () => {
     if (veiculosFiltrados.length === 0) return;
 
-    const escapeCsv = (valor: string | number | null | undefined): string => {
-      if (valor === null || valor === undefined) return '""';
-      const texto = String(valor).replace(/"/g, '""');
-      return `"${texto}"`;
-    };
-
-    // Monta o cabeçalho respeitando a ordem e visibilidade das colunas
-    const cabecalhos: string[] = [];
-    if (colunasVisiveis.placa) cabecalhos.push("Matrícula / Placa");
-    if (colunasVisiveis.modelo) cabecalhos.push("Veículo & Versão");
-    if (colunasVisiveis.proprietario) cabecalhos.push("Proprietário");
-    if (colunasVisiveis.km_atual) cabecalhos.push("Odômetro Atual (km)");
-    if (colunasVisiveis.km_proxima_revisao) cabecalhos.push("Próxima Revisão");
-    if (colunasVisiveis.estado) cabecalhos.push("Estado");
-
-    // Monta as linhas de dados correspondentes
-    const linhas: string[] = veiculosFiltrados.map((v) => {
-      const colunasLinha: string[] = [];
-      const infoRevisao = calcularEstadoRevisao(v);
-
-      if (colunasVisiveis.placa) colunasLinha.push(escapeCsv(formatPlaca(v.placa)));
-      if (colunasVisiveis.modelo) colunasLinha.push(escapeCsv(v.modelo));
-      if (colunasVisiveis.proprietario) colunasLinha.push(escapeCsv(v.proprietario_nome || "—"));
-      if (colunasVisiveis.km_atual) colunasLinha.push(escapeCsv(formatKm(v.km_atual)));
-      if (colunasVisiveis.km_proxima_revisao) colunasLinha.push(escapeCsv(infoRevisao.textoProxima));
-      if (colunasVisiveis.estado) colunasLinha.push(escapeCsv(infoRevisao.estado));
-
-      return colunasLinha.join(";");
-    });
-
-    const conteudoCsv = [cabecalhos.join(";"), ...linhas].join("\r\n");
-
-    // Gera o blob com BOM UTF-8 (\uFEFF)
-    const blob = new Blob(["\uFEFF" + conteudoCsv], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const dataAtual = new Date().toISOString().slice(0, 10);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `prontuarios-veiculares-${dataAtual}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    // Feedback visual temporário no botão
     setExportando(true);
-    setTimeout(() => setExportando(false), 2000);
+
+    try {
+      // Cria o documento PDF em orientação paisagem para melhor legibilidade dos dados técnicos
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
+
+      const dataHoje = new Date();
+      const dataFormatada = dataHoje.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      const horaFormatada = dataHoje.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const dataArquivo = dataHoje.toISOString().slice(0, 10);
+
+      // 1. Cabeçalho Institucional do IDfeed
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text("IDfeed • Identidade Digital Veicular", 40, 36);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.text("Relatório Operacional de Prontuários Veiculares Cadastrados", 40, 50);
+
+      // Metadados da Oficina e Emissão alinhados à direita
+      const nomeOficina = loja?.nome || "Oficina Mecânica";
+      doc.setFontSize(8.5);
+      doc.setTextColor(51, 65, 85); // slate-700
+      doc.text(`Oficina: ${nomeOficina}`, 802, 34, { align: "right" });
+      doc.text(`Emissão: ${dataFormatada} às ${horaFormatada}`, 802, 47, { align: "right" });
+      doc.text(`Total de Veículos: ${veiculosFiltrados.length}`, 802, 60, { align: "right" });
+
+      // Linha separadora horizontal sutil
+      doc.setDrawColor(226, 232, 240); // slate-200
+      doc.setLineWidth(1);
+      doc.line(40, 68, 802, 68);
+
+      // 2. Montagem dos Cabeçalhos e Linhas conforme colunas ativas
+      const cabecalhos: string[] = [];
+      if (colunasVisiveis.placa) cabecalhos.push("Matrícula / Placa");
+      if (colunasVisiveis.modelo) cabecalhos.push("Veículo & Versão");
+      if (colunasVisiveis.proprietario) cabecalhos.push("Proprietário");
+      if (colunasVisiveis.km_atual) cabecalhos.push("Odômetro Atual");
+      if (colunasVisiveis.km_proxima_revisao) cabecalhos.push("Próxima Revisão");
+      if (colunasVisiveis.estado) cabecalhos.push("Estado");
+
+      const corpoTabela: string[][] = veiculosFiltrados.map((v) => {
+        const linha: string[] = [];
+        const infoRevisao = calcularEstadoRevisao(v);
+
+        if (colunasVisiveis.placa) linha.push(formatPlaca(v.placa));
+        if (colunasVisiveis.modelo) linha.push(v.modelo || "—");
+        if (colunasVisiveis.proprietario) linha.push(v.proprietario_nome || "—");
+        if (colunasVisiveis.km_atual) linha.push(formatKm(v.km_atual));
+        if (colunasVisiveis.km_proxima_revisao) linha.push(infoRevisao.textoProxima);
+        if (colunasVisiveis.estado) {
+          const statusMap: Record<string, string> = {
+            em_dia: "Em Dia",
+            alerta: "Atenção",
+            vencida: "Vencida",
+          };
+          linha.push(statusMap[infoRevisao.estado] || infoRevisao.estado);
+        }
+
+        return linha;
+      });
+
+      // 3. Renderização tabular com jspdf-autotable
+      autoTable(doc, {
+        head: [cabecalhos],
+        body: corpoTabela,
+        startY: 78,
+        theme: "plain",
+        styles: {
+          font: "helvetica",
+          fontSize: 8.5,
+          textColor: [30, 41, 59], // slate-800
+          cellPadding: { top: 6, right: 6, bottom: 6, left: 6 },
+          lineColor: [241, 245, 249], // slate-100
+          lineWidth: 0.5,
+        },
+        headStyles: {
+          fillColor: [15, 23, 42], // slate-900
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 8.5,
+          cellPadding: { top: 6, right: 6, bottom: 6, left: 6 },
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252], // slate-50
+        },
+        margin: { top: 40, right: 40, bottom: 40, left: 40 },
+        didParseCell: (data) => {
+          // Destaca visualmente o estado da revisão com cores semânticas
+          if (data.section === "body" && cabecalhos[data.column.index] === "Estado") {
+            const val = String(data.cell.raw).toLowerCase();
+            if (val.includes("em dia")) {
+              data.cell.styles.textColor = [16, 149, 106]; // emerald-700
+              data.cell.styles.fontStyle = "bold";
+            } else if (val.includes("atenção") || val.includes("atencao") || val.includes("alerta")) {
+              data.cell.styles.textColor = [217, 119, 6]; // amber-600
+              data.cell.styles.fontStyle = "bold";
+            } else if (val.includes("vencida")) {
+              data.cell.styles.textColor = [225, 29, 72]; // rose-600
+              data.cell.styles.fontStyle = "bold";
+            }
+          }
+        },
+      });
+
+      // 4. Numeração e Rodapé em todas as páginas geradas
+      const totalPaginas = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPaginas; i++) {
+        doc.setPage(i);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(148, 163, 184); // slate-400
+        doc.text(
+          "IDfeed • Sistema de Prontuário e Identidade Digital Veicular Auditada",
+          40,
+          575
+        );
+        doc.text(
+          `Página ${i} de ${totalPaginas}`,
+          802,
+          575,
+          { align: "right" }
+        );
+      }
+
+      // 5. Salva o arquivo no formato PDF
+      doc.save(`prontuarios-veiculares-${dataArquivo}.pdf`);
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+    } finally {
+      setTimeout(() => setExportando(false), 2000);
+    }
   };
 
   /**
@@ -1182,23 +1282,23 @@ export default function LojaDashboardView({
                   )}
                 </div>
 
-                {/* Botão: Exportar CSV */}
+                {/* Botão: Exportar PDF */}
                 <button
                   id="btn-tabela-exportar"
                   type="button"
-                  onClick={handleExportarCsv}
+                  onClick={handleExportarPdf}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-[#E2E8F0] hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
-                  title="Exportar registros filtrados em arquivo CSV (Excel)"
+                  title="Exportar registros filtrados em arquivo PDF formatado"
                 >
                   {exportando ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-emerald-700 font-semibold">Exportado!</span>
+                      <span className="text-emerald-700 font-semibold">Gerado!</span>
                     </>
                   ) : (
                     <>
                       <Download className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Exportar</span>
+                      <span>Exportar PDF</span>
                     </>
                   )}
                 </button>
