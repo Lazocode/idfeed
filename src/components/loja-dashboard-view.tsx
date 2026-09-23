@@ -18,6 +18,7 @@
 // 1. Dependências e bibliotecas externas
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Plus,
   ChevronDown,
@@ -586,8 +587,8 @@ export default function LojaDashboardView({
       {/* ─────────────────────────────────────────────────────────────
           1. BARRA SUPERIOR (HEADER PRINCIPAL COM BUSCA E REGISTRO)
       ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0]">
-        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 md:py-0 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 md:py-0 md:h-18 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">
           
           {/* Lado Esquerdo: Logo + Seleção da Oficina */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -595,22 +596,25 @@ export default function LojaDashboardView({
               href="/loja/dashboard"
               className="flex items-center gap-2 group focus:outline-none"
               title="IDfeed - Identidade Digital Veicular"
+              aria-label="IDfeed - Início"
             >
-              {/* Logo estilizado IDfeed */}
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs">
-                  ID
-                </div>
-                <span className="text-base font-bold text-[#0F172A] tracking-tight">
-                  IDfeed
-                </span>
+              <div className="relative h-8 w-32 sm:w-36 flex items-center">
+                <Image
+                  src="/IDfeed-logo.jpg"
+                  alt="IDfeed - Identidade Digital Veicular"
+                  width={180}
+                  height={48}
+                  priority
+                  referrerPolicy="no-referrer"
+                  className="h-8 w-auto object-contain"
+                />
               </div>
             </Link>
 
-            <div className="h-4 w-px bg-[#E2E8F0] mx-0.5 sm:mx-1" aria-hidden="true" />
+            <div className="h-4 w-px bg-slate-200 mx-0.5 sm:mx-1" aria-hidden="true" />
 
             {/* Dropdown de Seleção da Oficina Mecânica */}
-            <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-[#0F172A] hover:bg-slate-50 rounded-md cursor-pointer transition-colors">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors">
               <span className="truncate max-w-[130px] sm:max-w-[200px]">
                 {loja?.nome || "Oficina Bom Motor"}
               </span>
@@ -623,24 +627,24 @@ export default function LojaDashboardView({
             <Link
               id="btn-header-feedback"
               href="/feedback"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200/80 active:bg-slate-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
               title="Deixar opinião ou avaliação durante esta fase de testes"
             >
-              <MessageSquarePlus className="w-3.5 h-3.5 text-blue-600" />
+              <MessageSquarePlus className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">Feedback</span>
             </Link>
 
             <Link
               id="btn-cadastrar-novo"
               href="/loja/novo"
-              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300" />
               <span>Registrar</span>
             </Link>
 
             {/* Pílula de Perfil do Usuário com Ponto de Estado */}
-            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-xs font-medium text-[#0F172A] shadow-2xs">
+            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-[#10B981]" />
               <span className="truncate max-w-[120px]">{displayUserName}</span>
             </div>
@@ -649,7 +653,7 @@ export default function LojaDashboardView({
               type="button"
               onClick={() => signOut({ callbackUrl: "/loja/login" })}
               title="Encerrar Sessão"
-              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -661,46 +665,52 @@ export default function LojaDashboardView({
       {/* ─────────────────────────────────────────────────────────────
           2. SEGUNDA BARRA (NAVEGAÇÃO POR ABAS HORIZONTAIS)
       ───────────────────────────────────────────────────────────── */}
-      <nav className="bg-white border-b border-[#E2E8F0]">
+      <nav className="bg-white border-b border-slate-200/80">
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 flex items-center gap-6 sm:gap-8 text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
           
           <button
             type="button"
             onClick={() => setActiveTab("visao_geral")}
-            className={`py-3.5 font-semibold transition-colors relative cursor-pointer ${
+            className={`py-3.5 transition-colors relative cursor-pointer ${
               activeTab === "visao_geral"
-                ? "text-[#2563EB]"
-                : "text-slate-500 hover:text-[#0F172A]"
+                ? "text-slate-900 font-semibold"
+                : "text-slate-500 hover:text-slate-900 font-medium"
             }`}
           >
             Visão Geral
             {activeTab === "visao_geral" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563EB]" />
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900" />
             )}
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("frota")}
-            className={`py-3.5 font-medium transition-colors cursor-pointer ${
+            className={`py-3.5 transition-colors relative cursor-pointer ${
               activeTab === "frota"
-                ? "text-[#2563EB] font-semibold"
-                : "text-slate-500 hover:text-[#0F172A]"
+                ? "text-slate-900 font-semibold"
+                : "text-slate-500 hover:text-slate-900 font-medium"
             }`}
           >
             Frota de Veículos ({totalVeiculos})
+            {activeTab === "frota" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900" />
+            )}
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("estoque")}
-            className={`py-3.5 font-medium transition-colors cursor-pointer ${
+            className={`py-3.5 transition-colors relative cursor-pointer ${
               activeTab === "estoque"
-                ? "text-[#2563EB] font-semibold"
-                : "text-slate-500 hover:text-[#0F172A]"
+                ? "text-slate-900 font-semibold"
+                : "text-slate-500 hover:text-slate-900 font-medium"
             }`}
           >
             Estoque &amp; Insumos
+            {activeTab === "estoque" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900" />
+            )}
           </button>
         </div>
       </nav>
@@ -819,7 +829,7 @@ export default function LojaDashboardView({
               </div>
               <Link
                 href="/loja/material/novo"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Novo Material</span>
@@ -909,7 +919,7 @@ export default function LojaDashboardView({
                   value={termoBusca}
                   onChange={(e) => setTermoBusca(e.target.value)}
                   placeholder="Buscar por matrícula, proprietário, modelo..."
-                  className="w-full bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-lg pl-10 pr-20 py-2.5 text-xs text-[#0F172A] placeholder:text-slate-400 transition-colors focus:outline-none"
+                  className="w-full bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] focus:border-slate-400 focus:ring-1 focus:ring-slate-400 rounded-lg pl-10 pr-20 py-2.5 text-xs text-[#0F172A] placeholder:text-slate-400 transition-colors focus:outline-none"
                 />
                 <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                   {termoBusca.length > 0 ? (
@@ -1549,7 +1559,7 @@ export default function LojaDashboardView({
                     <Link
                       id="btn-abrir-prontuario-completo"
                       href={`/loja/veiculo/${veiculoSelecionado.id}`}
-                      className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 text-white text-xs font-semibold tracking-wide transition-colors shadow-xs cursor-pointer text-center"
+                      className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-xs font-semibold tracking-wide transition-colors shadow-xs cursor-pointer text-center"
                     >
                       <span>Abrir Prontuário Completo</span>
                       <ArrowRight className="w-4 h-4" />
