@@ -619,7 +619,6 @@ export default function ConsultaVeiculo({
               <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-2">
                 <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
                   <p>Histórico de Ordens</p>
-                  <ShieldCheck className="w-4 h-4 text-slate-600" />
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-slate-900 tracking-tight">
