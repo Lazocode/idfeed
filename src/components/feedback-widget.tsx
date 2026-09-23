@@ -27,18 +27,17 @@ export default function FeedbackWidget() {
     <>
       <aside
         aria-label="Canal de suporte e opinião"
-        className="no-print fixed bottom-6 right-6 z-50 pointer-events-auto"
-        style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 9999 }}
+        className="no-print fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 pointer-events-auto"
       >
         <button
           id="btn-abrir-widget-feedback"
           type="button"
           onClick={() => setModalAberto(true)}
-          className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all border border-slate-700 cursor-pointer text-xs font-medium"
-          title="Deixe uma sugestão ou relate uma dúvida"
+          className="flex items-center gap-2 px-3 py-2.5 sm:px-3.5 sm:py-2.5 rounded-full sm:rounded-lg bg-slate-900 text-white hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all border border-slate-700 cursor-pointer text-xs font-medium"
+          title="Deixe uma sugestão ou relate uma dúvida (Opinião / Suporte)"
         >
-          <MessageSquarePlus className="w-4 h-4 text-slate-300" />
-          <span>Opinião / Suporte</span>
+          <MessageSquarePlus className="w-4 h-4 text-slate-300 shrink-0" />
+          <span className="hidden sm:inline">Opinião / Suporte</span>
         </button>
       </aside>
 
