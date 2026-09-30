@@ -55,34 +55,66 @@ function formatarCnpjInput(valor: string): string {
 
 /**
  * Aplica máscara telefônica dinâmica para celular ou fixo com DDD,
- * suportando prefixo internacional +55 sem causar truncamento ou falha.
+ * com suporte transparente e completo ao prefixo internacional +55 sem causar truncamento,
+ * conflito de digitação ou mensagens indevidas de erro no cadastro.
  *
  * @param valor - String crua digitada ou colada pelo usuário.
- * @returns Telefone formatado no padrão (00) 00000-0000 ou (00) 0000-0000.
+ * @returns Telefone formatado no padrão com ou sem +55: +55 (00) 00000-0000 ou (00) 00000-0000.
  */
 function formatarTelefoneInput(valor: string): string {
   if (!valor) return "";
 
-  const trimmed = valor.trim();
-  if (trimmed === "+" || trimmed === "+5" || trimmed === "+55") {
-    return trimmed === "+55" ? "+55 " : trimmed;
+  const limpo = valor.trim();
+  const temMais = limpo.startsWith("+");
+  const todosDigitos = valor.replace(/\D/g, "");
+
+  // Detecta se é formato internacional com DDI 55
+  const temDDI = temMais || (todosDigitos.startsWith("55") && todosDigitos.length >= 12);
+
+  // Digitação inicial do prefixo "+" ou "+5" ou "+55"
+  if (temMais && todosDigitos.length <= 2) {
+    if (todosDigitos === "") return "+";
+    if (todosDigitos === "5") return "+5";
+    if (todosDigitos === "55") {
+      return valor.endsWith(" ") ? "+55 " : "+55";
+    }
+    return `+${todosDigitos}`;
   }
 
-  let digitos = valor.replace(/\D/g, "");
-
-  // Se o usuário digitou ou colou com DDI +55:
-  if (digitos.startsWith("55") && (digitos.length > 11 || (valor.includes("+") && digitos.length > 2))) {
-    digitos = digitos.slice(2);
+  // Extrai dígitos nacionais (DDD + número)
+  let digitosNacionais = todosDigitos;
+  if (temDDI && digitosNacionais.startsWith("55")) {
+    digitosNacionais = digitosNacionais.slice(2);
   }
 
-  const apenasNumeros = digitos.slice(0, 11);
-  if (apenasNumeros.length === 0) return "";
-  if (apenasNumeros.length <= 2) return `(${apenasNumeros}`;
-  if (apenasNumeros.length <= 6) return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2)}`;
-  if (apenasNumeros.length <= 10) {
-    return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 6)}-${apenasNumeros.slice(6)}`;
+  // Remove zero à esquerda do DDD caso o usuário tenha digitado (ex: 011 -> 11)
+  if (digitosNacionais.startsWith("0") && digitosNacionais.length > 2) {
+    digitosNacionais = digitosNacionais.slice(1);
   }
-  return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7)}`;
+
+  const num = digitosNacionais.slice(0, 11);
+  if (num.length === 0) {
+    return temDDI ? "+55 " : "";
+  }
+
+  const prefixo = temDDI ? "+55 " : "";
+
+  if (num.length <= 2) {
+    if (num.length === 2 && valor.endsWith(" ")) {
+      return `${prefixo}(${num}) `;
+    }
+    return `${prefixo}(${num}`;
+  }
+
+  if (num.length <= 6) {
+    return `${prefixo}(${num.slice(0, 2)}) ${num.slice(2)}`;
+  }
+
+  if (num.length <= 10) {
+    return `${prefixo}(${num.slice(0, 2)}) ${num.slice(2, 6)}-${num.slice(6)}`;
+  }
+
+  return `${prefixo}(${num.slice(0, 2)}) ${num.slice(2, 7)}-${num.slice(7)}`;
 }
 
 /**

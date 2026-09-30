@@ -13,6 +13,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Clock, CheckCircle2, XCircle } from "lucide-react";
 
+// 2. Serviços e utilitários internos
+import { formatarTelefoneExibicao } from "@/lib/validation";
+
 /**
  * Estrutura de dados representativa de uma oficina para fins de triagem administrativa.
  */
@@ -171,7 +174,7 @@ export default function AprovacoesTabs({
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pl-4">
                     <span>CNPJ: <strong className="text-slate-700 font-mono">{oficina.cnpj || "Não informado"}</strong></span>
-                    <span>Telefone: <strong className="text-slate-700">{oficina.telefone || "Não informado"}</strong></span>
+                    <span>Telefone: <strong className="text-slate-700">{formatarTelefoneExibicao(oficina.telefone)}</strong></span>
                   </div>
                 </div>
 

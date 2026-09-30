@@ -19,6 +19,7 @@ import LogoutButton from "@/components/logout-button";
 // 3. Bibliotecas e serviços internos
 import { requireAdmin } from "@/lib/security";
 import { supabaseAdmin } from "@/lib/supabase";
+import { formatarTelefoneExibicao } from "@/lib/validation";
 
 /**
  * Força a renderização dinâmica da página de auditoria documental.
@@ -193,7 +194,7 @@ export default async function AnaliseOficinaPage({ params }: AnaliseOficinaPageP
 
               <div className="flex items-center gap-2.5 text-slate-700">
                 <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>Telefone: <strong className="text-slate-900">{loja.telefone || "Não informado"}</strong></span>
+                <span>Telefone: <strong className="text-slate-900">{formatarTelefoneExibicao(loja.telefone)}</strong></span>
               </div>
 
               <div className="pt-2 border-t border-slate-100 flex items-center gap-2">

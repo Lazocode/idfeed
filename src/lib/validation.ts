@@ -19,8 +19,9 @@ import { z } from "zod";
  *   Remove o '55' inicial, extraindo o DDD de 2 dígitos + número local (8 ou 9 dígitos).
  *   Ex: "+55 (21) 98765-4321" -> dígitos "5521987654321" -> normalizado "21987654321" (11 dígitos).
  *   Ex: "+55 (21) 3333-4444" -> dígitos "552133334444" -> normalizado "2133334444" (10 dígitos).
- * - Se o usuário digitou explicitamente "+55" seguido de dígitos, remove o 55 inicial.
- * - Preserva DDDs nacionais (inclusive o DDD 55 do RS quando o número tiver 10 ou 11 dígitos no total).
+ * - Se o usuário digitou explicitamente "+55" ou "55", remove com segurança o DDI internacional.
+ * - Trata zeros à esquerda no DDD (ex: 011 ou +55 011) e prefixos de operadora (ex: 015 11).
+ * - Preserva DDDs nacionais legítimos (inclusive o DDD 55 do RS quando o número tiver 10 ou 11 dígitos no total).
  *
  * @param valor - String crua informada pelo usuário.
  * @returns Dígitos limpos e normalizados (10 ou 11 dígitos numéricos).
@@ -28,17 +29,47 @@ import { z } from "zod";
 export function normalizarTelefone(valor?: string | null): string {
   if (!valor) return "";
   const limpo = valor.trim();
+  const temMais = limpo.startsWith("+");
   let digitos = limpo.replace(/\D/g, "");
 
-  // Se tiver 12 ou 13 dígitos e começar com o DDI 55 do Brasil:
-  if (digitos.startsWith("55") && (digitos.length === 12 || digitos.length === 13)) {
+  // 1. Trata DDI 55 do Brasil:
+  if (temMais && digitos.startsWith("55")) {
+    // Se digitou explicitamente "+55", remove o DDI 55
     digitos = digitos.slice(2);
-  } else if (limpo.startsWith("+55") && digitos.startsWith("55") && digitos.length > 2) {
-    // Se o usuário digitou explicitamente "+55" seguido de outros números
+  } else if (digitos.startsWith("55") && digitos.length >= 12) {
+    // Se tem 12 ou mais dígitos e começa com 55, é DDI 55 + (DDD + número local)
     digitos = digitos.slice(2);
   }
 
+  // 2. Trata prefixo de operadora com zero (ex: 015 11..., 021 21...)
+  if (digitos.startsWith("0") && digitos.length >= 13) {
+    // 0 + 2 dígitos de operadora + DDD (2) + número (8 ou 9)
+    digitos = digitos.slice(3);
+  } else if (digitos.startsWith("0") && (digitos.length === 11 || digitos.length === 12)) {
+    // 0 + DDD (2 dígitos) + número (8 ou 9 dígitos)
+    digitos = digitos.slice(1);
+  }
+
   return digitos;
+}
+
+/**
+ * Formata um número de telefone normalizado para exibição visual amigável (ex: (21) 98888-8888).
+ * Suporta telefones celulares (11 dígitos) e fixos (10 dígitos).
+ *
+ * @param valor - Número ou texto do telefone a ser formatado.
+ * @returns Telefone formatado no padrão visual brasileiro ou o texto original.
+ */
+export function formatarTelefoneExibicao(valor?: string | null): string {
+  if (!valor) return "Não informado";
+  const norm = normalizarTelefone(valor);
+  if (norm.length === 11) {
+    return `(${norm.slice(0, 2)}) ${norm.slice(2, 7)}-${norm.slice(7)}`;
+  }
+  if (norm.length === 10) {
+    return `(${norm.slice(0, 2)}) ${norm.slice(2, 6)}-${norm.slice(6)}`;
+  }
+  return valor;
 }
 
 /**
