@@ -1,0 +1,6 @@
+{
+  "name": "IDfeed",
+  "description": "Consulta de histórico de veículo por placa e CPF, e painel de gestão de frotas, materiais e ordens de serviço para oficinas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
